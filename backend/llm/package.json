@@ -1,0 +1,19 @@
+{
+  "name": "@gemini-engine/llm",
+  "version": "1.0.0",
+  "description": "TypeScript port of python/llm",
+  "main": "src/index.ts",
+  "scripts": {
+    "test": "ts-node test_llm.ts"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "dotenv": "^16.0.0",
+    "zod": "^3.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.0.0"
+  }
+}
