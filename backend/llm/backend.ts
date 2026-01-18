@@ -26,7 +26,10 @@ export class GeminiBackend implements LLMBackend {
         const model = this.client.getGenerativeModel({
             model: modelName,
             systemInstruction: system,
-            generationConfig: { responseMimeType: "application/json" },
+            generationConfig: {
+                responseMimeType: "application/json",
+                responseSchema: schema
+            },
         });
 
         const processor = new PartialJSONProcessor();
