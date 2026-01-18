@@ -1,5 +1,5 @@
-import { LLMClient } from "./src/client";
-import { extractGameState } from "./src/agents/game_state";
+import { LLMClient } from "../llm/src/client";
+import { extractGameState } from "../llm/src/agents/game_state";
 import * as dotenv from "dotenv";
 import * as path from "path";
 
