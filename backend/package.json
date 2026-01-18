@@ -4,7 +4,9 @@
   "description": "TypeScript port of python/llm",
   "main": "src/index.ts",
   "scripts": {
-    "test": "ts-node --transpile-only test/test_llm.ts"
+    "test": "npm run test:mock",
+    "test:mock": "find test/mock -name 'test_*.ts' -exec npx ts-node {} \\;",
+    "test:real": "find test/real -name 'test_*.ts' -exec npx ts-node {} \\;"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",

@@ -32,8 +32,30 @@ export class LLMClient {
     // TODO: Add mocks integration
     private async tryGetMock(label: string): Promise<any | null> {
         if (!this.debugMode) return null;
-        // Integration with mocks.ts comes later
-        return null;
+
+        // Lazy load mocks to avoid circular dependencies if possible, or just standard import
+        // For simplicity, assuming imports are available at top or we import here using require/import()
+        // But TS synchronous requires top level.
+        // We will add imports to the top of file in a separate step or just hardcode for now for "llm unit" if needed.
+        // Actually, let's use the explicit imports.
+
+        switch (label) {
+            case "planner_agent":
+                // We need to return structure matching PlannerSchema
+                return { designDoc: "# Game Design Doc (Mock)" };
+            case "architect_agent":
+                return { initialState: { mock: true }, rules: "Mock Rules" };
+            case "artist_agent":
+                return { imagePrompt: "Mock Prompt", visualLayout: ["mock_item"] };
+            case "mapper_agent":
+                return { finalState: { mock: "final" }, assetMap: { "item": "path.png" } };
+            case "renderer_agent":
+                return { reactCode: "export const Game = () => <div />;" };
+            case "game_state_extraction":
+                return { states: [] };
+            default:
+                return null;
+        }
     }
 
     private async *trackTtfb<T>(
