@@ -1,2 +1,2 @@
-backend/llm/node_modules
-backend/llm/.env
+node_modules
+.env
