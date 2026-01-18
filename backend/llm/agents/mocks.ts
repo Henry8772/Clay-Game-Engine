@@ -1,4 +1,4 @@
-import { GameStateList } from "../models/game_state";
+import { GameStateList } from "../../models/game_state";
 
 export const mockGameStateExtraction = (): GameStateList => ({
     states: [

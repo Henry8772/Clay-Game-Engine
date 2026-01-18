@@ -1,5 +1,6 @@
-import { LLMClient } from "../llm/src/client";
-import { extractGameState } from "../llm/src/agents/game_state";
+import { LLMClient } from "../llm/client";
+import { extractGameState } from "../llm/agents/game_state";
+import { compileGameGraph, printMermaid, GraphState } from "../llm/graph/game_state_graph";
 import * as dotenv from "dotenv";
 import * as path from "path";
 
@@ -64,9 +65,43 @@ async function runLiveTest() {
     }
 }
 
+async function runGraphTest() {
+    console.log("\n🧪 --- TEST: LangGraph Visualization & Execution ---");
+
+    // 1. Print Visualization
+    await printMermaid();
+
+    // 2. Run Graph Execution (Mock)
+    const client = new LLMClient("gemini", "gemini-2.5-flash", true);
+    const rules = "Tic Tac Toe rules...";
+    const description = "A simple 3x3 grid game.";
+
+    const app = compileGameGraph();
+
+    try {
+        const result = await app.invoke({}, {
+            configurable: {
+                client,
+                rules,
+                description,
+                useMock: true
+            }
+        }) as unknown as GraphState;
+
+        if (result.gameStates && result.gameStates.states.length > 0) {
+            console.log(`✅ Graph Execution PASSED: Received ${result.gameStates.states.length} states.`);
+        } else {
+            console.warn("⚠️  Graph Execution finished but no states found.");
+        }
+    } catch (error) {
+        console.error("❌ Graph Execution FAILED:", error);
+    }
+}
+
 async function main() {
     await runMockTest();
     await runLiveTest();
+    await runGraphTest();
 }
 
 main();

@@ -1,5 +1,5 @@
 import { LLMClient } from "../client";
-import { GameStateList } from "../models/game_state";
+import { GameStateList } from "../../models/game_state";
 import { mockGameStateExtraction } from "./mocks";
 
 export async function* extractGameState(
