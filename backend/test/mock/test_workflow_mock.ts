@@ -1,4 +1,5 @@
 
+import { describe, it, expect, beforeAll } from 'vitest';
 import { compileGenerationGraph } from "../../llm/graph/workflow";
 import { GraphState } from "../../llm/graph/state";
 import { LLMClient } from "../../llm/client";
@@ -6,21 +7,19 @@ import * as dotenv from "dotenv";
 
 dotenv.config();
 
-async function runE2EMock() {
-    console.log("\n🧪 --- TEST: Workflow E2E (Mock Mode) ---");
+describe('MOCK: Workflow E2E', () => {
+    beforeAll(() => {
+        if (!process.env.GEMINI_API_KEY) {
+            process.env.GEMINI_API_KEY = "dummy-test-key";
+        }
+    });
 
-    if (!process.env.GEMINI_API_KEY) {
-        process.env.GEMINI_API_KEY = "dummy-test-key";
-    }
+    it('should run E2E workflow with mocks', async () => {
+        const client = new LLMClient("gemini", "gemini-2.5-flash", true);
+        const userInput = "Test Input";
 
-    const client = new LLMClient("gemini", "gemini-2.5-flash", true);
-    const userInput = "Test Input";
+        const app = compileGenerationGraph();
 
-    const app = compileGenerationGraph();
-
-    console.log("Graph compiled. Invoking with useMock: true...");
-
-    try {
         const result = await app.invoke({
             userInput: userInput
         }, {
@@ -30,19 +29,10 @@ async function runE2EMock() {
             }
         }) as unknown as GraphState;
 
-        console.log("\n📊 --- Results ---");
-
-        if (result.designDoc && result.initialState && result.rules && result.imagePrompt) {
-            console.log("✅ Workflow E2E Mock PASSED");
-        } else {
-            console.error("❌ Workflow E2E Mock FAILED: Missing fields", result);
-            process.exit(1);
-        }
-
-    } catch (error) {
-        console.error("❌ Error running Workflow E2E:", error);
-        process.exit(1);
-    }
-}
-
-runE2EMock();
+        expect(result).toBeDefined();
+        expect(result.designDoc).toBeDefined();
+        expect(result.initialState).toBeDefined();
+        expect(result.rules).toBeDefined();
+        expect(result.imagePrompt).toBeDefined();
+    });
+});
