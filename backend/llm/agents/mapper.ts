@@ -10,8 +10,7 @@ Your input is the Image Prompt (what was asked for) and the Planner's Design Doc
 **Responsibilities:**
 1. **Vision Analysis:** (Simulated) Count the objects in the 'image'.
 2. **State Reconciliation:** Write the *actual* JSON state (\`finalState\`) based on the visual.
-3. **Asset Mapping:** Map IDs to filenames (\`assetMap\`).
-`;
+3. **Asset Mapping:** Map IDs to filenames (\`assetMap\`).`;
 
 const MapperSchema = {
     type: SchemaType.OBJECT,

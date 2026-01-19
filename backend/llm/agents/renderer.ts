@@ -14,8 +14,7 @@ Your goal is to write the React code (\`Game.tsx\`).
 **Responsibilities:**
 1. **Wireframing:** Write the React component.
 2. **Binding:** Connect available state to UI.
-3. **Assets:** Use the provided asset paths.
-`;
+3. **Assets:** Use the provided asset paths.`;
 
 const RendererSchema = {
     type: SchemaType.OBJECT,

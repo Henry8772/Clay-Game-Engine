@@ -8,8 +8,7 @@ Your input is the Planner's Design Doc.
 
 **Responsibilities:**
 1. **Scene Composition:** Generate a detailed image prompt. Enforce spatial separation.
-2. **Visual Inventory:** List what *should* be in the image (array of strings).
-`;
+2. **Visual Inventory:** List what *should* be in the image (array of strings).`;
 
 const ArtistSchema = {
     type: SchemaType.OBJECT,

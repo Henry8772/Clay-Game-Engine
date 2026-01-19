@@ -22,8 +22,7 @@ Return a Markdown string with the following sections:
 ## Game Loop
 ...
 ## Interface Definition
-...
-`;
+...`;
 
 export async function runPlanner(
     client: LLMClient,
@@ -33,26 +32,9 @@ export async function runPlanner(
     const stream = client.streamJson<any>(
         PLANNER_SYSTEM_PROMPT,
         userInput,
-        null, // No strict schema for markdown output, but wait, streamJson expects JSON. 
-        // We should use a text generation method if we want MD. 
-        // However, client.ts only exposes streamJson. 
-        // Let's wrap the MD in a JSON object or modify client to support text.
-        // For now, let's ask for JSON that contains the markdown, or just use streamJson and expect a JSON object with a 'content' field.
+        null,
         "planner_agent"
     );
-
-    // Let's ask for updates to the design doc in JSON format so we can stream it, 
-    // OR we can just use the backend directly if we want text.
-    // But `client.ts` wraps backend. 
-    // Let's check `client.ts` again. It has `streamJson`. 
-    // We will ask for a JSON object: { designDoc: string }
-
-    // Actually, let's just modify the prompt to ask for JSON.
-    /*
-    {
-        "designDoc": "# Game Design Doc..."
-    }
-    */
 
     let finalDoc = "";
     for await (const chunk of stream) {
@@ -63,8 +45,6 @@ export async function runPlanner(
     return finalDoc;
 }
 
-// Adjusted Prompt for JSON output
-// Adjusted Prompt for JSON output
 export const PLANNER_JSON_PROMPT = `
 You are 'The Planner' (Game Designer).
 Your goal is to take a raw user idea and convert it into a concrete 'Game Design Document'.

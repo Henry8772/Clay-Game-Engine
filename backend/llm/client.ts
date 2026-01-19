@@ -108,4 +108,23 @@ export class LLMClient {
             yield item;
         }
     }
+
+    public async generateImage(prompt: string, model: string = "gemini-2.5-flash-image"): Promise<Buffer> {
+        if (this.debugMode) {
+            console.log(`DEBUG: Generating mock image for prompt: ${prompt}`);
+            // Return a simple 1x1 pixel PNG (base64) as mock
+            const mockPng = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==";
+            return Buffer.from(mockPng, 'base64');
+        }
+        return this.backend.generateImage(prompt, model);
+    }
+
+    public async editImage(prompt: string, image: Buffer, model: string = "gemini-2.5-flash-image"): Promise<Buffer> {
+        if (this.debugMode) {
+            console.log(`DEBUG: Editing mock image for prompt: ${prompt}`);
+            const mockPng = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==";
+            return Buffer.from(mockPng, 'base64');
+        }
+        return this.backend.editImage(prompt, image, model);
+    }
 }

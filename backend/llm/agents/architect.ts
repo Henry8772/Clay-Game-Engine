@@ -8,8 +8,7 @@ Your inputs are the Planner's Design Doc.
 
 **Responsibilities:**
 1. **State Generation:** Translate the 'Entity Manifest' into an \`initial_state.json\`.
-2. **Rule Codification:** Translate the 'Game Loop' into \`rules.md\`.
-`;
+2. **Rule Codification:** Translate the 'Game Loop' into \`rules.md\`.`;
 
 const ArchitectSchema = {
     type: SchemaType.OBJECT,

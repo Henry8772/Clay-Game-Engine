@@ -8,6 +8,17 @@ export interface LLMBackend {
         model: string,
         schema?: any // Zod schema or similar, used more for type inference in caller usually
     ): AsyncGenerator<T, void, unknown>;
+
+    generateImage(
+        prompt: string,
+        model: string
+    ): Promise<Buffer>;
+
+    editImage(
+        prompt: string,
+        image: Buffer,
+        model: string
+    ): Promise<Buffer>;
 }
 
 export class GeminiBackend implements LLMBackend {
@@ -61,5 +72,46 @@ export class GeminiBackend implements LLMBackend {
                 }
             }
         }
+    }
+
+    async generateImage(prompt: string, modelName: string): Promise<Buffer> {
+        const model = this.client.getGenerativeModel({ model: modelName });
+        const result = await model.generateContent(prompt);
+        const response = result.response;
+
+        // Check for inlineData (image)
+        if (response.candidates && response.candidates[0].content.parts) {
+            for (const part of response.candidates[0].content.parts) {
+                if (part.inlineData && part.inlineData.data) {
+                    return Buffer.from(part.inlineData.data, 'base64');
+                }
+            }
+        }
+
+        throw new Error("No image data found in response");
+    }
+
+    async editImage(prompt: string, image: Buffer, modelName: string): Promise<Buffer> {
+        const model = this.client.getGenerativeModel({ model: modelName });
+
+        const imagePart = {
+            inlineData: {
+                data: image.toString('base64'),
+                mimeType: "image/png" // Assuming PNG for simplicity, could be parametrized
+            }
+        };
+
+        const result = await model.generateContent([prompt, imagePart]);
+        const response = result.response;
+
+        if (response.candidates && response.candidates[0].content.parts) {
+            for (const part of response.candidates[0].content.parts) {
+                if (part.inlineData && part.inlineData.data) {
+                    return Buffer.from(part.inlineData.data, 'base64');
+                }
+            }
+        }
+
+        throw new Error("No image data found in response");
     }
 }
