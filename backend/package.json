@@ -4,9 +4,9 @@
   "description": "TypeScript port of python/llm",
   "main": "src/index.ts",
   "scripts": {
-    "test": "vitest run",
-    "test:mock": "vitest run --dir test/mock",
-    "test:real": "vitest run --dir test/real"
+    "test": "vitest --ui -t 'MOCK:'",
+    "test:mock": "vitest run -t 'MOCK:'",
+    "test:real": "vitest run -t 'REAL:'"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
