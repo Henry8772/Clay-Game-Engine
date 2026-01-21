@@ -6,7 +6,7 @@ import * as dotenv from "dotenv";
 
 dotenv.config();
 
-describe('MOCK: Game State Extraction', () => {
+describe('MOCK: 00 Game State Extraction', () => {
     let client: LLMClient;
 
     beforeAll(() => {

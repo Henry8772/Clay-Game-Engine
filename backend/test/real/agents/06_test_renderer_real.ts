@@ -6,7 +6,7 @@ import * as dotenv from "dotenv";
 
 dotenv.config();
 
-describe('REAL: Renderer Agent', () => {
+describe('REAL: 06 Renderer Agent', () => {
     let client: LLMClient;
     const shouldRun = process.env.GEMINI_API_KEY && !process.env.GEMINI_API_KEY.includes("dummy");
 

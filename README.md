@@ -37,3 +37,12 @@ The interaction phase manages the runtime execution of the game. It handles the 
 The next stage of development focuses on the implementation of **Adaptive Game UI**.
 
 In current iterations, the UI remains relatively static once generated. The future objective is to enable the Game Engine to request and generate entirely new UI components in real-time. This will allow the frontend to transform dynamically based on game events—for example, shifting the entire control scheme or visual theme instantly as the narrative or mechanical requirements of the game evolve.
+
+
+## Test
+
+```bash
+npm run test # run mock to save token
+npm run test:mock
+npm run test:real
+```
