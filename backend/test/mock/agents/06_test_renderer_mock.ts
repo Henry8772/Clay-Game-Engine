@@ -6,7 +6,7 @@ import * as dotenv from "dotenv";
 
 dotenv.config();
 
-describe('MOCK: Renderer Agent', () => {
+describe('MOCK: 06 Renderer Agent', () => {
     let client: LLMClient;
 
     beforeAll(() => {

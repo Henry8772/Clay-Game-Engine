@@ -3,10 +3,11 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import { LLMClient } from "../../../llm/client";
 import { runPlannerAgent } from "../../../llm/agents/planner";
 import * as dotenv from "dotenv";
+import { MOCK_DESIGN_DOC } from "../../../llm/graph/mocks";
 
 dotenv.config();
 
-describe('MOCK: Planner Agent', () => {
+describe('MOCK: 01 Planner Agent', () => {
     let client: LLMClient;
 
     beforeAll(() => {
@@ -24,6 +25,6 @@ describe('MOCK: Planner Agent', () => {
 
         console.log(`[Mock] Planner Output:`, designDoc);
         expect(designDoc).toBeDefined();
-        expect(designDoc).toContain("Mock");
+        expect(designDoc).toBe(MOCK_DESIGN_DOC);
     });
 });

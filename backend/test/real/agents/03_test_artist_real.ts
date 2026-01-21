@@ -6,7 +6,7 @@ import * as dotenv from "dotenv";
 
 dotenv.config();
 
-describe('REAL: Artist Agent', () => {
+describe('REAL: 03 Artist Agent', () => {
     let client: LLMClient;
     const shouldRun = process.env.GEMINI_API_KEY && !process.env.GEMINI_API_KEY.includes("dummy");
 

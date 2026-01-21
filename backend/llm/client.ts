@@ -34,25 +34,33 @@ export class LLMClient {
         if (!this.debugMode) return null;
 
         // Lazy load mocks to avoid circular dependencies if possible, or just standard import
-        // For simplicity, assuming imports are available at top or we import here using require/import()
-        // But TS synchronous requires top level.
-        // We will add imports to the top of file in a separate step or just hardcode for now for "llm unit" if needed.
-        // Actually, let's use the explicit imports.
+        // Using explicit imports as intended.
+        const {
+            MOCK_DESIGN_DOC,
+            MOCK_INITIAL_STATE,
+            MOCK_RULES,
+            MOCK_IMAGE_PROMPT,
+            MOCK_VISUAL_LAYOUT,
+            MOCK_FINAL_STATE,
+            MOCK_ASSET_MAP,
+            MOCK_REACT_CODE
+        } = await import("./graph/mocks");
+        const { mockGameStateExtraction } = await import("./agents/mocks");
 
         switch (label) {
             case "planner_agent":
                 // We need to return structure matching PlannerSchema
-                return { designDoc: "# Game Design Doc (Mock)" };
+                return { designDoc: MOCK_DESIGN_DOC };
             case "architect_agent":
-                return { initialState: { mock: true }, rules: "Mock Rules" };
+                return { initialState: MOCK_INITIAL_STATE, rules: MOCK_RULES };
             case "artist_agent":
-                return { imagePrompt: "Mock Prompt", visualLayout: ["mock_item"] };
+                return { imagePrompt: MOCK_IMAGE_PROMPT, visualLayout: MOCK_VISUAL_LAYOUT };
             case "mapper_agent":
-                return { finalState: { mock: "final" }, assetMap: { "item": "path.png" } };
+                return { finalState: MOCK_FINAL_STATE, assetMap: MOCK_ASSET_MAP };
             case "renderer_agent":
-                return { reactCode: "export const Game = () => <div />;" };
+                return { reactCode: MOCK_REACT_CODE };
             case "game_state_extraction":
-                return { states: [] };
+                return mockGameStateExtraction();
             default:
                 return null;
         }
