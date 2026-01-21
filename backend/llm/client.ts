@@ -43,7 +43,9 @@ export class LLMClient {
             MOCK_VISUAL_LAYOUT,
             MOCK_FINAL_STATE,
             MOCK_ASSET_MAP,
-            MOCK_REACT_CODE
+            MOCK_REACT_CODE,
+            MOCK_DETECTED_REGIONS,
+            MOCK_RESTORED_ASSETS
         } = await import("./graph/mocks");
         const { mockGameStateExtraction } = await import("./agents/mocks");
 
@@ -55,6 +57,16 @@ export class LLMClient {
                 return { initialState: MOCK_INITIAL_STATE, rules: MOCK_RULES };
             case "artist_agent":
                 return { imagePrompt: MOCK_IMAGE_PROMPT, visualLayout: MOCK_VISUAL_LAYOUT };
+            case "ui_designer":
+                return { imagePrompt: MOCK_IMAGE_PROMPT, visualLayout: MOCK_VISUAL_LAYOUT };
+            case "scene_decomposer":
+                return { detectedRegions: MOCK_DETECTED_REGIONS };
+            case "asset_restorer":
+                // Mocking a single asset restoration response
+                return {
+                    ...MOCK_RESTORED_ASSETS[0],
+                    inpaintingPrompt: "Inpaint this asset on transparent background"
+                };
             case "mapper_agent":
                 return { finalState: MOCK_FINAL_STATE, assetMap: MOCK_ASSET_MAP };
             case "renderer_agent":

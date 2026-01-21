@@ -12,10 +12,28 @@ The generation phase covers the initial creation and setup of the game environme
 
 ### Workflow Components:
 
-- **Planner:** Receives input in the form of game rules (free text) and establishes the functional requirements for the session.
-- **UI Designer & Game Engine:** These modules operate in parallel. The UI Designer generates the visual layout, while the Game Engine outputs the initial **Game State** in a structured data format (JSON).
-- **Segmenter (Nanobana):** Once a scene is generated, the segmenter identifies and isolates individual assets. This allows the system to treat visual elements as discrete objects rather than static pixels.
-- **Individual Segmenting:** Each isolated asset is assigned a unique ID and a text description, ensuring the engine can track and manipulate specific items during gameplay.
+
+
+- **Planner**
+  - **Role:** The strategic "brain" of the session.
+  - **Function:** Receives natural language game rules and establishes functional requirements. It outputs a list of necessary assets (e.g., "We need a mage card, a wooden table, and a coin") to guide the generation downstream, ensuring the visual AI knows exactly what to look for.
+- **UI Designer & Game Engine**
+  - **Role:** Visual targeting and state initialization.
+  - **Function:**
+    - **UI Designer:** Generates a high-fidelity "Target Scene" (a single, cohesive image containing all elements). This serves as the visual reference for the decomposition process.
+    - **Game Engine:** Parallelly outputs the initial **Game State** (JSON), defining the logic and stats for the assets (e.g., `{ "id": "card_mage", "attack": 5 }`) that will soon be visually extracted.
+- **Scene Decomposer (formerly Segmenter)**
+  - **Role:** Semantic identification and masking (Grounded SAM 2).
+  - **Function:** Instead of simple cropping, this module performs **Open Vocabulary Segmentation**. It takes the "Target Scene" and the asset list from the Planner, detects objects (even if they are overlapping), and generates precise **pixel-perfect masks** (silhouettes) for each element, separating foreground objects from the background.
+- **Asset Restorer (formerly Individual Segmenting)**
+  - **Role:** Isolation, Inpainting, and ID Assignment.
+  - **Function:** This module transforms raw masks into game-ready assets using **Generative Inpainting**:
+    1. **Extraction:** Cuts the asset using the generated mask.
+    2. **Restoration:** Uses generative fill to "hallucinate" missing details (e.g., completing the bottom of a card that was hidden behind a UI element) and clean up edge artifacts.
+    3. **Background Healing:** (Optional) Removes the object from the original scene and fills the hole, creating a clean "empty" background layer.
+    4. **Registration:** Assigns the unique ID and description to the final clean PNG, linking it back to the Game Engine's logical state.
+
+
 
 ------
 

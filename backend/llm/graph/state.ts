@@ -27,4 +27,8 @@ export interface GraphState {
 
     // 7. Renderer Output
     reactCode: string | null;
+
+    // New Fields for Advanced Workflow
+    detectedRegions: any[] | null;
+    restoredAssets: any[] | null;
 }

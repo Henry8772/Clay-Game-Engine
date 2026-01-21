@@ -43,3 +43,13 @@ export function Game() {
   return <div>Mock Game</div>;
 }
 `;
+
+export const MOCK_DETECTED_REGIONS = [
+    { label: "chef", box2d: [100, 100, 200, 200], confidence: 0.95 },
+    { label: "conveyor", box2d: [0, 800, 1000, 900], confidence: 0.90 }
+];
+
+export const MOCK_RESTORED_ASSETS = [
+    { id: "chef_1", name: "Sushi Chef", description: "Pixel art chef", imagePath: "assets/chef.png" },
+    { id: "conveyor_belt", name: "Conveyor Belt", description: "Industrial belt", imagePath: "assets/belt.png" }
+];
