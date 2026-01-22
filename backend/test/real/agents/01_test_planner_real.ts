@@ -18,7 +18,7 @@ describe('REAL: 01 Planner Agent', () => {
     });
 
     it.skipIf(!shouldRun)('should generate a design doc from input', async () => {
-        const input = "A simple Pong game.";
+        const input = "A chess game";
         console.log(`[Real] Planner Input: ${input}`);
 
         const designDoc = await runPlannerAgent(client, input);
