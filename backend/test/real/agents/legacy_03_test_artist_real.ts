@@ -26,8 +26,8 @@ Retro 8-bit.
 
         const res = await runArtistAgent(client, designDoc);
 
-        console.log(`[Real] Artist Output Prompt:`, res.imagePrompt);
-        console.log(`[Real] Artist Output Layout:`, res.visualLayout);
+        console.log(`[Real] Artist Output Prompt:\n`, res.imagePrompt);
+        console.log(`[Real] Artist Output Layout:\n`, JSON.stringify(res.visualLayout, null, 2));
 
         expect(res.imagePrompt).toBeDefined();
         expect(Array.isArray(res.visualLayout)).toBe(true);

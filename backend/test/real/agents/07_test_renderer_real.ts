@@ -26,8 +26,7 @@ describe('REAL: 06 Renderer Agent', () => {
 
         const res = await runRendererAgent(client, layout, state, assets);
 
-        console.log(`[Real] Renderer Output Code Length:`, res?.length);
-        console.log(`[Real] Renderer Output Preview:`, res?.substring(0, 50));
+        console.log(`[Real] Renderer Output Code:\n`, res);
 
         expect(res).toBeDefined();
         expect(res).toContain("React");
