@@ -58,6 +58,7 @@ export class LLMClient {
             case "artist_agent":
                 return { imagePrompt: MOCK_IMAGE_PROMPT, visualLayout: MOCK_VISUAL_LAYOUT };
             case "ui_designer":
+            case "ui_prompt_generator":
                 return { imagePrompt: MOCK_IMAGE_PROMPT, visualLayout: MOCK_VISUAL_LAYOUT };
             case "scene_decomposer":
                 return { detectedRegions: MOCK_DETECTED_REGIONS };
