@@ -24,7 +24,7 @@ describe('REAL: 01 Planner Agent', () => {
         const designDoc = await runPlannerAgent(client, input);
 
         console.log(`[Real] Planner Output Length:`, designDoc?.length);
-        console.log(`[Real] Planner Output Preview:`, designDoc?.substring(0, 100));
+        console.log(`[Real] Planner Output Preview:`, designDoc);
 
         expect(designDoc).toBeDefined();
         expect(designDoc.length).toBeGreaterThan(10);

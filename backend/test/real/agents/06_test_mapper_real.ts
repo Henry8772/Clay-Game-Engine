@@ -29,8 +29,8 @@ describe('REAL: 05 Mapper Agent', () => {
         // We simulate the mapping without real image gen (mapper takes prompts to map assets)
         const res = await runMapperAgent(client, prompt, designDoc);
 
-        console.log(`[Real] Mapper Output Final State:`, res.finalState);
-        console.log(`[Real] Mapper Output Asset Map:`, res.assetMap);
+        console.log(`[Real] Mapper Output Final State:\n`, JSON.stringify(res.finalState, null, 2));
+        console.log(`[Real] Mapper Output Asset Map:\n`, JSON.stringify(res.assetMap, null, 2));
 
         expect(res.finalState).toBeDefined();
         expect(res.assetMap).toBeDefined();
