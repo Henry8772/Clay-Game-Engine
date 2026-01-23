@@ -23,12 +23,8 @@ export interface GraphState {
 
     // 6. Mapper Output
     finalState: any | null; // Reconciled JSON
-    assetMap: any | null; // ID to Asset Path/URL map
+    // assetMap: any | null; // REMOVED
 
     // 7. Renderer Output
     reactCode: string | null;
-
-    // New Fields for Advanced Workflow
-    detectedRegions: any[] | null;
-    restoredAssets: any[] | null;
 }

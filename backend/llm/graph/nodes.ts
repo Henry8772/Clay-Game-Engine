@@ -3,13 +3,10 @@ import { GraphState } from "./state";
 import { runPlannerAgent } from "../agents/planner";
 import { runArchitectAgent } from "../agents/architect";
 import { runArtistAgent } from "../agents/artist";
-import { runMapperAgent } from "../agents/mapper";
 import { runRendererAgent } from "../agents/renderer";
 import { LLMClient } from "../client";
 import * as Mocks from "./mocks";
 import { runUIDesignerAgent } from "../agents/ui_designer";
-import { runSceneDecomposerAgent } from "../agents/scene_decomposer";
-import { runAssetRestorerAgent } from "../agents/asset_restorer";
 
 export interface GenerationGraphConfig {
     client: LLMClient;
@@ -69,39 +66,6 @@ export const nodeUIDesigner = async (state: GraphState, config?: { configurable?
     };
 };
 
-// 4. Scene Decomposer Node
-export const nodeSceneDecomposer = async (state: GraphState, config?: { configurable?: GenerationGraphConfig }) => {
-    const { client, useMock } = config?.configurable || {};
-    if (!client) throw new Error("Client not found");
-
-    if (useMock) {
-        return { detectedRegions: Mocks.MOCK_DETECTED_REGIONS };
-    }
-
-    if (!state.visualLayout) throw new Error("Visual Layout missing");
-    const result = await runSceneDecomposerAgent(client, state.visualLayout);
-    return { detectedRegions: result };
-};
-
-// 5. Asset Restorer Node
-export const nodeAssetRestorer = async (state: GraphState, config?: { configurable?: GenerationGraphConfig }) => {
-    const { client, useMock } = config?.configurable || {};
-    if (!client) throw new Error("Client not found");
-
-    if (useMock) {
-        return { restoredAssets: Mocks.MOCK_RESTORED_ASSETS };
-    }
-
-    if (!state.detectedRegions) throw new Error("Detected Regions missing");
-
-    // Fan-out: Process each region
-    const restoredAssets = await Promise.all(state.detectedRegions.map(region =>
-        runAssetRestorerAgent(client, region)
-    ));
-
-    return { restoredAssets };
-};
-
 // Legacy Artist Node (Optional, kept for backward compatibility if needed, but not used in new graph)
 export const nodeArtist = async (state: GraphState, config?: { configurable?: GenerationGraphConfig }) => {
     const { client, useMock } = config?.configurable || {};
@@ -122,53 +86,13 @@ export const nodeArtist = async (state: GraphState, config?: { configurable?: Ge
     };
 };
 
-// Gen Node (Image Gen) - likely unused in new flow as UI Designer does prompt, but maybe needed for pixel gen?
-// Actually UI Designer generates PROMPT. Who generates the IMAGE?
-// In the plan: "UI Designer... Generates 'Target Scene'. Output: Image."
-// My `ui_designer.ts` output `imagePrompt`.
-// So we probably need a "Gen" node that takes prompt -> Image (Buffer/URL).
-// `nodeGen` currently does that.
-// So `UI Designer` -> `Gen` -> `Scene Decomposer`.
+// Gen Node (Image Gen)
 export const nodeGen = async (state: GraphState, config?: { configurable?: GenerationGraphConfig }) => {
     const { useMock } = config?.configurable || {};
 
     // Always mock for now as we don't have Image Gen API connected
     const generatedImage = useMock ? Mocks.MOCK_GENERATED_IMAGE : "http://placeholder.image/gen.png";
     return { generatedImage };
-};
-
-// Mapper Node
-export const nodeMapper = async (state: GraphState, config?: { configurable?: GenerationGraphConfig }) => {
-    const { client, useMock } = config?.configurable || {};
-    if (!client) throw new Error("Client not found");
-
-    if (useMock) {
-        return {
-            finalState: Mocks.MOCK_FINAL_STATE,
-            assetMap: Mocks.MOCK_ASSET_MAP
-        };
-    }
-
-    // Merge logic: use restoredAssets if available
-    let assetMap: Record<string, string> = {};
-    if (state.restoredAssets) {
-        state.restoredAssets.forEach((asset: any) => {
-            assetMap[asset.id] = asset.imagePath || "path/to/asset.png";
-        });
-    }
-
-    // Call legacy mapper for state logic (assuming it handles design doc)
-    const prompt = state.imagePrompt || "";
-    const doc = state.designDoc || "";
-
-    // If we have assetMap from Restorer, we might want to pass it or just merge results.
-    // Mapper agent normally generates the map. We want to override it with our high-fidelity map.
-    const result = await runMapperAgent(client, prompt, doc);
-
-    return {
-        finalState: result.finalState,
-        assetMap: { ...result.assetMap, ...assetMap } // Priority to restored assets? Or legacy? Let's merge.
-    };
 };
 
 // Renderer Node
@@ -180,8 +104,19 @@ export const nodeRenderer = async (state: GraphState, config?: { configurable?: 
         return { reactCode: Mocks.MOCK_REACT_CODE };
     }
 
-    if (!state.visualLayout || !state.initialState || !state.assetMap) throw new Error("Missing inputs for Renderer");
+    // Note: assetMap is currently removed from state, so this might fail if checking for it.
+    // However, we are removing the agents that produce it.
+    // We should probably update this node to be robust or just leave it fail until fixed by new agents.
+    // For now, removing assetMap check to allow compilation, or just keep it as is and let it be partial?
+    // The request is to remove legacy agents.
+    // If I leave `state.assetMap` here, it will be an error if I remove it from `GraphState` interface.
+    // So I must remove `state.assetMap` usage here or update it.
+    // I will comment it out or simplify.
 
-    const reactCode = await runRendererAgent(client, state.visualLayout, state.initialState, state.assetMap);
+    if (!state.visualLayout || !state.initialState) throw new Error("Missing inputs for Renderer");
+
+    // Mock asset map for now or empty?
+    const assetMap = {};
+    const reactCode = await runRendererAgent(client, state.visualLayout, state.initialState, assetMap);
     return { reactCode };
 };

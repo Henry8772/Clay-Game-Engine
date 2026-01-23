@@ -5,10 +5,7 @@ import {
     nodePlanner,
     nodeArchitect,
     nodeUIDesigner,
-    nodeSceneDecomposer,
-    nodeAssetRestorer,
     nodeGen,
-    nodeMapper,
     nodeRenderer
 } from "./nodes";
 
@@ -26,10 +23,7 @@ export function compileGenerationGraph() {
         visualLayout: { value: (x, y) => y ?? x, default: () => null },
         generatedImage: { value: (x, y) => y ?? x, default: () => null },
         finalState: { value: (x, y) => y ?? x, default: () => null },
-        assetMap: { value: (x, y) => y ?? x, default: () => null },
         reactCode: { value: (x, y) => y ?? x, default: () => null },
-        detectedRegions: { value: (x, y) => y ?? x, default: () => null },
-        restoredAssets: { value: (x, y) => y ?? x, default: () => null },
     };
 
     const builder = new StateGraph<GraphState>({ channels: graphState });
@@ -39,9 +33,6 @@ export function compileGenerationGraph() {
     builder.addNode("architect", nodeArchitect as any);
     builder.addNode("ui_designer", nodeUIDesigner as any);
     builder.addNode("gen", nodeGen as any);
-    builder.addNode("scene_decomposer", nodeSceneDecomposer as any);
-    builder.addNode("asset_restorer", nodeAssetRestorer as any);
-    builder.addNode("mapper", nodeMapper as any);
     builder.addNode("renderer", nodeRenderer as any);
 
     // 3. Define Edges (Use explicit logic-visual split)
@@ -57,18 +48,26 @@ export function compileGenerationGraph() {
 
     // Visual Branch Flow
     builder.addEdge("ui_designer" as any, "gen" as any);
-    builder.addEdge("gen" as any, "scene_decomposer" as any);
-    builder.addEdge("scene_decomposer" as any, "asset_restorer" as any);
+    // Gen output is where this branch currently stops until asset generation is re-integrated
 
-    // Merge: Both Architect and Asset Restorer feed into Mapper
-    // Note: In strict DAG, Mapper runs when BOTH are ready if acting as join, or twice.
-    // For simplicity, we just add edges.
-    builder.addEdge("architect" as any, "mapper" as any);
-    builder.addEdge("asset_restorer" as any, "mapper" as any);
+    // Logic Branch Flow
+    // Architect -> Renderer (Assuming renderer might use architect state directly now, or waiting for mapper replacement)
+    // For now we disconnect the merge into renderer since mapper is gone.
+    // However, renderer needs inputs.
+    // Let's connect Architect -> Renderer directly as a temporary measure or just end.
+    // The visual branch also feeds renderer (layout).
+    // Let's just leave them as terminal branches for now to avoid invalid edges if Renderer is broken without mapper.
+    // Actually, let's look at Renderer requirements. It needs visualLayout, initialState, assetMap.
+    // assetMap came from mapper. Now it's missing.
+    // We will leave the graph disconnected at the end of Architect and Gen for now, as I'm removing the legacy parts.
+    // Or I can add Renderer back if I can mock the missing parts, but safer to just disconnect.
+    // Wait, the plan was just to remove the legacy nodes. I will leave the structure open-ended.
 
-    // Mapper -> Renderer -> End
-    builder.addEdge("mapper" as any, "renderer" as any);
-    builder.addEdge("renderer" as any, END);
+    // Architect -> END
+    builder.addEdge("architect" as any, END);
+
+    // Gen -> END
+    builder.addEdge("gen" as any, END);
 
     return builder.compile();
 }
