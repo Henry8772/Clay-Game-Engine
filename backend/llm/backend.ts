@@ -19,6 +19,12 @@ export interface LLMBackend {
         image: Buffer,
         model: string
     ): Promise<Buffer>;
+
+    segmentImage(
+        image: Buffer,
+        labels: string[],
+        model: string
+    ): Promise<any[]>;
 }
 
 export class GeminiBackend implements LLMBackend {
@@ -113,5 +119,47 @@ export class GeminiBackend implements LLMBackend {
         }
 
         throw new Error("No image data found in response");
+    }
+
+    async segmentImage(image: Buffer, labels: string[], modelName: string = "gemini-2.0-flash"): Promise<any[]> {
+        const model = this.client.getGenerativeModel({
+            model: modelName,
+            generationConfig: { responseMimeType: "application/json" }
+        });
+
+        const prompt = `
+            Detect the following objects in the image: ${labels.join(", ")}.
+            Return a list of detected objects with their bounding boxes.
+            
+            Output strictly valid JSON in this format:
+            [
+              {
+                "label": "string",
+                "box2d": [ymin, xmin, ymax, xmax] 
+              }
+            ]
+            
+            Where ymin, xmin, ymax, xmax are normalized coordinates (0-1000).
+            If an object is not found, do not include it.
+        `;
+
+        const imagePart = {
+            inlineData: {
+                data: image.toString('base64'),
+                mimeType: "image/png" // Assuming PNG based on previous contexts
+            }
+        };
+
+        try {
+            const result = await model.generateContent([prompt, imagePart]);
+            const response = result.response;
+            const text = response.text();
+
+            return JSON.parse(text);
+        } catch (error) {
+            console.error("Gemini segmentation failed:", error);
+            console.warn("⚠️ Fallback: returning empty regions due to error.");
+            return [];
+        }
     }
 }

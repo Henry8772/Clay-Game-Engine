@@ -23,7 +23,7 @@ The generation phase covers the initial creation and setup of the game environme
     - **UI Designer:** Generates a high-fidelity "Target Scene" (a single, cohesive image containing all elements). This serves as the visual reference for the decomposition process.
     - **Game Engine:** Parallelly outputs the initial **Game State** (JSON), defining the logic and stats for the assets (e.g., `{ "id": "card_mage", "attack": 5 }`) that will soon be visually extracted.
 - **Scene Decomposer (formerly Segmenter)**
-  - **Role:** Semantic identification and masking (Grounded SAM 2).
+  - **Role:** Semantic identification and masking.
   - **Function:** Instead of simple cropping, this module performs **Open Vocabulary Segmentation**. It takes the "Target Scene" and the asset list from the Planner, detects objects (even if they are overlapping), and generates precise **pixel-perfect masks** (silhouettes) for each element, separating foreground objects from the background.
 - **Asset Restorer (formerly Individual Segmenting)**
   - **Role:** Isolation, Inpainting, and ID Assignment.
