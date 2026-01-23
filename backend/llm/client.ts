@@ -148,4 +148,13 @@ export class LLMClient {
         }
         return this.backend.editImage(prompt, image, model);
     }
+
+    public async segmentImage(image: Buffer, labels: string[], model: string = "gemini-2.5-flash"): Promise<any[]> {
+        if (this.debugMode) {
+            console.log(`DEBUG: Segmenting image for labels: ${labels.join(", ")}`);
+            const mockRegions = await this.tryGetMock("scene_decomposer");
+            return mockRegions?.detectedRegions || [];
+        }
+        return this.backend.segmentImage(image, labels, model);
+    }
 }

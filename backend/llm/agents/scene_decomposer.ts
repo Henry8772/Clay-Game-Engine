@@ -42,24 +42,14 @@ export interface DetectedRegion {
 
 export async function runSceneDecomposerAgent(
     client: LLMClient,
-    assetList: string[]
+    assetList: string[],
+    image: Buffer
 ): Promise<DetectedRegion[]> {
-    // Note: In a real system, we would pass the Image Buffer to the multimodal LLM.
-    // Here, we pass the asset list as a proxy for what to "look for".
-    const input = `Find these assets in the scene: ${assetList.join(", ")}`;
+    console.log("🔍 Scene Decomposer: Segmenting image for assets:", assetList.length);
 
-    const stream = client.streamJson<{ detectedRegions: DetectedRegion[] }>(
-        SCENE_DECOMPOSER_PROMPT,
-        input,
-        SceneDecomposerSchema,
-        "scene_decomposer"
-    );
+    // We pass the image and the asset list to the client which handles the multimodal call
+    // (or returns mock data in debug mode)
+    const regions = await client.segmentImage(image, assetList);
 
-    let regions: DetectedRegion[] = [];
-    for await (const chunk of stream) {
-        if (chunk && chunk.detectedRegions) {
-            regions = chunk.detectedRegions;
-        }
-    }
     return regions;
 }
