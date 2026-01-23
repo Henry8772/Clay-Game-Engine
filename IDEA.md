@@ -14,25 +14,20 @@ The generation phase covers the initial creation and setup of the game environme
 
 
 
-- **Planner**
-  - **Role:** The strategic "brain" of the session.
+- **Planner** (Step 01)
   - **Function:** Receives natural language game rules and establishes functional requirements. It outputs a list of necessary assets (e.g., "We need a mage card, a wooden table, and a coin") to guide the generation downstream, ensuring the visual AI knows exactly what to look for.
-- **UI Designer & Game Engine**
-  - **Role:** Visual targeting and state initialization.
+- **Architect** (Step 02A)
+  - **Function:** Parallelly outputs the initial **Game State** (JSON), defining the logic and stats for the assets (e.g., `{ "id": "card_mage", "attack": 5 }`) that will soon be visually extracted.
+- **Game Designer** (Step 02B)
   - **Function:**
-    - **UI Designer:** Generates a high-fidelity "Target Scene" (a single, cohesive image containing all elements). This serves as the visual reference for the decomposition process.
-    - **Game Engine:** Parallelly outputs the initial **Game State** (JSON), defining the logic and stats for the assets (e.g., `{ "id": "card_mage", "attack": 5 }`) that will soon be visually extracted.
-- **Scene Decomposer (formerly Segmenter)**
-  - **Role:** Semantic identification and masking.
-  - **Function:** Instead of simple cropping, this module performs **Open Vocabulary Segmentation**. It takes the "Target Scene" and the asset list from the Planner, detects objects (even if they are overlapping), and generates precise **pixel-perfect masks** (silhouettes) for each element, separating foreground objects from the background.
-- **Asset Restorer (formerly Individual Segmenting)**
-  - **Role:** Isolation, Inpainting, and ID Assignment.
-  - **Function:** This module transforms raw masks into game-ready assets using **Generative Inpainting**:
-    1. **Extraction:** Cuts the asset using the generated mask.
-    2. **Restoration:** Uses generative fill to "hallucinate" missing details (e.g., completing the bottom of a card that was hidden behind a UI element) and clean up edge artifacts.
-    3. **Background Healing:** (Optional) Removes the object from the original scene and fills the hole, creating a clean "empty" background layer.
-    4. **Registration:** Assigns the unique ID and description to the final clean PNG, linking it back to the Game Engine's logical state.
-
+    -  Generates a high-fidelity "Target Scene" (a single, cohesive image containing all elements). This serves as the visual reference for the decomposition process.
+- **Assert Generator** (Step 02B-1)
+  - **Function:**
+    -  Take the `Game Designer` generated scene image as refernce, to genereate a image for the asset.
+-  **Game Frontend Genertor** (Step 03)
+  - **Function:**
+    -  Take the state from architect and entity list from Architect, ensure each state can be plug into the frontend typescript code, as each entity is linked by asset, the frontend should be able to render the asset based on the state.
+-  
 
 
 ------
