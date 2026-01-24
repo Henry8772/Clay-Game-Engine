@@ -18,24 +18,18 @@ describe('REAL: 03 UI Designer Agent', () => {
     });
 
     it.skipIf(!shouldRun)('should generate target scene prompt and layout', async () => {
-        const designDoc = `# Chess Game Design Document
+        const fs = await import("fs");
+        const path = await import("path");
+        const chainDir = path.resolve(__dirname, "../../../.tmp/real_chain");
+        const inputFile = path.join(chainDir, "design_doc.json");
+        const outputPath = path.join(chainDir, "ui_designer_output.json");
+        const outputImagePath = path.join(chainDir, "ui_designer_output.png");
 
-## Theme & Atmosphere
-*   **Vibe:** Timeless strategic duel, focused on intellect and calculated moves.
-*   **Visual Style:** High-quality **Pixel Art** with a clean, classic aesthetic. Pieces are easily distinguishable with subtle animations for movement and capture. Board squares have clear light/dark contrast.
+        let designDoc = "";
 
-## Entity Manifest
-*   **Game Board:** 8x8 grid of alternating light and dark squares.
-*   **Chess Pieces (White & Black, 6 types each):**
-    *   King
-    *   Queen
-    *   Rook
-    *   Bishop
-    *   Knight
-    *   Pawn
-*   **Player Indicators:** Visual cues for whose turn it is.
-*   **Captured Pieces Display:** Area to show pieces taken by each player.
-*   **Game Over/Win/Draw Message:** Pop-up or banner display.`;
+        const data = JSON.parse(fs.readFileSync(inputFile, "utf-8"));
+        designDoc = data.designDoc;
+        console.log(`[Real] Loaded design doc from chain: ${designDoc.substring(0, 50)}...`);
         console.log(`[Real] UI Designer Input Length: ${designDoc.length}`);
 
         const result = await runUIDesignerAgent(client, designDoc);
@@ -49,14 +43,20 @@ describe('REAL: 03 UI Designer Agent', () => {
         expect(result.image).toBeDefined();
         expect(result.image).toBeInstanceOf(Buffer);
 
-        const fs = await import("fs");
-        const path = await import("path");
-        const outputPath = path.resolve(__dirname, "../../../.tmp/ui_designer_output.png");
-        const dirname = path.dirname(outputPath);
-        if (!fs.existsSync(dirname)) {
-            fs.mkdirSync(dirname, { recursive: true });
+        expect(result.image).toBeInstanceOf(Buffer);
+
+        if (!fs.existsSync(chainDir)) {
+            fs.mkdirSync(chainDir, { recursive: true });
         }
-        fs.writeFileSync(outputPath, result.image);
-        console.log(`[Real] Image saved to: ${outputPath}`);
+        fs.writeFileSync(outputImagePath, result.image);
+        console.log(`[Real] Image saved to: ${outputImagePath}`);
+
+        const outputData = {
+            ...result,
+            imagePath: outputImagePath,
+            image: undefined // Don't save buffer to JSON
+        };
+        fs.writeFileSync(outputPath, JSON.stringify(outputData, null, 2));
+        console.log(`[Real] Saved UI Designer output to: ${outputPath}`);
     });
 });
