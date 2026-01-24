@@ -12,22 +12,26 @@ The generation phase covers the initial creation and setup of the game environme
 
 ### Workflow Components:
 
-
-
 - **Planner** (Step 01)
   - **Function:** Receives natural language game rules and establishes functional requirements. It outputs a list of necessary assets (e.g., "We need a mage card, a wooden table, and a coin") to guide the generation downstream, ensuring the visual AI knows exactly what to look for.
 - **Architect** (Step 02A)
-  - **Function:** Parallelly outputs the initial **Game State** (JSON), defining the logic and stats for the assets (e.g., `{ "id": "card_mage", "attack": 5 }`) that will soon be visually extracted.
+  - **Inputs:** Planner Design Doc.
+  - **Output:**
+    - **Game Rules:** Free text description of mechanics.
+    - **Initial State:** JSON object defining the game logic (e.g., stats).
+    - **Entity List:** Structured list of entities, each with an `id`, `name`, and **Visual Prompt** (e.g., "A pixel art white knight chess piece...").
 - **Game Designer** (Step 02B)
   - **Function:**
     -  Generates a high-fidelity "Target Scene" (a single, cohesive image containing all elements). This serves as the visual reference for the decomposition process.
-- **Assert Generator** (Step 02B-1)
+- **Asset Generator Swarm** (Step 02B-1)
   - **Function:**
-    -  Take the `Game Designer` generated scene image as refernce, to genereate a image for the asset.
--  **Game Frontend Genertor** (Step 03)
+    -  Takes the `Entity List` from the Architect and the `Target Scene` from the Game Designer.
+    -  **Parallel Execution:** Runs an **Asset Generator** agent for *each* entity in the list.
+    -  **Action:** Extracts/Generates the specific asset image using the `Visual Prompt` and the reference scene.
+    -  **Output:** An `Asset Map` linking `entity.id` to the generated image.
+-  **Game Frontend Generator** (Step 03)
   - **Function:**
-    -  Take the state from architect and entity list from Architect, ensure each state can be plug into the frontend typescript code, as each entity is linked by asset, the frontend should be able to render the asset based on the state.
--  
+    -  Take the state from architect and asset map, ensure each state can be plug into the frontend typescript code. As each entity is linked by asset ID, the frontend can render the correct asset for each game state object.  
 
 
 ------

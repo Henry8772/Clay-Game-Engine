@@ -63,8 +63,14 @@ describe('REAL: 02 Architect Agent', () => {
 
         console.log(`[Real] Architect Output State:\n`, JSON.stringify(res.initialState, null, 2));
         console.log(`[Real] Architect Output Rules:\n`, res.rules);
+        console.log(`[Real] Architect Output Entity List:\n`, JSON.stringify(res.entityList, null, 2));
 
         expect(res.initialState).toBeDefined();
         expect(res.rules).toBeDefined();
-    });
+        expect(res.entityList).toBeDefined();
+        expect(Array.isArray(res.entityList)).toBe(true);
+        expect(res.entityList.length).toBeGreaterThan(0);
+        expect(res.entityList[0].visualPrompt).toBeDefined();
+        expect(res.entityList[0].visualPrompt).toBeDefined();
+    }, 120000);
 });

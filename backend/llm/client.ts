@@ -45,7 +45,8 @@ export class LLMClient {
             MOCK_ASSET_MAP,
             MOCK_REACT_CODE,
             MOCK_DETECTED_REGIONS,
-            MOCK_RESTORED_ASSETS
+            MOCK_RESTORED_ASSETS,
+            MOCK_ENTITY_LIST
         } = await import("./graph/mocks");
         const { mockGameStateExtraction } = await import("./agents/mocks");
 
@@ -54,7 +55,11 @@ export class LLMClient {
                 // We need to return structure matching PlannerSchema
                 return { designDoc: MOCK_DESIGN_DOC };
             case "architect_agent":
-                return { initialState: MOCK_INITIAL_STATE, rules: MOCK_RULES };
+                return {
+                    initialState: JSON.stringify(MOCK_INITIAL_STATE),
+                    rules: MOCK_RULES,
+                    entityList: MOCK_ENTITY_LIST
+                };
             case "artist_agent":
                 return { imagePrompt: MOCK_IMAGE_PROMPT, visualLayout: MOCK_VISUAL_LAYOUT };
             case "ui_designer":

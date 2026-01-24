@@ -20,12 +20,15 @@ describe('MOCK: 02 Architect Agent', () => {
         const designDoc = "Design Doc Mock";
         console.log(`[Mock] Architect Input: ${designDoc}`);
 
-        const { initialState, rules } = await runArchitectAgent(client, designDoc);
+        const { initialState, rules, entityList } = await runArchitectAgent(client, designDoc);
 
         console.log(`[Mock] Architect Output State:`, initialState);
         console.log(`[Mock] Architect Output Rules:`, rules);
+        console.log(`[Mock] Architect Output Entity List:`, entityList);
 
         expect(initialState).toBeDefined();
         expect(rules).toBeDefined();
+        expect(entityList).toBeDefined();
+        expect(Array.isArray(entityList)).toBe(true);
     });
 });

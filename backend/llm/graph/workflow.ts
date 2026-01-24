@@ -6,6 +6,7 @@ import {
     nodeArchitect,
     nodeUIDesigner,
     nodeGen,
+    nodeAssetGenSwarm,
     nodeRenderer
 } from "./nodes";
 
@@ -23,6 +24,8 @@ export function compileGenerationGraph() {
         visualLayout: { value: (x, y) => y ?? x, default: () => null },
         generatedImage: { value: (x, y) => y ?? x, default: () => null },
         finalState: { value: (x, y) => y ?? x, default: () => null },
+        assetMap: { value: (x, y) => y ?? x, default: () => null },
+        entityList: { value: (x, y) => y ?? x, default: () => null },
         reactCode: { value: (x, y) => y ?? x, default: () => null },
     };
 
