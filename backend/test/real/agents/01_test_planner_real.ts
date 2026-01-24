@@ -28,5 +28,16 @@ describe('REAL: 01 Planner Agent', () => {
 
         expect(designDoc).toBeDefined();
         expect(designDoc.length).toBeGreaterThan(10);
+
+        // Save output for chaining
+        const fs = await import("fs");
+        const path = await import("path");
+        const outDir = path.resolve(__dirname, "../../../.tmp/real_chain");
+        if (!fs.existsSync(outDir)) {
+            fs.mkdirSync(outDir, { recursive: true });
+        }
+        const outFile = path.join(outDir, "design_doc.json");
+        fs.writeFileSync(outFile, JSON.stringify({ designDoc }, null, 2));
+        console.log(`[Real] Saved design doc to: ${outFile}`);
     });
 });
