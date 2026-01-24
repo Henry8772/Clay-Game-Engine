@@ -1,24 +1,24 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Game, INITIAL_STATE, GAME_RULES } from "../generated/game-slot";
 import { generateGameAction } from "../actions/generate";
 import { processGameMoveAction } from "../actions/game-move";
+import { useQuery, useMutation } from "convex/react";
+import { api } from "../../convex/_generated/api";
 
 export default function PlayPage() {
     const [prompt, setPrompt] = useState("");
     const [isGenerating, setIsGenerating] = useState(false);
 
-    // Game State Management
-    const [currentGameState, setCurrentGameState] = useState<any>(INITIAL_STATE);
+    // Convex State Management
+    const gameStateFromConvex = useQuery(api.games.get);
     const [chatInput, setChatInput] = useState("");
-    const [chatMessages, setChatMessages] = useState<{ role: 'user' | 'agent', content: string }[]>([]);
     const [isProcessingMove, setIsProcessingMove] = useState(false);
 
-    // Update state when INITIAL_STATE changes (e.g. after loading test)
-    useEffect(() => {
-        setCurrentGameState(INITIAL_STATE);
-    }, [INITIAL_STATE]);
+    // Derived State
+    const currentGameState = gameStateFromConvex?.state || INITIAL_STATE;
+    const history = gameStateFromConvex?.history || [];
 
     const handleGenerate = async () => {
         if (!prompt) return;
@@ -27,8 +27,6 @@ export default function PlayPage() {
             const result = await generateGameAction(prompt);
             if (result.success) {
                 console.log("Game generated successfully!");
-                // Note: This forces a refresh because the generate action overwrites the file.
-                // Ideally we should reload or the HMR handles it.
             } else {
                 console.error("Failed to generate game");
             }
@@ -44,23 +42,21 @@ export default function PlayPage() {
 
         const input = chatInput;
         setChatInput("");
-        setChatMessages(prev => [...prev, { role: 'user', content: input }]);
         setIsProcessingMove(true);
 
         try {
-            // Use current state and rules using the agent
-            const rules = GAME_RULES || "Standard game rules";
+            // Optimistic update could go here, but for now we rely on the server action + convex sync
+            const rules = gameStateFromConvex?.rules || GAME_RULES || "Standard game rules";
             const result = await processGameMoveAction(currentGameState, rules, input);
             const res = result as any;
 
-            if (res.success && res.newState) {
-                setCurrentGameState(res.newState);
-                setChatMessages(prev => [...prev, { role: 'agent', content: res.summary }]);
-            } else {
-                setChatMessages(prev => [...prev, { role: 'agent', content: "Error: " + (res.error || res.summary || "Unknown error") }]);
+            if (!res.success) {
+                // We could push a local error message to a toast or local state
+                console.error("Move failed:", res.error);
             }
+            // State update happens automatically via Convex subscription
         } catch (e) {
-            setChatMessages(prev => [...prev, { role: 'agent', content: "System Error: " + String(e) }]);
+            console.error("System Error:", e);
         } finally {
             setIsProcessingMove(false);
         }
@@ -68,7 +64,7 @@ export default function PlayPage() {
 
     return (
         <div className="flex flex-col items-center min-h-screen p-8 gap-8">
-            <h1 className="text-3xl font-bold">AI Game Generator & Agent</h1>
+            <h1 className="text-3xl font-bold">AI Game Generator & Agent (Convex Synced)</h1>
 
             <div className="w-full max-w-2xl flex gap-4">
                 <input
@@ -93,8 +89,6 @@ export default function PlayPage() {
                         const res = await loadTestGameAction();
                         if (res.success) {
                             console.log("Loaded test game!");
-                            // We might need to reload to pick up the new const exports if HMR doesn't handle non-component exports well?
-                            // But usually it's fine.
                         } else {
                             alert("Failed to load test game: " + res.error);
                         }
@@ -128,10 +122,10 @@ export default function PlayPage() {
                 <div className="w-80 border border-gray-700 bg-gray-900 text-white rounded-xl p-4 flex flex-col h-[600px]">
                     <h2 className="text-xl font-bold mb-4">Game Agent</h2>
                     <div className="flex-1 overflow-y-auto mb-4 space-y-2 pr-2">
-                        {chatMessages.length === 0 && (
+                        {history.length === 0 && (
                             <div className="text-gray-500 italic text-sm">Send a move command to start...</div>
                         )}
-                        {chatMessages.map((msg, i) => (
+                        {history.map((msg: any, i: number) => (
                             <div key={i} className={`p-3 rounded-lg text-sm max-w-[90%] ${msg.role === 'user' ? 'bg-blue-600 self-end ml-auto' : 'bg-gray-700 self-start mr-auto'}`}>
                                 {msg.content}
                             </div>
