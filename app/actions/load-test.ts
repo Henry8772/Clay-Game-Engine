@@ -1,6 +1,8 @@
 "use server";
 import fs from "fs";
 import path from "path";
+import { fetchMutation } from "convex/nextjs";
+import { api } from "../../convex/_generated/api";
 
 const TMP_DIR = path.join(process.cwd(), "backend", ".tmp", "real_chain");
 const RENDERER_OUTPUT_PATH = path.join(TMP_DIR, "renderer_output.tsx");
@@ -39,6 +41,14 @@ export async function loadTestGameAction() {
         if (!initialState) {
             return { success: false, error: "No initialState in architect output." };
         }
+
+        // --- CONVEX SEEDING ---
+        console.log("Seeding Convex DB...");
+        await fetchMutation(api.games.reset, {
+            initialState: initialState,
+            rules: architectData.rules || "Standard rules",
+        });
+        // ----------------------
 
         // 4. Handle Assets
         console.log("Processing assets...");
@@ -117,12 +127,35 @@ export async function loadTestGameAction() {
             return { success: false, error: "Could not rename Game component." };
         }
 
+        // Inject useEffect for internal state sync
+        // Locate useState<GameState>(initialState); or similar and inject useEffect
+        // Note: The previous task planned to add useEffect here. 
+        // PROMPT: "Inject Logic: Add a step to inject a useEffect hook into the _Game component."
+        // We do this by regex replacement on the final string.
+
+        // Find the start of the component to inject imports if needed, but we already added 'use client'
+
+        // Find: useState<GameState>(initialState);
+        // Replace with: useState<GameState>(initialState); useEffect(() => { setGameState(initialState); }, [initialState]);
+
+        if (finalCode.includes("useState<GameState>(initialState)")) {
+            finalCode = finalCode.replace(
+                "useState<GameState>(initialState);",
+                "useState<GameState>(initialState); useEffect(() => { setGameState(initialState); }, [initialState]);"
+            );
+        } else if (finalCode.includes("useState(initialState)")) {
+            finalCode = finalCode.replace(
+                "useState(initialState);",
+                "useState(initialState); useEffect(() => { setGameState(initialState); }, [initialState]);"
+            );
+        }
+
+
         const wrapper = `
     export const Game = (props: { initialState?: any, assetMap?: any }) => {
         const state = props.initialState || INITIAL_STATE;
         const assets = props.assetMap || ASSET_MAP;
-        // Key forces re-mount when state changes to ensure _Game's useState picks up the new value
-        return <_Game key={JSON.stringify(state)} initialState={state} assetMap={assets} />;
+        return <_Game initialState={state} assetMap={assets} />;
     };
     `;
 
