@@ -74,8 +74,9 @@ export async function loadTestGameAction() {
 
         // Constants Injection
         const constants = `
-    const INITIAL_STATE = ${JSON.stringify(initialState)};
-    const ASSET_MAP = ${JSON.stringify(newAssetMap)};
+    export const INITIAL_STATE = ${JSON.stringify(initialState)};
+    export const ASSET_MAP = ${JSON.stringify(newAssetMap)};
+    export const GAME_RULES = ${JSON.stringify(architectData.rules || "Standard game rules")};
     `;
 
         // Replacement Logic - Use Regex for flexibility
@@ -117,8 +118,11 @@ export async function loadTestGameAction() {
         }
 
         const wrapper = `
-    export const Game = () => {
-        return <_Game initialState={INITIAL_STATE} assetMap={ASSET_MAP} />;
+    export const Game = (props: { initialState?: any, assetMap?: any }) => {
+        const state = props.initialState || INITIAL_STATE;
+        const assets = props.assetMap || ASSET_MAP;
+        // Key forces re-mount when state changes to ensure _Game's useState picks up the new value
+        return <_Game key={JSON.stringify(state)} initialState={state} assetMap={assets} />;
     };
     `;
 
