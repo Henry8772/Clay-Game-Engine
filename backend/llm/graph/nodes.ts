@@ -55,15 +55,32 @@ export const nodeUIDesigner = async (state: GraphState, config?: { configurable?
     if (useMock) {
         return {
             imagePrompt: Mocks.MOCK_IMAGE_PROMPT,
-            visualLayout: Mocks.MOCK_VISUAL_LAYOUT
+            visualLayout: Mocks.MOCK_VISUAL_LAYOUT,
+            generatedImage: Mocks.MOCK_GENERATED_IMAGE
         };
     }
 
     if (!state.designDoc) throw new Error("Design Doc missing");
     const result = await runUIDesignerAgent(client, state.designDoc);
+
+    // Save image to a temporary path for downstream consumption (Asset Swarm)
+    let generatedImagePath: string | null = null;
+    if (result.image) {
+        const fs = await import("fs");
+        const path = await import("path");
+        const tmpDir = path.resolve(process.cwd(), ".tmp/generated");
+        if (!fs.existsSync(tmpDir)) {
+            fs.mkdirSync(tmpDir, { recursive: true });
+        }
+        generatedImagePath = path.join(tmpDir, `scene_${Date.now()}.png`);
+        fs.writeFileSync(generatedImagePath, result.image);
+        console.log(`[Nodes] Saved generated scene to: ${generatedImagePath}`);
+    }
+
     return {
         imagePrompt: result.imagePrompt,
-        visualLayout: result.visualLayout
+        visualLayout: result.visualLayout,
+        generatedImage: generatedImagePath
     };
 };
 
@@ -141,14 +158,7 @@ export const nodeAssetGenSwarm = async (state: GraphState, config?: { configurab
     return { assetMap };
 };
 
-// Gen Node (Image Gen)
-export const nodeGen = async (state: GraphState, config?: { configurable?: GenerationGraphConfig }) => {
-    const { useMock } = config?.configurable || {};
 
-    // Always mock for now as we don't have Image Gen API connected
-    const generatedImage = useMock ? Mocks.MOCK_GENERATED_IMAGE : "http://placeholder.image/gen.png";
-    return { generatedImage };
-};
 
 // Renderer Node
 export const nodeRenderer = async (state: GraphState, config?: { configurable?: GenerationGraphConfig }) => {

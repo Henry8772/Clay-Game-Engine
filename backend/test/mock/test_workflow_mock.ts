@@ -34,5 +34,9 @@ describe('MOCK: Workflow E2E', () => {
         expect(result.initialState).toBeDefined();
         expect(result.rules).toBeDefined();
         expect(result.imagePrompt).toBeDefined();
+        expect(result.generatedImage).toBeDefined();
+        expect(result.assetMap).toBeDefined();
+        expect(Object.keys(result.assetMap || {}).length).toBeGreaterThan(0);
+        expect(result.reactCode).toBeDefined();
     });
 });

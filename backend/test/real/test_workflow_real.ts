@@ -36,7 +36,23 @@ describe('REAL: Workflow E2E', () => {
         console.log("Summary:", {
             designDocLength: result.designDoc?.length,
             rules: result.rules ? "Present" : "Missing",
+            generatedImage: result.generatedImage,
+            assetCount: result.assetMap ? Object.keys(result.assetMap).length : 0,
             reactCodeLength: result.reactCode?.length
         });
+
+        // Debug output for manual verification
+        const fs = await import("fs");
+        const path = await import("path");
+        const outDir = path.resolve(__dirname, "../../../.tmp/real_chain");
+        if (!fs.existsSync(outDir)) {
+            fs.mkdirSync(outDir, { recursive: true });
+        }
+        fs.writeFileSync(path.join(outDir, "workflow_output.json"), JSON.stringify(result, null, 2));
+
+        if (result.reactCode) {
+            fs.writeFileSync(path.join(outDir, "renderer_output.tsx"), result.reactCode);
+        }
+
     }, 60000); // Set timeout to 60s
 });
