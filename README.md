@@ -51,4 +51,10 @@ npx convex dev
 
 ```sh
 npm run dev
+## Test
+
+```bash
+npm run test # run mock to save token
+npm run test:mock
+npm run test:real
 ```
