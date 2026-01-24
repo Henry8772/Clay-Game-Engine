@@ -22,6 +22,21 @@ export const MOCK_INITIAL_STATE = {
 
 export const MOCK_RULES = "Enemies spawn every 5 seconds.";
 
+export const MOCK_ENTITY_LIST = [
+    {
+        id: "chef_1",
+        name: "Sushi Chef",
+        description: "The main tower that throws knives",
+        visualPrompt: "A pixel art sushi chef in white uniform holding a knife"
+    },
+    {
+        id: "tuna_roll",
+        name: "Tuna Roll",
+        description: "Basic enemy unit",
+        visualPrompt: "A pixel art tuna sushi roll with angry eyes"
+    }
+];
+
 export const MOCK_IMAGE_PROMPT = "Cyberpunk sushi kitchen with neon lights.";
 export const MOCK_VISUAL_LAYOUT = ["conveyor_belt", "chef_station_1"];
 

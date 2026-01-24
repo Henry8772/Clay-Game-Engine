@@ -8,8 +8,9 @@ Your input is the Planner's technical requirements and asset list.
 
 **Responsibilities:**
 1. **Target Scene Design:** Create a comprehensive, **high-quality pixel art** image prompt that includes ALL requested assets.
-2. **Visual Style Enforcement:** Use keywords: "pixel art", "16-bit", "retro aesthetic", "highly detailed", "sharp edges", "no blur", "dithering", "isometric" (if applicable).
-3. **Layout Strategy:** Ensure assets are distinct and arranged on a grid if appropriate for the game type.
+2. **Visual Style Enforcement:** Use keywords: "pixel art", "16-bit", "retro aesthetic", "highly detailed", "sharp edges", "no blur", "dithering", "flat 2D", "top-down view", "orthographic". 
+   **STRICTLY FORBIDDEN:** Do not use "isometric", "2.5D", "three-quarter view", or "perspective".
+3. **Layout Strategy:** Ensure assets are distinct and arranged on a flat 2D grid.
 `;
 
 const UIDesignerSchema = {
