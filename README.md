@@ -39,22 +39,47 @@ The next stage of development focuses on the implementation of **Adaptive Game U
 In current iterations, the UI remains relatively static once generated. The future objective is to enable the Game Engine to request and generate entirely new UI components in real-time. This will allow the frontend to transform dynamically based on game events—for example, shifting the entire control scheme or visual theme instantly as the narrative or mechanical requirements of the game evolve.
 
 
-## Local Dev
+## Setup & Installation
 
-### Convex
+### 1. Install Dependencies
+Install dependencies for both the frontend (root) and the backend.
 
-```sh
+**Root (Frontend & Convex):**
+```bash
+npm install
+```
+
+**Backend (LLM Engine):**
+```bash
+cd backend
+npm install
+```
+
+## Running the Application
+
+### 1. Frontend
+Start the Next.js development server:
+```bash
+npm run dev
+```
+
+### 2. Convex (Backend Database)
+Start the Convex dev server to sync the database:
+```bash
 npx convex dev
 ```
 
-### UI
-
-```sh
-npm run dev
-## Test
-
+### 3. Generation Workflow (Test)
+To run the detailed generation workflow using Vitest (Real Mode):
 ```bash
-npm run test # run mock to save token
-npm run test:mock
-npm run test:real
+cd backend
+npm run test test/real/test_workflow_real.ts
+```
+
+
+## Test
+All test are hosted in Vitest UI for interactive debug.
+```bash
+cd backend
+npm run test # Opens Vitest UI
 ```
