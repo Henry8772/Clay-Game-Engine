@@ -1,484 +1,914 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 
-// Define types for the initial state
-interface Card {
-  id: string;
-  name: string;
-  type: 'minion' | 'spell';
-  cost: number;
-  text: string;
-  attack?: number;
-  health?: number;
-}
-
-interface Player {
-  health: number;
-  manaCurrent: number;
-  manaMax: number;
-  deck: Card[];
-  hand: Card[];
-  graveyard: Card[];
-  board: (Card | null)[];
-}
-
-interface GameState {
-  players: {
-    player1: Player;
-    player2: Player;
-  };
-  activePlayer: 'player1' | 'player2';
-  turnPhase: string;
-  gameRunning: boolean;
-}
-
-// Define AssetMap type
-interface AssetMap {
-  minion_board_space: string;
-  card_text_display: string;
-  player_mana_display: string;
-  player_hand_area: string;
-  icon_shield: string;
-  turn_indicator: string;
-  card_cost_display: string;
-  icon_mana_crystal_filled: string;
-  player_graveyard_stack: string;
-  game_board_background: string;
-  player_health_display: string;
-  card_attack_display: string;
-  minion_card_asset: string;
-  icon_sword: string;
-  icon_heart: string;
-  icon_mana_crystal_empty: string;
-  player_deck_count: string;
-  card_health_display: string;
-  player_graveyard_count: string;
-  player_deck_stack: string;
-  spell_card_asset: string;
-}
-
-// --- Card Components ---
-
-interface MinionCardProps {
-  card: Card;
-  assetMap: AssetMap;
-}
-
-const MinionCard: React.FC<MinionCardProps> = ({ card, assetMap }) => (
-  <div style={{
-    width: '120px',
-    height: '180px',
-    border: '1px solid gold',
-    borderRadius: '8px',
-    backgroundColor: '#333',
-    color: 'white',
-    margin: '5px',
-    position: 'relative',
-    backgroundImage: `url(${assetMap.minion_card_asset})`,
-    backgroundSize: 'cover',
-    backgroundRepeat: 'no-repeat',
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'space-between',
-    padding: '5px',
-    boxSizing: 'border-box'
-  }}>
-    <div style={{ position: 'absolute', top: '5px', left: '5px', width: '30px', height: '30px', backgroundImage: `url(${assetMap.card_cost_display})`, backgroundSize: 'cover', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
-      {card.cost}
-    </div>
-    <div style={{ fontWeight: 'bold', textAlign: 'center', marginTop: '35px', fontSize: '0.8em' }}>{card.name}</div>
-    <div style={{
-      position: 'absolute',
-      bottom: '35px',
-      left: '5px',
-      right: '5px',
-      height: '40px',
-      backgroundImage: `url(${assetMap.card_text_display})`,
-      backgroundSize: 'cover',
-      backgroundRepeat: 'no-repeat',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      fontSize: '0.6em',
-      padding: '0 5px',
-      boxSizing: 'border-box'
-    }}>
-      {card.text}
-    </div>
-    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0 5px 5px 5px' }}>
-      <div style={{
-        width: '30px',
-        height: '30px',
-        backgroundImage: `url(${assetMap.card_attack_display})`,
-        backgroundSize: 'cover',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        fontWeight: 'bold'
-      }}>
-        {card.attack}
-      </div>
-      <div style={{
-        width: '30px',
-        height: '30px',
-        backgroundImage: `url(${assetMap.card_health_display})`,
-        backgroundSize: 'cover',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        fontWeight: 'bold'
-      }}>
-        {card.health}
-      </div>
-    </div>
-  </div>
-);
-
-interface SpellCardProps {
-  card: Card;
-  assetMap: AssetMap;
-}
-
-const SpellCard: React.FC<SpellCardProps> = ({ card, assetMap }) => (
-  <div style={{
-    width: '120px',
-    height: '180px',
-    border: '1px solid blue',
-    borderRadius: '8px',
-    backgroundColor: '#333',
-    color: 'white',
-    margin: '5px',
-    position: 'relative',
-    backgroundImage: `url(${assetMap.spell_card_asset})`,
-    backgroundSize: 'cover',
-    backgroundRepeat: 'no-repeat',
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'space-between',
-    padding: '5px',
-    boxSizing: 'border-box'
-  }}>
-    <div style={{ position: 'absolute', top: '5px', left: '5px', width: '30px', height: '30px', backgroundImage: `url(${assetMap.card_cost_display})`, backgroundSize: 'cover', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
-      {card.cost}
-    </div>
-    <div style={{ fontWeight: 'bold', textAlign: 'center', marginTop: '35px', fontSize: '0.8em' }}>{card.name}</div>
-    <div style={{
-      position: 'absolute',
-      bottom: '10px',
-      left: '5px',
-      right: '5px',
-      height: '80px', // Spells have more text space
-      backgroundImage: `url(${assetMap.card_text_display})`,
-      backgroundSize: 'cover',
-      backgroundRepeat: 'no-repeat',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      fontSize: '0.7em',
-      padding: '0 5px',
-      boxSizing: 'border-box',
-      textAlign: 'center'
-    }}>
-      {card.text}
-    </div>
-  </div>
-);
-
-interface CardProps {
-  card: Card;
-  assetMap: AssetMap;
-}
-
-const CardComponent: React.FC<CardProps> = ({ card, assetMap }) => {
-  if (card.type === 'minion') {
-    return <MinionCard card={card} assetMap={assetMap} />;
-  } else if (card.type === 'spell') {
-    return <SpellCard card={card} assetMap={assetMap} />;
-  }
-  return null; // Should not happen with current types
-};
-
-// --- Player Info Components ---
-
-interface PlayerHealthProps {
-  health: number;
-  assetMap: AssetMap;
-}
-
-const PlayerHealth: React.FC<PlayerHealthProps> = ({ health, assetMap }) => (
-  <div style={{
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: '80px',
-    height: '40px',
-    backgroundImage: `url(${assetMap.player_health_display})`,
-    backgroundSize: 'cover',
-    color: 'white',
-    fontWeight: 'bold',
-    fontSize: '1.2em',
-    position: 'relative'
-  }}>
-    <img src={assetMap.icon_heart} alt="Health" style={{ width: '25px', height: '25px', marginRight: '5px' }} />
-    {health}
-  </div>
-);
-
-interface PlayerManaProps {
-  current: number;
-  max: number;
-  assetMap: AssetMap;
-}
-
-const PlayerMana: React.FC<PlayerManaProps> = ({ current, max, assetMap }) => (
-  <div style={{
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: '2px',
-    height: '40px',
-    backgroundImage: `url(${assetMap.player_mana_display})`,
-    backgroundSize: 'cover',
-    backgroundRepeat: 'no-repeat',
-    padding: '0 10px'
-  }}>
-    {Array.from({ length: max }).map((_, i) => (
-      <img
-        key={i}
-        src={i < current ? assetMap.icon_mana_crystal_filled : assetMap.icon_mana_crystal_empty}
-        alt="Mana Crystal"
-        style={{ width: '25px', height: '25px' }}
-      />
-    ))}
-  </div>
-);
-
-interface PlayerHandProps {
-  hand: Card[];
-  assetMap: AssetMap;
-}
-
-const PlayerHand: React.FC<PlayerHandProps> = ({ hand, assetMap }) => (
-  <div style={{
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'flex-end',
-    minHeight: '200px',
-    padding: '10px',
-    backgroundImage: `url(${assetMap.player_hand_area})`,
-    backgroundSize: 'cover',
-    borderRadius: '10px',
-    boxShadow: 'inset 0 0 10px rgba(0,0,0,0.5)'
-  }}>
-    {hand.map((card, index) => (
-      <CardComponent key={card.id + index} card={card} assetMap={assetMap} />
-    ))}
-  </div>
-);
-
-interface DeckGraveyardProps {
-  deckCount: number;
-  graveyardCount: number;
-  assetMap: AssetMap;
-}
-
-const DeckGraveyard: React.FC<DeckGraveyardProps> = ({ deckCount, graveyardCount, assetMap }) => (
-  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
-    <div style={{ position: 'relative', width: '60px', height: '80px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-      <img src={assetMap.player_deck_stack} alt="Deck" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
-      <span style={{ position: 'absolute', bottom: '-20px', backgroundColor: 'rgba(0,0,0,0.7)', padding: '2px 5px', borderRadius: '5px', color: 'white' }}>
-        {deckCount}
-      </span>
-    </div>
-    <div style={{ position: 'relative', width: '60px', height: '80px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-      <img src={assetMap.player_graveyard_stack} alt="Graveyard" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
-      <span style={{ position: 'absolute', bottom: '-20px', backgroundColor: 'rgba(0,0,0,0.7)', padding: '2px 5px', borderRadius: '5px', color: 'white' }}>
-        {graveyardCount}
-      </span>
-    </div>
-  </div>
-);
-
-interface MinionBoardSpaceProps {
-  minion: Card | null;
-  assetMap: AssetMap;
-}
-
-const MinionBoardSpace: React.FC<MinionBoardSpaceProps> = ({ minion, assetMap }) => (
-  <div style={{
-    width: '130px',
-    height: '190px',
-    border: '2px dashed grey',
-    borderRadius: '8px',
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundImage: `url(${assetMap.minion_board_space})`,
-    backgroundSize: 'cover'
-  }}>
-    {minion ? <MinionCard card={minion} assetMap={assetMap} /> : <span style={{ color: 'grey', fontSize: '0.8em' }}>Empty</span>}
-  </div>
-);
-
-interface PlayerBoardProps {
-  board: (Card | null)[];
-  assetMap: AssetMap;
-}
-
-const PlayerBoard: React.FC<PlayerBoardProps> = ({ board, assetMap }) => (
-  <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', margin: '20px 0' }}>
-    {board.map((minion, index) => (
-      <MinionBoardSpace key={index} minion={minion} assetMap={assetMap} />
-    ))}
-  </div>
-);
-
-interface PlayerAreaProps {
-  player: Player;
-  isPlayer1: boolean;
-  assetMap: AssetMap;
-}
-
-const PlayerArea: React.FC<PlayerAreaProps> = ({ player, isPlayer1, assetMap }) => {
-  const flexDirection = isPlayer1 ? 'column-reverse' : 'column'; // Hand at bottom for P1, top for P2
-
-  return (
-    <div style={{
-      display: 'flex',
-      flexDirection: flexDirection,
-      alignItems: 'center',
-      gap: '20px',
-      width: '100%',
-      justifyContent: 'space-between',
-      margin: '20px 0'
-    }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-        <PlayerHealth health={player.health} assetMap={assetMap} />
-        <PlayerMana current={player.manaCurrent} max={player.manaMax} assetMap={assetMap} />
-      </div>
-      <PlayerHand hand={player.hand} assetMap={assetMap} />
-      <DeckGraveyard
-        deckCount={player.deck.length}
-        graveyardCount={player.graveyard.length}
-        assetMap={assetMap}
-      />
-    </div>
-  );
-};
-
-interface TurnIndicatorProps {
-  activePlayer: 'player1' | 'player2';
-  assetMap: AssetMap;
-}
-
-const TurnIndicator: React.FC<TurnIndicatorProps> = ({ activePlayer, assetMap }) => (
-  <div style={{
-    position: 'absolute',
-    top: '50%',
-    left: '50%',
-    transform: 'translate(-50%, -50%)',
-    width: '80px',
-    height: '80px',
-    borderRadius: '50%',
-    backgroundColor: 'rgba(255, 255, 255, 0.8)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    boxShadow: '0 0 10px rgba(0,0,0,0.5)',
-    zIndex: 10
-  }}>
-    <img
-      src={assetMap.turn_indicator}
-      alt="Turn"
-      style={{
-        width: '60px',
-        height: '60px',
-        transform: activePlayer === 'player1' ? 'rotate(180deg)' : 'rotate(0deg)',
-        transition: 'transform 0.5s ease-in-out'
-      }}
-    />
-  </div>
-);
-
-
-// --- Main Game Component ---
-
-interface GameProps {
-  initialState: GameState;
-  assetMap: AssetMap;
-}
-
-const Game: React.FC<GameProps> = ({ initialState, assetMap }) => {
-  // In a real app, you would use useState for game state
-  const state = initialState;
-
-  return (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      height: '100vh',
-      width: '100vw',
-      backgroundColor: '#282c34',
-      backgroundImage: `url(${assetMap.game_board_background})`,
-      backgroundSize: 'cover',
-      backgroundPosition: 'center',
-      overflow: 'hidden',
-      position: 'relative'
-    }}>
-      {/* Player 2 Area (Top) */}
-      <PlayerArea player={state.players.player2} isPlayer1={false} assetMap={assetMap} />
-
-      {/* Game Board */}
-      <div style={{
-        flexGrow: 1,
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'center',
-        alignItems: 'center',
-        width: '80%',
-        maxWidth: '1200px',
-        position: 'relative'
-      }}>
-        {/* Player 2's Board */}
-        <PlayerBoard board={state.players.player2.board} assetMap={assetMap} />
-
-        {/* Turn Indicator */}
-        <TurnIndicator activePlayer={state.activePlayer} assetMap={assetMap} />
-
-        {/* Player 1's Board */}
-        <PlayerBoard board={state.players.player1.board} assetMap={assetMap} />
-      </div>
-
-      {/* Player 1 Area (Bottom) */}
-      <PlayerArea player={state.players.player1} isPlayer1={true} assetMap={assetMap} />
-    </div>
-  );
-};
-
-export default Game;
-
-
+// --- ASSET MAP ---
 export const ASSET_MAP = {
-  "minion_board_space": "/generated-assets/minion_board_space.png",
-  "card_text_display": "/generated-assets/card_text_display.png",
-  "player_mana_display": "/generated-assets/player_mana_display.png",
-  "player_hand_area": "/generated-assets/player_hand_area.png",
-  "icon_shield": "/generated-assets/icon_shield.png",
-  "turn_indicator": "/generated-assets/turn_indicator.png",
-  "card_cost_display": "/generated-assets/card_cost_display.png",
-  "icon_mana_crystal_filled": "/generated-assets/icon_mana_crystal_filled.png",
-  "player_graveyard_stack": "/generated-assets/player_graveyard_stack.png",
-  "game_board_background": "/generated-assets/game_board_background.png",
-  "player_health_display": "/generated-assets/player_health_display.png",
-  "card_attack_display": "/generated-assets/card_attack_display.png",
-  "minion_card_asset": "/generated-assets/minion_card_asset.png",
-  "icon_sword": "/generated-assets/icon_sword.png",
-  "icon_heart": "/generated-assets/icon_heart.png",
-  "icon_mana_crystal_empty": "/generated-assets/icon_mana_crystal_empty.png",
-  "player_deck_count": "/generated-assets/player_deck_count.png",
-  "card_health_display": "/generated-assets/card_health_display.png",
-  "player_graveyard_count": "/generated-assets/player_graveyard_count.png",
-  "player_deck_stack": "/generated-assets/player_deck_stack.png",
-  "spell_card_asset": "/generated-assets/spell_card_asset.png"
+  "white_queen": "/generated-assets/white_queen.png",
+  "black_queen": "/generated-assets/black_queen.png",
+  "white_pawn": "/generated-assets/white_pawn.png",
+  "black_knight": "/generated-assets/black_knight.png",
+  "white_bishop": "/generated-assets/white_bishop.png",
+  "boardSquare_dark": "/generated-assets/boardSquare_dark.png",
+  "white_king": "/generated-assets/white_king.png",
+  "white_rook": "/generated-assets/white_rook.png",
+  "black_pawn": "/generated-assets/black_pawn.png",
+  "captureIndicator": "/generated-assets/captureIndicator.png",
+  "black_rook": "/generated-assets/black_rook.png",
+  "black_king": "/generated-assets/black_king.png",
+  "white_knight": "/generated-assets/white_knight.png",
+  "currentPlayerIndicator": "/generated-assets/currentPlayerIndicator.png",
+  "boardCoordinate_letter": "/generated-assets/boardCoordinate_letter.png",
+  "boardSquare_light": "/generated-assets/boardSquare_light.png",
+  "boardCoordinate_number": "/generated-assets/boardCoordinate_number.png",
+  "selectionIndicator": "/generated-assets/selectionIndicator.png",
+  "black_bishop": "/generated-assets/black_bishop.png",
+  "validMoveIndicator": "/generated-assets/validMoveIndicator.png"
+};
+
+// --- INITIAL STATE ---
+export const INITIAL_STATE = {
+  "currentPlayer": "white",
+  "selectedPieceId": null,
+  "validMoves": [],
+  "gameOver": false,
+  "winner": null,
+  "squares": [
+    {
+      "id": "s_0_0",
+      "x": 0,
+      "y": 0,
+      "color": "dark",
+      "pieceId": "wr_a1"
+    },
+    {
+      "id": "s_1_0",
+      "x": 1,
+      "y": 0,
+      "color": "light",
+      "pieceId": "wn_b1"
+    },
+    {
+      "id": "s_2_0",
+      "x": 2,
+      "y": 0,
+      "color": "dark",
+      "pieceId": "wb_c1"
+    },
+    {
+      "id": "s_3_0",
+      "x": 3,
+      "y": 0,
+      "color": "light",
+      "pieceId": "wq_d1"
+    },
+    {
+      "id": "s_4_0",
+      "x": 4,
+      "y": 0,
+      "color": "dark",
+      "pieceId": "wk_e1"
+    },
+    {
+      "id": "s_5_0",
+      "x": 5,
+      "y": 0,
+      "color": "light",
+      "pieceId": "wb_f1"
+    },
+    {
+      "id": "s_6_0",
+      "x": 6,
+      "y": 0,
+      "color": "dark",
+      "pieceId": "wn_g1"
+    },
+    {
+      "id": "s_7_0",
+      "x": 7,
+      "y": 0,
+      "color": "light",
+      "pieceId": "wr_h1"
+    },
+    {
+      "id": "s_0_1",
+      "x": 0,
+      "y": 1,
+      "color": "light",
+      "pieceId": "wp_a2"
+    },
+    {
+      "id": "s_1_1",
+      "x": 1,
+      "y": 1,
+      "color": "dark",
+      "pieceId": "wp_b2"
+    },
+    {
+      "id": "s_2_1",
+      "x": 2,
+      "y": 1,
+      "color": "light",
+      "pieceId": "wp_c2"
+    },
+    {
+      "id": "s_3_1",
+      "x": 3,
+      "y": 1,
+      "color": "dark",
+      "pieceId": "wp_d2"
+    },
+    {
+      "id": "s_4_1",
+      "x": 4,
+      "y": 1,
+      "color": "light",
+      "pieceId": "wp_e2"
+    },
+    {
+      "id": "s_5_1",
+      "x": 5,
+      "y": 1,
+      "color": "dark",
+      "pieceId": "wp_f2"
+    },
+    {
+      "id": "s_6_1",
+      "x": 6,
+      "y": 1,
+      "color": "light",
+      "pieceId": "wp_g2"
+    },
+    {
+      "id": "s_7_1",
+      "x": 7,
+      "y": 1,
+      "color": "dark",
+      "pieceId": "wp_h2"
+    },
+    {
+      "id": "s_0_2",
+      "x": 0,
+      "y": 2,
+      "color": "dark",
+      "pieceId": null
+    },
+    {
+      "id": "s_1_2",
+      "x": 1,
+      "y": 2,
+      "color": "light",
+      "pieceId": null
+    },
+    {
+      "id": "s_2_2",
+      "x": 2,
+      "y": 2,
+      "color": "dark",
+      "pieceId": null
+    },
+    {
+      "id": "s_3_2",
+      "x": 3,
+      "y": 2,
+      "color": "light",
+      "pieceId": null
+    },
+    {
+      "id": "s_4_2",
+      "x": 4,
+      "y": 2,
+      "color": "dark",
+      "pieceId": null
+    },
+    {
+      "id": "s_5_2",
+      "x": 5,
+      "y": 2,
+      "color": "light",
+      "pieceId": null
+    },
+    {
+      "id": "s_6_2",
+      "x": 6,
+      "y": 2,
+      "color": "dark",
+      "pieceId": null
+    },
+    {
+      "id": "s_7_2",
+      "x": 7,
+      "y": 2,
+      "color": "light",
+      "pieceId": null
+    },
+    {
+      "id": "s_0_3",
+      "x": 0,
+      "y": 3,
+      "color": "light",
+      "pieceId": null
+    },
+    {
+      "id": "s_1_3",
+      "x": 1,
+      "y": 3,
+      "color": "dark",
+      "pieceId": null
+    },
+    {
+      "id": "s_2_3",
+      "x": 2,
+      "y": 3,
+      "color": "light",
+      "pieceId": null
+    },
+    {
+      "id": "s_3_3",
+      "x": 3,
+      "y": 3,
+      "color": "dark",
+      "pieceId": null
+    },
+    {
+      "id": "s_4_3",
+      "x": 4,
+      "y": 3,
+      "color": "light",
+      "pieceId": null
+    },
+    {
+      "id": "s_5_3",
+      "x": 5,
+      "y": 3,
+      "color": "dark",
+      "pieceId": null
+    },
+    {
+      "id": "s_6_3",
+      "x": 6,
+      "y": 3,
+      "color": "light",
+      "pieceId": null
+    },
+    {
+      "id": "s_7_3",
+      "x": 7,
+      "y": 3,
+      "color": "dark",
+      "pieceId": null
+    },
+    {
+      "id": "s_0_4",
+      "x": 0,
+      "y": 4,
+      "color": "dark",
+      "pieceId": null
+    },
+    {
+      "id": "s_1_4",
+      "x": 1,
+      "y": 4,
+      "color": "light",
+      "pieceId": null
+    },
+    {
+      "id": "s_2_4",
+      "x": 2,
+      "y": 4,
+      "color": "dark",
+      "pieceId": null
+    },
+    {
+      "id": "s_3_4",
+      "x": 3,
+      "y": 4,
+      "color": "light",
+      "pieceId": null
+    },
+    {
+      "id": "s_4_4",
+      "x": 4,
+      "y": 4,
+      "color": "dark",
+      "pieceId": null
+    },
+    {
+      "id": "s_5_4",
+      "x": 5,
+      "y": 4,
+      "color": "light",
+      "pieceId": null
+    },
+    {
+      "id": "s_6_4",
+      "x": 6,
+      "y": 4,
+      "color": "dark",
+      "pieceId": null
+    },
+    {
+      "id": "s_7_4",
+      "x": 7,
+      "y": 4,
+      "color": "light",
+      "pieceId": null
+    },
+    {
+      "id": "s_0_5",
+      "x": 0,
+      "y": 5,
+      "color": "light",
+      "pieceId": null
+    },
+    {
+      "id": "s_1_5",
+      "x": 1,
+      "y": 5,
+      "color": "dark",
+      "pieceId": null
+    },
+    {
+      "id": "s_2_5",
+      "x": 2,
+      "y": 5,
+      "color": "light",
+      "pieceId": null
+    },
+    {
+      "id": "s_3_5",
+      "x": 3,
+      "y": 5,
+      "color": "dark",
+      "pieceId": null
+    },
+    {
+      "id": "s_4_5",
+      "x": 4,
+      "y": 5,
+      "color": "light",
+      "pieceId": null
+    },
+    {
+      "id": "s_5_5",
+      "x": 5,
+      "y": 5,
+      "color": "dark",
+      "pieceId": null
+    },
+    {
+      "id": "s_6_5",
+      "x": 6,
+      "y": 5,
+      "color": "light",
+      "pieceId": null
+    },
+    {
+      "id": "s_7_5",
+      "x": 7,
+      "y": 5,
+      "color": "dark",
+      "pieceId": null
+    },
+    {
+      "id": "s_0_6",
+      "x": 0,
+      "y": 6,
+      "color": "dark",
+      "pieceId": "bp_a7"
+    },
+    {
+      "id": "s_1_6",
+      "x": 1,
+      "y": 6,
+      "color": "light",
+      "pieceId": "bp_b7"
+    },
+    {
+      "id": "s_2_6",
+      "x": 2,
+      "y": 6,
+      "color": "dark",
+      "pieceId": "bp_c7"
+    },
+    {
+      "id": "s_3_6",
+      "x": 3,
+      "y": 6,
+      "color": "light",
+      "pieceId": "bp_d7"
+    },
+    {
+      "id": "s_4_6",
+      "x": 4,
+      "y": 6,
+      "color": "dark",
+      "pieceId": "bp_e7"
+    },
+    {
+      "id": "s_5_6",
+      "x": 5,
+      "y": 6,
+      "color": "light",
+      "pieceId": "bp_f7"
+    },
+    {
+      "id": "s_6_6",
+      "x": 6,
+      "y": 6,
+      "color": "dark",
+      "pieceId": "bp_g7"
+    },
+    {
+      "id": "s_7_6",
+      "x": 7,
+      "y": 6,
+      "color": "light",
+      "pieceId": "bp_h7"
+    },
+    {
+      "id": "s_0_7",
+      "x": 0,
+      "y": 7,
+      "color": "light",
+      "pieceId": "br_a8"
+    },
+    {
+      "id": "s_1_7",
+      "x": 1,
+      "y": 7,
+      "color": "dark",
+      "pieceId": "bn_b8"
+    },
+    {
+      "id": "s_2_7",
+      "x": 2,
+      "y": 7,
+      "color": "light",
+      "pieceId": "bb_c8"
+    },
+    {
+      "id": "s_3_7",
+      "x": 3,
+      "y": 7,
+      "color": "dark",
+      "pieceId": "bq_d8"
+    },
+    {
+      "id": "s_4_7",
+      "x": 4,
+      "y": 7,
+      "color": "light",
+      "pieceId": "bk_e8"
+    },
+    {
+      "id": "s_5_7",
+      "x": 5,
+      "y": 7,
+      "color": "dark",
+      "pieceId": "bb_f8"
+    },
+    {
+      "id": "s_6_7",
+      "x": 6,
+      "y": 7,
+      "color": "light",
+      "pieceId": "bn_g8"
+    },
+    {
+      "id": "s_7_7",
+      "x": 7,
+      "y": 7,
+      "color": "dark",
+      "pieceId": "br_h8"
+    }
+  ],
+  "pieces": [
+    {
+      "id": "wr_a1",
+      "type": "rook",
+      "color": "white",
+      "position": "s_0_0",
+      "hasMoved": false
+    },
+    {
+      "id": "wn_b1",
+      "type": "knight",
+      "color": "white",
+      "position": "s_1_0",
+      "hasMoved": false
+    },
+    {
+      "id": "wb_c1",
+      "type": "bishop",
+      "color": "white",
+      "position": "s_2_0",
+      "hasMoved": false
+    },
+    {
+      "id": "wq_d1",
+      "type": "queen",
+      "color": "white",
+      "position": "s_3_0",
+      "hasMoved": false
+    },
+    {
+      "id": "wk_e1",
+      "type": "king",
+      "color": "white",
+      "position": "s_4_0",
+      "hasMoved": false
+    },
+    {
+      "id": "wb_f1",
+      "type": "bishop",
+      "color": "white",
+      "position": "s_5_0",
+      "hasMoved": false
+    },
+    {
+      "id": "wn_g1",
+      "type": "knight",
+      "color": "white",
+      "position": "s_6_0",
+      "hasMoved": false
+    },
+    {
+      "id": "wr_h1",
+      "type": "rook",
+      "color": "white",
+      "position": "s_7_0",
+      "hasMoved": false
+    },
+    {
+      "id": "wp_a2",
+      "type": "pawn",
+      "color": "white",
+      "position": "s_0_1",
+      "hasMoved": false
+    },
+    {
+      "id": "wp_b2",
+      "type": "pawn",
+      "color": "white",
+      "position": "s_1_1",
+      "hasMoved": false
+    },
+    {
+      "id": "wp_c2",
+      "type": "pawn",
+      "color": "white",
+      "position": "s_2_1",
+      "hasMoved": false
+    },
+    {
+      "id": "wp_d2",
+      "type": "pawn",
+      "color": "white",
+      "position": "s_3_1",
+      "hasMoved": false
+    },
+    {
+      "id": "wp_e2",
+      "type": "pawn",
+      "color": "white",
+      "position": "s_4_1",
+      "hasMoved": false
+    },
+    {
+      "id": "wp_f2",
+      "type": "pawn",
+      "color": "white",
+      "position": "s_5_1",
+      "hasMoved": false
+    },
+    {
+      "id": "wp_g2",
+      "type": "pawn",
+      "color": "white",
+      "position": "s_6_1",
+      "hasMoved": false
+    },
+    {
+      "id": "wp_h2",
+      "type": "pawn",
+      "color": "white",
+      "position": "s_7_1",
+      "hasMoved": false
+    },
+    {
+      "id": "br_a8",
+      "type": "rook",
+      "color": "black",
+      "position": "s_0_7",
+      "hasMoved": false
+    },
+    {
+      "id": "bn_b8",
+      "type": "knight",
+      "color": "black",
+      "position": "s_1_7",
+      "hasMoved": false
+    },
+    {
+      "id": "bb_c8",
+      "type": "bishop",
+      "color": "black",
+      "position": "s_2_7",
+      "hasMoved": false
+    },
+    {
+      "id": "bq_d8",
+      "type": "queen",
+      "color": "black",
+      "position": "s_3_7",
+      "hasMoved": false
+    },
+    {
+      "id": "bk_e8",
+      "type": "king",
+      "color": "black",
+      "position": "s_4_7",
+      "hasMoved": false
+    },
+    {
+      "id": "bb_f8",
+      "type": "bishop",
+      "color": "black",
+      "position": "s_5_7",
+      "hasMoved": false
+    },
+    {
+      "id": "bn_g8",
+      "type": "knight",
+      "color": "black",
+      "position": "s_6_7",
+      "hasMoved": false
+    },
+    {
+      "id": "br_h8",
+      "type": "rook",
+      "color": "black",
+      "position": "s_7_7",
+      "hasMoved": false
+    },
+    {
+      "id": "bp_a7",
+      "type": "pawn",
+      "color": "black",
+      "position": "s_0_6",
+      "hasMoved": false
+    },
+    {
+      "id": "bp_b7",
+      "type": "pawn",
+      "color": "black",
+      "position": "s_1_6",
+      "hasMoved": false
+    },
+    {
+      "id": "bp_c7",
+      "type": "pawn",
+      "color": "black",
+      "position": "s_2_6",
+      "hasMoved": false
+    },
+    {
+      "id": "bp_d7",
+      "type": "pawn",
+      "color": "black",
+      "position": "s_3_6",
+      "hasMoved": false
+    },
+    {
+      "id": "bp_e7",
+      "type": "pawn",
+      "color": "black",
+      "position": "s_4_6",
+      "hasMoved": false
+    },
+    {
+      "id": "bp_f7",
+      "type": "pawn",
+      "color": "black",
+      "position": "s_5_6",
+      "hasMoved": false
+    },
+    {
+      "id": "bp_g7",
+      "type": "pawn",
+      "color": "black",
+      "position": "s_6_6",
+      "hasMoved": false
+    },
+    {
+      "id": "bp_h7",
+      "type": "pawn",
+      "color": "black",
+      "position": "s_7_6",
+      "hasMoved": false
+    }
+  ]
+};
+
+// --- GAME RULES ---
+export const GAME_RULES = "Chess is a two-player strategy board game played on a checkered board with 64 squares arranged in an 8x8 grid. Each player begins with 16 pieces: one king, one queen, two rooks, two knights, two bishops, and eight pawns. The object of the game is to checkmate the opponent's king, whereby the king is under immediate attack (in 'check') and there is no legal way to remove it from attack on the next move. Pieces move in specific ways: Pawns move forward, rooks move horizontally or vertically, knights move in an 'L' shape, bishops move diagonally, the queen moves any direction, and the king moves one square in any direction.";
+
+// --- Game Component ---
+export const Game = ({ initialState: propInitialState }) => {
+  const [gameState, setGameState] = useState(propInitialState || INITIAL_STATE);
+
+  // Helper to map piece type and color to asset key
+  const getPieceAssetKey = (piece) => {
+    if (!piece) return null;
+    return `${piece.color}_${piece.type}`;
+  };
+
+  // Create a map for quick lookup of pieces by ID
+  const pieceMap = new Map(gameState.pieces.map(p => [p.id, p]));
+
+  // Create a map for quick lookup of valid moves by target square ID
+  const validMoveMap = new Map();
+  gameState.validMoves.forEach(move => {
+    validMoveMap.set(move.targetSquareId, move);
+  });
+
+  const files = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+  const ranks = ['1', '2', '3', '4', '5', '6', '7', '8'];
+
+  // Basic styling for the game container
+  const gameContainerStyle = {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: '20px',
+    fontFamily: 'Arial, sans-serif',
+    backgroundColor: '#333',
+    color: 'white',
+    padding: '20px',
+    borderRadius: '10px',
+  };
+
+  const boardWrapperStyle = {
+    display: 'grid',
+    gridTemplateColumns: 'auto repeat(8, 60px) auto', // For A-H labels
+    gridTemplateRows: 'auto repeat(8, 60px) auto', // For 1-8 labels
+    border: '2px solid #8B4513', // Wood-like border
+    boxShadow: '0 0 10px rgba(0,0,0,0.5)',
+  };
+
+  const squareStyle = {
+    width: '60px',
+    height: '60px',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative',
+    backgroundSize: 'cover',
+  };
+
+  const pieceStyle = {
+    width: '80%',
+    height: '80%',
+    objectFit: 'contain',
+    zIndex: 2,
+  };
+
+  const indicatorStyle = {
+    position: 'absolute',
+    width: '100%',
+    height: '100%',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 3,
+  };
+
+  const dotIndicatorStyle = {
+    width: '20px',
+    height: '20px',
+    borderRadius: '50%',
+    backgroundColor: 'rgba(0, 255, 0, 0.6)', // Green dot
+  };
+
+  const captureIndicatorImageStyle = {
+    width: '60%',
+    height: '60%',
+    objectFit: 'contain',
+  };
+
+  const coordinateLabelStyle = {
+    width: '60px',
+    height: '60px',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    fontWeight: 'bold',
+    fontSize: '14px',
+    color: '#ccc',
+  };
+
+  const gameOverStyle = {
+    marginTop: '20px',
+    fontSize: '24px',
+    fontWeight: 'bold',
+    color: '#FFD700', // Gold color
+  };
+
+  return (
+    <div style={gameContainerStyle}>
+      <h1>Chess Game</h1>
+      
+      {gameState.gameOver ? (
+        <div style={gameOverStyle}>
+          GAME OVER! {gameState.winner ? `${gameState.winner.toUpperCase()} WINS!` : 'IT\'S A DRAW!'}
+        </div>
+      ) : (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
+          <img src={ASSET_MAP.currentPlayerIndicator} alt="Current Player" style={{ width: '30px', height: '30px' }} />
+          <h2>Current Player: <span style={{ textTransform: 'capitalize' }}>{gameState.currentPlayer}</span></h2>
+        </div>
+      )}
+
+      <div style={boardWrapperStyle}>
+        {/* Top coordinate labels (A-H) */}
+        <div style={{ ...coordinateLabelStyle, gridColumn: '1 / span 1', gridRow: '1 / span 1', visibility: 'hidden' }}></div> {/* Empty corner */}
+        {files.map((file, index) => (
+          <div key={`file-top-${index}`} style={{ ...coordinateLabelStyle, gridColumn: `${index + 2} / span 1`, gridRow: '1 / span 1' }}>
+            {file}
+          </div>
+        ))}
+        <div style={{ ...coordinateLabelStyle, gridColumn: '10 / span 1', gridRow: '1 / span 1', visibility: 'hidden' }}></div> {/* Empty corner */}
+
+        {gameState.squares.map((square) => {
+          const piece = square.pieceId ? pieceMap.get(square.pieceId) : null;
+          const pieceAssetKey = piece ? getPieceAssetKey(piece) : null;
+          const pieceAsset = pieceAssetKey ? ASSET_MAP[pieceAssetKey] : null;
+
+          const isSelected = gameState.selectedPieceId === square.pieceId;
+          const validMove = validMoveMap.get(square.id);
+          const isTargetOfValidMove = !!validMove;
+          const isCaptureMove = isTargetOfValidMove && validMove.isCapture;
+
+          // Chess board ranks (rows) are typically 1-8, with 1 at the bottom. Our Y-coordinate is 0-indexed, 0 at bottom.
+          // To display rank 8 at the top of the grid and rank 1 at the bottom, we map grid row as (9 - y).
+          // Columns are A-H, x-coordinate 0-7. We map grid column as (x + 2) to account for left rank labels.
+          const gridRow = 9 - square.y; 
+          const gridColumn = square.x + 2;
+
+          return (
+            <React.Fragment key={square.id}>
+              {/* Left Rank Labels (1-8) */}
+              {square.x === 0 && (
+                <div style={{ ...coordinateLabelStyle, gridColumn: '1 / span 1', gridRow: `${gridRow} / span 1` }}>
+                  {ranks[square.y]}
+                </div>
+              )}
+              
+              <div
+                style={{
+                  ...squareStyle,
+                  backgroundImage: `url(${ASSET_MAP[`boardSquare_${square.color}`]})`,
+                  gridColumn: `${gridColumn} / span 1`,
+                  gridRow: `${gridRow} / span 1`,
+                }}
+              >
+                {pieceAsset && (
+                  <img src={pieceAsset} alt={`${piece.color} ${piece.type}`} style={pieceStyle} />
+                )}
+                {isSelected && (
+                  <div style={indicatorStyle}>
+                    <img src={ASSET_MAP.selectionIndicator} alt="Selected" style={pieceStyle} />
+                  </div>
+                )}
+                {isTargetOfValidMove && (
+                  <div style={indicatorStyle}>
+                    {isCaptureMove ? (
+                      <img src={ASSET_MAP.captureIndicator} alt="Capture" style={captureIndicatorImageStyle} />
+                    ) : (
+                      <div style={dotIndicatorStyle}></div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Right Rank Labels (1-8) */}
+              {square.x === 7 && (
+                <div style={{ ...coordinateLabelStyle, gridColumn: '10 / span 1', gridRow: `${gridRow} / span 1` }}>
+                  {ranks[square.y]}
+                </div>
+              )}
+            </React.Fragment>
+          );
+        })}
+
+        {/* Bottom coordinate labels (A-H) */}
+        <div style={{ ...coordinateLabelStyle, gridColumn: '1 / span 1', gridRow: '10 / span 1', visibility: 'hidden' }}></div> {/* Empty corner */}
+        {files.map((file, index) => (
+          <div key={`file-bottom-${index}`} style={{ ...coordinateLabelStyle, gridColumn: `${index + 2} / span 1`, gridRow: '10 / span 1' }}>
+            {file}
+          </div>
+        ))}
+        <div style={{ ...coordinateLabelStyle, gridColumn: '10 / span 1', gridRow: '10 / span 1', visibility: 'hidden' }}></div> {/* Empty corner */}
+      </div>
+    </div>
+  );
 };
