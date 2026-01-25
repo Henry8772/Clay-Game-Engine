@@ -201,7 +201,48 @@ export const nodeRenderer = async (state: GraphState, config?: { configurable?: 
 
     const reactCode = await runRendererAgent(client, state.visualLayout, state.initialState, state.assetMap);
 
-    await saveRunArtifact(state.runId, "game-slot.tsx", reactCode);
+    // Safeguard: Inject INITIAL_STATE and GAME_RULES if missing
+    let finalCode = reactCode;
 
-    return { reactCode };
+    // Check and inject INITIAL_STATE
+    if (!finalCode.includes("export const INITIAL_STATE")) {
+        const stateStr = JSON.stringify(state.initialState, null, 2);
+        finalCode += `\n\nexport const INITIAL_STATE = ${stateStr};\n`;
+    }
+
+    // Check and inject GAME_RULES
+    if (!finalCode.includes("export const GAME_RULES")) {
+        // Use JSON.stringify for safety but we might want just a string literal if it's text
+        // rules is likely a string block
+        const rulesStr = JSON.stringify(state.rules || "");
+        finalCode += `\n\nexport const GAME_RULES = ${rulesStr};\n`;
+    }
+
+    // Safeguard: Ensure "Game" is exported as a named export
+    // Remove "export default Game" if present
+    if (finalCode.includes("export default Game")) {
+        finalCode = finalCode.replace("export default Game;", "");
+        finalCode = finalCode.replace("export default Game", "");
+    }
+
+    // Ensure the function is exported
+    // Regex to find "const Game" or "function Game" and make sure it has "export"
+    if (!finalCode.includes("export const Game") && !finalCode.includes("export function Game")) {
+        // Try to find definition
+        if (finalCode.includes("const Game")) {
+            finalCode = finalCode.replace("const Game", "export const Game");
+        } else if (finalCode.includes("function Game")) {
+            finalCode = finalCode.replace("function Game", "export function Game");
+        }
+    }
+
+    // Safeguard: Ensure Game accepts initialState prop (simplified check, regex would be better for full parsing)
+    // We look for "({ initialState" or "props.initialState" or similar, but simplified: 
+    // We just warn or rely on the agent prompt for the prop structure, 
+    // BUT we can try to patch the functional component signature if completely missing.
+    // For now, the prompt update is the primary defense for props.
+
+    await saveRunArtifact(state.runId, "game-slot.tsx", finalCode);
+
+    return { reactCode: finalCode };
 };
