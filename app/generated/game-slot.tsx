@@ -1,488 +1,484 @@
-"use client";
-import React, { useState, useCallback, useEffect } from 'react';
+import React from 'react';
 
-interface PieceDetails {
+// Define types for the initial state
+interface Card {
   id: string;
-  type: string;
-  color: 'white' | 'black';
-  position: string;
-  hasMoved: boolean;
-  captured: boolean;
+  name: string;
+  type: 'minion' | 'spell';
+  cost: number;
+  text: string;
+  attack?: number;
+  health?: number;
 }
 
-interface SquareData {
-  id: string;
-  position: string;
-  color: 'dark' | 'light';
-  pieceId: string | null;
+interface Player {
+  health: number;
+  manaCurrent: number;
+  manaMax: number;
+  deck: Card[];
+  hand: Card[];
+  graveyard: Card[];
+  board: (Card | null)[];
 }
 
 interface GameState {
-  board: SquareData[];
-  pieces: { [id: string]: PieceDetails };
-  selectedPieceId: string | null;
-  turn: 'white' | 'black';
-  gameOver: boolean;
-  winner: 'white' | 'black' | 'draw' | null;
-  check: 'white' | 'black' | null;
-  checkmate: boolean;
-  highlightedSquares: string[];
+  players: {
+    player1: Player;
+    player2: Player;
+  };
+  activePlayer: 'player1' | 'player2';
+  turnPhase: string;
+  gameRunning: boolean;
 }
 
+// Define AssetMap type
 interface AssetMap {
-  [key: string]: string; // e.g., "white_rook_a": "/path/to/white_rook_a.png"
+  minion_board_space: string;
+  card_text_display: string;
+  player_mana_display: string;
+  player_hand_area: string;
+  icon_shield: string;
+  turn_indicator: string;
+  card_cost_display: string;
+  icon_mana_crystal_filled: string;
+  player_graveyard_stack: string;
+  game_board_background: string;
+  player_health_display: string;
+  card_attack_display: string;
+  minion_card_asset: string;
+  icon_sword: string;
+  icon_heart: string;
+  icon_mana_crystal_empty: string;
+  player_deck_count: string;
+  card_health_display: string;
+  player_graveyard_count: string;
+  player_deck_stack: string;
+  spell_card_asset: string;
 }
+
+// --- Card Components ---
+
+interface MinionCardProps {
+  card: Card;
+  assetMap: AssetMap;
+}
+
+const MinionCard: React.FC<MinionCardProps> = ({ card, assetMap }) => (
+  <div style={{
+    width: '120px',
+    height: '180px',
+    border: '1px solid gold',
+    borderRadius: '8px',
+    backgroundColor: '#333',
+    color: 'white',
+    margin: '5px',
+    position: 'relative',
+    backgroundImage: `url(${assetMap.minion_card_asset})`,
+    backgroundSize: 'cover',
+    backgroundRepeat: 'no-repeat',
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'space-between',
+    padding: '5px',
+    boxSizing: 'border-box'
+  }}>
+    <div style={{ position: 'absolute', top: '5px', left: '5px', width: '30px', height: '30px', backgroundImage: `url(${assetMap.card_cost_display})`, backgroundSize: 'cover', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
+      {card.cost}
+    </div>
+    <div style={{ fontWeight: 'bold', textAlign: 'center', marginTop: '35px', fontSize: '0.8em' }}>{card.name}</div>
+    <div style={{
+      position: 'absolute',
+      bottom: '35px',
+      left: '5px',
+      right: '5px',
+      height: '40px',
+      backgroundImage: `url(${assetMap.card_text_display})`,
+      backgroundSize: 'cover',
+      backgroundRepeat: 'no-repeat',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      fontSize: '0.6em',
+      padding: '0 5px',
+      boxSizing: 'border-box'
+    }}>
+      {card.text}
+    </div>
+    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0 5px 5px 5px' }}>
+      <div style={{
+        width: '30px',
+        height: '30px',
+        backgroundImage: `url(${assetMap.card_attack_display})`,
+        backgroundSize: 'cover',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontWeight: 'bold'
+      }}>
+        {card.attack}
+      </div>
+      <div style={{
+        width: '30px',
+        height: '30px',
+        backgroundImage: `url(${assetMap.card_health_display})`,
+        backgroundSize: 'cover',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontWeight: 'bold'
+      }}>
+        {card.health}
+      </div>
+    </div>
+  </div>
+);
+
+interface SpellCardProps {
+  card: Card;
+  assetMap: AssetMap;
+}
+
+const SpellCard: React.FC<SpellCardProps> = ({ card, assetMap }) => (
+  <div style={{
+    width: '120px',
+    height: '180px',
+    border: '1px solid blue',
+    borderRadius: '8px',
+    backgroundColor: '#333',
+    color: 'white',
+    margin: '5px',
+    position: 'relative',
+    backgroundImage: `url(${assetMap.spell_card_asset})`,
+    backgroundSize: 'cover',
+    backgroundRepeat: 'no-repeat',
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'space-between',
+    padding: '5px',
+    boxSizing: 'border-box'
+  }}>
+    <div style={{ position: 'absolute', top: '5px', left: '5px', width: '30px', height: '30px', backgroundImage: `url(${assetMap.card_cost_display})`, backgroundSize: 'cover', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
+      {card.cost}
+    </div>
+    <div style={{ fontWeight: 'bold', textAlign: 'center', marginTop: '35px', fontSize: '0.8em' }}>{card.name}</div>
+    <div style={{
+      position: 'absolute',
+      bottom: '10px',
+      left: '5px',
+      right: '5px',
+      height: '80px', // Spells have more text space
+      backgroundImage: `url(${assetMap.card_text_display})`,
+      backgroundSize: 'cover',
+      backgroundRepeat: 'no-repeat',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      fontSize: '0.7em',
+      padding: '0 5px',
+      boxSizing: 'border-box',
+      textAlign: 'center'
+    }}>
+      {card.text}
+    </div>
+  </div>
+);
+
+interface CardProps {
+  card: Card;
+  assetMap: AssetMap;
+}
+
+const CardComponent: React.FC<CardProps> = ({ card, assetMap }) => {
+  if (card.type === 'minion') {
+    return <MinionCard card={card} assetMap={assetMap} />;
+  } else if (card.type === 'spell') {
+    return <SpellCard card={card} assetMap={assetMap} />;
+  }
+  return null; // Should not happen with current types
+};
+
+// --- Player Info Components ---
+
+interface PlayerHealthProps {
+  health: number;
+  assetMap: AssetMap;
+}
+
+const PlayerHealth: React.FC<PlayerHealthProps> = ({ health, assetMap }) => (
+  <div style={{
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '80px',
+    height: '40px',
+    backgroundImage: `url(${assetMap.player_health_display})`,
+    backgroundSize: 'cover',
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: '1.2em',
+    position: 'relative'
+  }}>
+    <img src={assetMap.icon_heart} alt="Health" style={{ width: '25px', height: '25px', marginRight: '5px' }} />
+    {health}
+  </div>
+);
+
+interface PlayerManaProps {
+  current: number;
+  max: number;
+  assetMap: AssetMap;
+}
+
+const PlayerMana: React.FC<PlayerManaProps> = ({ current, max, assetMap }) => (
+  <div style={{
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '2px',
+    height: '40px',
+    backgroundImage: `url(${assetMap.player_mana_display})`,
+    backgroundSize: 'cover',
+    backgroundRepeat: 'no-repeat',
+    padding: '0 10px'
+  }}>
+    {Array.from({ length: max }).map((_, i) => (
+      <img
+        key={i}
+        src={i < current ? assetMap.icon_mana_crystal_filled : assetMap.icon_mana_crystal_empty}
+        alt="Mana Crystal"
+        style={{ width: '25px', height: '25px' }}
+      />
+    ))}
+  </div>
+);
+
+interface PlayerHandProps {
+  hand: Card[];
+  assetMap: AssetMap;
+}
+
+const PlayerHand: React.FC<PlayerHandProps> = ({ hand, assetMap }) => (
+  <div style={{
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'flex-end',
+    minHeight: '200px',
+    padding: '10px',
+    backgroundImage: `url(${assetMap.player_hand_area})`,
+    backgroundSize: 'cover',
+    borderRadius: '10px',
+    boxShadow: 'inset 0 0 10px rgba(0,0,0,0.5)'
+  }}>
+    {hand.map((card, index) => (
+      <CardComponent key={card.id + index} card={card} assetMap={assetMap} />
+    ))}
+  </div>
+);
+
+interface DeckGraveyardProps {
+  deckCount: number;
+  graveyardCount: number;
+  assetMap: AssetMap;
+}
+
+const DeckGraveyard: React.FC<DeckGraveyardProps> = ({ deckCount, graveyardCount, assetMap }) => (
+  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
+    <div style={{ position: 'relative', width: '60px', height: '80px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+      <img src={assetMap.player_deck_stack} alt="Deck" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+      <span style={{ position: 'absolute', bottom: '-20px', backgroundColor: 'rgba(0,0,0,0.7)', padding: '2px 5px', borderRadius: '5px', color: 'white' }}>
+        {deckCount}
+      </span>
+    </div>
+    <div style={{ position: 'relative', width: '60px', height: '80px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+      <img src={assetMap.player_graveyard_stack} alt="Graveyard" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+      <span style={{ position: 'absolute', bottom: '-20px', backgroundColor: 'rgba(0,0,0,0.7)', padding: '2px 5px', borderRadius: '5px', color: 'white' }}>
+        {graveyardCount}
+      </span>
+    </div>
+  </div>
+);
+
+interface MinionBoardSpaceProps {
+  minion: Card | null;
+  assetMap: AssetMap;
+}
+
+const MinionBoardSpace: React.FC<MinionBoardSpaceProps> = ({ minion, assetMap }) => (
+  <div style={{
+    width: '130px',
+    height: '190px',
+    border: '2px dashed grey',
+    borderRadius: '8px',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundImage: `url(${assetMap.minion_board_space})`,
+    backgroundSize: 'cover'
+  }}>
+    {minion ? <MinionCard card={minion} assetMap={assetMap} /> : <span style={{ color: 'grey', fontSize: '0.8em' }}>Empty</span>}
+  </div>
+);
+
+interface PlayerBoardProps {
+  board: (Card | null)[];
+  assetMap: AssetMap;
+}
+
+const PlayerBoard: React.FC<PlayerBoardProps> = ({ board, assetMap }) => (
+  <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', margin: '20px 0' }}>
+    {board.map((minion, index) => (
+      <MinionBoardSpace key={index} minion={minion} assetMap={assetMap} />
+    ))}
+  </div>
+);
+
+interface PlayerAreaProps {
+  player: Player;
+  isPlayer1: boolean;
+  assetMap: AssetMap;
+}
+
+const PlayerArea: React.FC<PlayerAreaProps> = ({ player, isPlayer1, assetMap }) => {
+  const flexDirection = isPlayer1 ? 'column-reverse' : 'column'; // Hand at bottom for P1, top for P2
+
+  return (
+    <div style={{
+      display: 'flex',
+      flexDirection: flexDirection,
+      alignItems: 'center',
+      gap: '20px',
+      width: '100%',
+      justifyContent: 'space-between',
+      margin: '20px 0'
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+        <PlayerHealth health={player.health} assetMap={assetMap} />
+        <PlayerMana current={player.manaCurrent} max={player.manaMax} assetMap={assetMap} />
+      </div>
+      <PlayerHand hand={player.hand} assetMap={assetMap} />
+      <DeckGraveyard
+        deckCount={player.deck.length}
+        graveyardCount={player.graveyard.length}
+        assetMap={assetMap}
+      />
+    </div>
+  );
+};
+
+interface TurnIndicatorProps {
+  activePlayer: 'player1' | 'player2';
+  assetMap: AssetMap;
+}
+
+const TurnIndicator: React.FC<TurnIndicatorProps> = ({ activePlayer, assetMap }) => (
+  <div style={{
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    width: '80px',
+    height: '80px',
+    borderRadius: '50%',
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    boxShadow: '0 0 10px rgba(0,0,0,0.5)',
+    zIndex: 10
+  }}>
+    <img
+      src={assetMap.turn_indicator}
+      alt="Turn"
+      style={{
+        width: '60px',
+        height: '60px',
+        transform: activePlayer === 'player1' ? 'rotate(180deg)' : 'rotate(0deg)',
+        transition: 'transform 0.5s ease-in-out'
+      }}
+    />
+  </div>
+);
+
+
+// --- Main Game Component ---
 
 interface GameProps {
   initialState: GameState;
   assetMap: AssetMap;
 }
 
-interface PieceProps {
-  piece: PieceDetails;
-  assetMap: AssetMap;
-}
-
-const Piece: React.FC<PieceProps> = ({ piece, assetMap }) => {
-  if (!piece) return null;
-
-  const assetKey = piece.id;
-  const imgSrc = assetMap[assetKey];
-
-  if (!imgSrc) {
-    // Fallback if the exact piece ID asset is not provided in assetMap
-    // Tries to find a generic asset (e.g., "white_king" instead of "white_king_e")
-    const genericAssetKey = `${piece.color}_${piece.type}`;
-    const genericImgSrc = assetMap[genericAssetKey];
-    if (genericImgSrc) {
-      return (
-        <img
-          src={genericImgSrc}
-          alt={`${piece.color} ${piece.type}`}
-          style={{
-            width: '100%',
-            height: '100%',
-            objectFit: 'contain',
-            pointerEvents: 'none'
-          }}
-        />
-      );
-    }
-    // If no image asset is found, display text abbreviation
-    return (
-      <span style={{ fontSize: '0.8em', textAlign: 'center', pointerEvents: 'none', color: piece.color === 'white' ? '#fff' : '#000' }}>
-        {piece.color.slice(0, 1).toUpperCase()}
-        {piece.type.slice(0, 2).toLowerCase()}
-      </span>
-    );
-  }
+const Game: React.FC<GameProps> = ({ initialState, assetMap }) => {
+  // In a real app, you would use useState for game state
+  const state = initialState;
 
   return (
-    <img
-      src={imgSrc}
-      alt={`${piece.color} ${piece.type}`}
-      style={{
-        width: '100%',
-        height: '100%',
-        objectFit: 'contain',
-        pointerEvents: 'none'
-      }}
-    />
-  );
-};
+    <div style={{
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      height: '100vh',
+      width: '100vw',
+      backgroundColor: '#282c34',
+      backgroundImage: `url(${assetMap.game_board_background})`,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      overflow: 'hidden',
+      position: 'relative'
+    }}>
+      {/* Player 2 Area (Top) */}
+      <PlayerArea player={state.players.player2} isPlayer1={false} assetMap={assetMap} />
 
-interface SquareProps {
-  square: SquareData;
-  piece: PieceDetails | null;
-  isSelected: boolean;
-  isHighlighted: boolean;
-  isAttackable: boolean;
-  isCheckWarning: boolean;
-  onClick: (squareId: string) => void;
-  assetMap: AssetMap;
-}
-
-const Square: React.FC<SquareProps> = ({
-  square,
-  piece,
-  isSelected,
-  isHighlighted,
-  isAttackable,
-  isCheckWarning,
-  onClick,
-  assetMap
-}) => {
-  const handleClick = useCallback(() => {
-    onClick(square.id);
-  }, [onClick, square.id]);
-
-  const backgroundColor = square.color === 'light' ? '#f0d9b5' : '#b58863';
-
-  const containerStyle: React.CSSProperties = {
-    width: '100%',
-    height: '100%',
-    backgroundColor: backgroundColor,
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    position: 'relative',
-    cursor: 'pointer',
-    boxSizing: 'border-box',
-    transition: 'background-color 0.2s, box-shadow 0.2s'
-  };
-
-  if (isSelected) {
-    containerStyle.boxShadow = 'inset 0 0 0 4px #ffcc00';
-  } else if (isCheckWarning) {
-    containerStyle.backgroundColor = 'rgba(255, 0, 0, 0.6)';
-  } else if (isHighlighted && piece && isAttackable) {
-    containerStyle.boxShadow = 'inset 0 0 0 4px #ff6666';
-    containerStyle.backgroundColor = 'rgba(255, 102, 102, 0.3)';
-  }
-
-  return (
-    <div
-      onClick={handleClick}
-      style={containerStyle}
-    >
-      {isHighlighted && !piece && (
-        <div
-          style={{
-            width: '30%',
-            height: '30%',
-            backgroundColor: 'rgba(0, 200, 0, 0.3)',
-            borderRadius: '50%',
-            opacity: 0.7,
-            position: 'absolute',
-          }}
-        />
-      )}
-      {piece && <Piece piece={piece} assetMap={assetMap} />}
-    </div>
-  );
-};
-
-const _Game: React.FC<GameProps> = ({ initialState, assetMap }) => {
-  const [gameState, setGameState] = useState<GameState>(initialState); useEffect(() => { setGameState(initialState); }, [initialState]);
-
-  const getPieceById = useCallback(
-    (pieceId: string | null) => {
-      return pieceId ? gameState.pieces[pieceId] : null;
-    },
-    [gameState.pieces]
-  );
-
-  const simulateValidMoves = useCallback(
-    (selectedPiece: PieceDetails): string[] => {
-      const moves: string[] = [];
-      const currentPos = selectedPiece.position;
-      const colChar = currentPos.charCodeAt(0);
-      const rowNum = parseInt(currentPos[1]);
-
-      const deltas = [
-        [0, 1], [0, -1], [1, 0], [-1, 0],
-        [1, 1], [1, -1], [-1, 1], [-1, -1]
-      ];
-
-      // Simulate moves for sliding pieces (Rook, Bishop, Queen)
-      const isSlidingPiece = selectedPiece.type === 'rook' || selectedPiece.type === 'bishop' || selectedPiece.type === 'queen';
-
-      if (selectedPiece.type === 'king' || selectedPiece.type === 'queen' || selectedPiece.type === 'rook' || selectedPiece.type === 'bishop') {
-        for (const [dCol, dRow] of deltas) {
-          let targetCol = colChar;
-          let targetRow = rowNum;
-          for (let i = 0; i < (isSlidingPiece ? 8 : 1); i++) {
-            targetCol += dCol;
-            targetRow += dRow;
-            const newCol = String.fromCharCode(targetCol);
-            const newRow = targetRow;
-
-            if (newCol >= 'a' && newCol <= 'h' && newRow >= 1 && newRow <= 8) {
-              const targetPos = `${newCol}${newRow}`;
-              const targetSquare = gameState.board.find(s => s.position === targetPos);
-
-              if (targetSquare) {
-                if (targetSquare.pieceId) {
-                  const targetPiece = getPieceById(targetSquare.pieceId);
-                  if (targetPiece && targetPiece.color !== selectedPiece.color) {
-                    moves.push(targetSquare.id);
-                  }
-                  break; // Stop sliding after hitting any piece
-                } else {
-                  moves.push(targetSquare.id);
-                }
-              }
-            } else {
-              break; // Out of bounds
-            }
-          }
-        }
-      }
-
-      // Pawn specific moves (simplified)
-      if (selectedPiece.type === 'pawn') {
-        const direction = selectedPiece.color === 'white' ? 1 : -1;
-        const startRow = selectedPiece.color === 'white' ? 2 : 7;
-
-        // One step forward
-        const oneStepPos = `${currentPos[0]}${rowNum + direction}`;
-        const oneStepSquare = gameState.board.find(s => s.position === oneStepPos);
-        if (oneStepSquare && !oneStepSquare.pieceId) {
-          moves.push(oneStepSquare.id);
-          // Two steps forward from start
-          if (rowNum === startRow) {
-            const twoStepPos = `${currentPos[0]}${rowNum + 2 * direction}`;
-            const twoStepSquare = gameState.board.find(s => s.position === twoStepPos);
-            if (twoStepSquare && !twoStepSquare.pieceId) {
-              moves.push(twoStepSquare.id);
-            }
-          }
-        }
-        // Basic diagonal attacks
-        const attackLeftCol = String.fromCharCode(colChar - 1);
-        const attackRightCol = String.fromCharCode(colChar + 1);
-        const attackRow = rowNum + direction;
-
-        [attackLeftCol, attackRightCol].forEach(col => {
-          if (col >= 'a' && col <= 'h' && attackRow >= 1 && attackRow <= 8) {
-            const attackPos = `${col}${attackRow}`;
-            const attackSquare = gameState.board.find(s => s.position === attackPos);
-            if (attackSquare && attackSquare.pieceId) {
-              const attackedPiece = getPieceById(attackSquare.pieceId);
-              if (attackedPiece && attackedPiece.color !== selectedPiece.color) {
-                moves.push(attackSquare.id);
-              }
-            }
-          }
-        });
-      }
-
-      // Knight specific moves
-      if (selectedPiece.type === 'knight') {
-        const knightDeltas = [
-          [1, 2], [1, -2], [-1, 2], [-1, -2],
-          [2, 1], [2, -1], [-2, 1], [-2, -1]
-        ];
-        knightDeltas.forEach(([dCol, dRow]) => {
-          const targetCol = String.fromCharCode(colChar + dCol);
-          const targetRow = rowNum + dRow;
-          if (targetCol >= 'a' && targetCol <= 'h' && targetRow >= 1 && targetRow <= 8) {
-            const targetPos = `${targetCol}${targetRow}`;
-            const targetSquare = gameState.board.find(s => s.position === targetPos);
-            if (targetSquare) {
-              if (targetSquare.pieceId) {
-                const targetPiece = getPieceById(targetSquare.pieceId);
-                if (targetPiece && targetPiece.color !== selectedPiece.color) {
-                  moves.push(targetSquare.id);
-                }
-              } else {
-                moves.push(targetSquare.id);
-              }
-            }
-          }
-        });
-      }
-
-      return Array.from(new Set(moves.filter(id => id !== selectedPiece.position)));
-    },
-    [gameState.board, gameState.pieces, getPieceById]
-  );
-
-  useEffect(() => {
-    if (gameState.selectedPieceId) {
-      const selectedPiece = getPieceById(gameState.selectedPieceId);
-      if (selectedPiece && selectedPiece.color === gameState.turn) {
-        const moves = simulateValidMoves(selectedPiece);
-        setGameState(prev => ({ ...prev, highlightedSquares: moves }));
-      } else {
-        setGameState(prev => ({ ...prev, selectedPieceId: null, highlightedSquares: [] }));
-      }
-    } else {
-      setGameState(prev => ({ ...prev, highlightedSquares: [] }));
-    }
-  }, [gameState.selectedPieceId, gameState.turn, getPieceById, simulateValidMoves]);
-
-  const handleSquareClick = useCallback(
-    (squareId: string) => {
-      setGameState(prev => {
-        const clickedSquare = prev.board.find(s => s.id === squareId);
-        if (!clickedSquare) return prev;
-
-        const currentSelectedPieceId = prev.selectedPieceId;
-        const pieceOnClickedSquare = clickedSquare.pieceId ? prev.pieces[clickedSquare.pieceId] : null;
-
-        // Case 1: No piece is currently selected
-        if (!currentSelectedPieceId) {
-          if (pieceOnClickedSquare && pieceOnClickedSquare.color === prev.turn) {
-            return { ...prev, selectedPieceId: pieceOnClickedSquare.id };
-          }
-          return prev;
-        }
-
-        // Case 2: A piece is already selected
-        const selectedPiece = prev.pieces[currentSelectedPieceId];
-
-        // If clicked square is the currently selected piece, deselect it
-        if (clickedSquare.id === selectedPiece.position) {
-          return { ...prev, selectedPieceId: null, highlightedSquares: [] };
-        }
-
-        // If clicked square has a piece of the current turn's color, select that instead
-        if (pieceOnClickedSquare && pieceOnClickedSquare.color === prev.turn) {
-          return { ...prev, selectedPieceId: pieceOnClickedSquare.id };
-        }
-
-        // Case 3: Try to move the selected piece to the clicked square
-        if (prev.highlightedSquares.includes(squareId)) {
-          const newBoard = prev.board.map(s => {
-            if (s.id === selectedPiece.position) {
-              return { ...s, pieceId: null };
-            }
-            if (s.id === squareId) {
-              return { ...s, pieceId: currentSelectedPieceId };
-            }
-            return s;
-          });
-
-          const newPieces = { ...prev.pieces };
-
-          // If there was an opponent's piece on the target square, capture it
-          if (clickedSquare.pieceId && newPieces[clickedSquare.pieceId]) {
-            newPieces[clickedSquare.pieceId] = { ...newPieces[clickedSquare.pieceId], captured: true, position: 'captured' };
-          }
-
-          newPieces[currentSelectedPieceId] = {
-            ...newPieces[currentSelectedPieceId],
-            position: clickedSquare.position,
-            hasMoved: true,
-          };
-
-          const newTurn = prev.turn === 'white' ? 'black' : 'white';
-
-          let newCheck: 'white' | 'black' | null = null;
-          let newCheckmate = false;
-          let newGameOver = false;
-          let newWinner: 'white' | 'black' | 'draw' | null = null;
-
-          if (Math.random() < 0.15) { // Simulate a chance to be in check
-            newCheck = newTurn;
-            if (Math.random() < 0.3) { // Simulate a chance for checkmate
-              newCheckmate = true;
-              newGameOver = true;
-              newWinner = prev.turn;
-            }
-          }
-
-          return {
-            ...prev,
-            board: newBoard,
-            pieces: newPieces,
-            selectedPieceId: null,
-            highlightedSquares: [],
-            turn: newTurn,
-            check: newCheck,
-            checkmate: newCheckmate,
-            gameOver: newGameOver,
-            winner: newWinner,
-          };
-        }
-
-        // If clicked square is not a valid move for the selected piece, deselect
-        return { ...prev, selectedPieceId: null, highlightedSquares: [] };
-      });
-    },
-    [gameState.pieces, gameState.turn, gameState.highlightedSquares]
-  );
-
-  const kingInCheckId = gameState.check ? (
-    Object.values(gameState.pieces).find(p => p.type === 'king' && p.color === gameState.check && !p.captured)?.id
-  ) : null;
-
-  return (
-    <div
-      style={{
-        fontFamily: 'Arial, sans-serif',
+      {/* Game Board */}
+      <div style={{
+        flexGrow: 1,
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
         justifyContent: 'center',
-        minHeight: '100vh',
-        backgroundColor: '#333',
-        color: '#eee',
-        padding: '20px',
-        boxSizing: 'border-box',
-        overflow: 'hidden'
-      }}
-    >
-      <h1 style={{ marginBottom: '20px', color: '#fff' }}>Chess Game</h1>
+        alignItems: 'center',
+        width: '80%',
+        maxWidth: '1200px',
+        position: 'relative'
+      }}>
+        {/* Player 2's Board */}
+        <PlayerBoard board={state.players.player2.board} assetMap={assetMap} />
 
-      <div style={{ marginBottom: '15px', fontSize: '1.2em' }}>
-        Current Turn: <span style={{ fontWeight: 'bold', color: gameState.turn === 'white' ? '#222' : '#eee', backgroundColor: gameState.turn === 'white' ? '#ddd' : '#555', padding: '5px 10px', borderRadius: '5px' }}>{gameState.turn.toUpperCase()}</span>
+        {/* Turn Indicator */}
+        <TurnIndicator activePlayer={state.activePlayer} assetMap={assetMap} />
+
+        {/* Player 1's Board */}
+        <PlayerBoard board={state.players.player1.board} assetMap={assetMap} />
       </div>
 
-      {gameState.check && (
-        <div style={{ color: 'red', fontWeight: 'bold', marginBottom: '10px', fontSize: '1.3em' }}>
-          CHECK! {gameState.checkmate && 'CHECKMATE!'}
-        </div>
-      )}
-      {gameState.gameOver && gameState.winner && (
-        <div style={{ color: '#ffd700', fontWeight: 'bold', marginBottom: '10px', fontSize: '1.5em' }}>
-          Game Over! {gameState.winner.toUpperCase()} wins!
-        </div>
-      )}
-
-      <div
-        style={{
-          width: 'min(90vw, 80vh)',
-          height: 'min(90vw, 80vh)',
-          maxWidth: '600px',
-          maxHeight: '600px',
-          display: 'grid',
-          gridTemplateColumns: 'repeat(8, 1fr)',
-          gridTemplateRows: 'repeat(8, 1fr)',
-          border: '2px solid #555',
-          boxShadow: '0 4px 15px rgba(0,0,0,0.5)',
-          backgroundImage: assetMap.board ? `url(${assetMap.board})` : 'none',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          position: 'relative',
-          userSelect: 'none',
-        }}
-      >
-        {gameState.board.map(square => {
-          const piece = getPieceById(square.pieceId);
-          const isSelected = gameState.selectedPieceId === square.pieceId;
-          const isHighlighted = gameState.highlightedSquares.includes(square.id);
-          const isAttackable = isHighlighted && piece && piece.color !== getPieceById(gameState.selectedPieceId)?.color;
-          const isCheckWarning = kingInCheckId === square.pieceId;
-
-          return (
-            <Square
-              key={square.id}
-              square={square}
-              piece={piece}
-              isSelected={isSelected}
-              isHighlighted={isHighlighted}
-              isAttackable={isAttackable}
-              isCheckWarning={isCheckWarning}
-              onClick={handleSquareClick}
-              assetMap={assetMap}
-            />
-          );
-        })}
-      </div>
+      {/* Player 1 Area (Bottom) */}
+      <PlayerArea player={state.players.player1} isPlayer1={true} assetMap={assetMap} />
     </div>
   );
 };
 
-    export const INITIAL_STATE = {"board":[{"id":"a1","position":"a1","color":"dark","pieceId":"white_rook_a"},{"id":"b1","position":"b1","color":"light","pieceId":"white_knight_b"},{"id":"c1","position":"c1","color":"dark","pieceId":"white_bishop_c"},{"id":"d1","position":"d1","color":"light","pieceId":"white_queen"},{"id":"e1","position":"e1","color":"dark","pieceId":"white_king"},{"id":"f1","position":"f1","color":"light","pieceId":"white_bishop_f"},{"id":"g1","position":"g1","color":"dark","pieceId":"white_knight_g"},{"id":"h1","position":"h1","color":"light","pieceId":"white_rook_h"},{"id":"a2","position":"a2","color":"light","pieceId":"white_pawn_a"},{"id":"b2","position":"b2","color":"dark","pieceId":"white_pawn_b"},{"id":"c2","position":"c2","color":"light","pieceId":"white_pawn_c"},{"id":"d2","position":"d2","color":"dark","pieceId":"white_pawn_d"},{"id":"e2","position":"e2","color":"light","pieceId":"white_pawn_e"},{"id":"f2","position":"f2","color":"dark","pieceId":"white_pawn_f"},{"id":"g2","position":"g2","color":"light","pieceId":"white_pawn_g"},{"id":"h2","position":"h2","color":"dark","pieceId":"white_pawn_h"},{"id":"a3","position":"a3","color":"dark","pieceId":null},{"id":"b3","position":"b3","color":"light","pieceId":null},{"id":"c3","position":"c3","color":"dark","pieceId":null},{"id":"d3","position":"d3","color":"light","pieceId":null},{"id":"e3","position":"e3","color":"dark","pieceId":null},{"id":"f3","position":"f3","color":"light","pieceId":null},{"id":"g3","position":"g3","color":"dark","pieceId":null},{"id":"h3","position":"h3","color":"light","pieceId":null},{"id":"a4","position":"a4","color":"light","pieceId":null},{"id":"b4","position":"b4","color":"dark","pieceId":null},{"id":"c4","position":"c4","color":"light","pieceId":null},{"id":"d4","position":"d4","color":"dark","pieceId":null},{"id":"e4","position":"e4","color":"light","pieceId":null},{"id":"f4","position":"f4","color":"dark","pieceId":null},{"id":"g4","position":"g4","color":"light","pieceId":null},{"id":"h4","position":"h4","color":"dark","pieceId":null},{"id":"a5","position":"a5","color":"dark","pieceId":null},{"id":"b5","position":"b5","color":"light","pieceId":null},{"id":"c5","position":"c5","color":"dark","pieceId":null},{"id":"d5","position":"d5","color":"light","pieceId":null},{"id":"e5","position":"e5","color":"dark","pieceId":null},{"id":"f5","position":"f5","color":"light","pieceId":null},{"id":"g5","position":"g5","color":"dark","pieceId":null},{"id":"h5","position":"h5","color":"light","pieceId":null},{"id":"a6","position":"a6","color":"light","pieceId":null},{"id":"b6","position":"b6","color":"dark","pieceId":null},{"id":"c6","position":"c6","color":"light","pieceId":null},{"id":"d6","position":"d6","color":"dark","pieceId":null},{"id":"e6","position":"e6","color":"light","pieceId":null},{"id":"f6","position":"f6","color":"dark","pieceId":null},{"id":"g6","position":"g6","color":"light","pieceId":null},{"id":"h6","position":"h6","color":"dark","pieceId":null},{"id":"a7","position":"a7","color":"dark","pieceId":"black_pawn_a"},{"id":"b7","position":"b7","color":"light","pieceId":"black_pawn_b"},{"id":"c7","position":"c7","color":"dark","pieceId":"black_pawn_c"},{"id":"d7","position":"d7","color":"light","pieceId":"black_pawn_d"},{"id":"e7","position":"e7","color":"dark","pieceId":"black_pawn_e"},{"id":"f7","position":"f7","color":"light","pieceId":"black_pawn_f"},{"id":"g7","position":"g7","color":"dark","pieceId":"black_pawn_g"},{"id":"h7","position":"h7","color":"light","pieceId":"black_pawn_h"},{"id":"a8","position":"a8","color":"light","pieceId":"black_rook_a"},{"id":"b8","position":"b8","color":"dark","pieceId":"black_knight_b"},{"id":"c8","position":"c8","color":"light","pieceId":"black_bishop_c"},{"id":"d8","position":"d8","color":"dark","pieceId":"black_queen"},{"id":"e8","position":"e8","color":"light","pieceId":"black_king"},{"id":"f8","position":"f8","color":"dark","pieceId":"black_bishop_f"},{"id":"g8","position":"g8","color":"light","pieceId":"black_knight_g"},{"id":"h8","position":"h8","color":"dark","pieceId":"black_rook_h"}],"pieces":{"white_rook_a":{"id":"white_rook_a","type":"rook","color":"white","position":"a1","hasMoved":false,"captured":false},"white_rook_h":{"id":"white_rook_h","type":"rook","color":"white","position":"h1","hasMoved":false,"captured":false},"white_knight_b":{"id":"white_knight_b","type":"knight","color":"white","position":"b1","hasMoved":false,"captured":false},"white_knight_g":{"id":"white_knight_g","type":"knight","color":"white","position":"g1","hasMoved":false,"captured":false},"white_bishop_c":{"id":"white_bishop_c","type":"bishop","color":"white","position":"c1","hasMoved":false,"captured":false},"white_bishop_f":{"id":"white_bishop_f","type":"bishop","color":"white","position":"f1","hasMoved":false,"captured":false},"white_queen":{"id":"white_queen","type":"queen","color":"white","position":"d1","hasMoved":false,"captured":false},"white_king":{"id":"white_king","type":"king","color":"white","position":"e1","hasMoved":false,"captured":false},"white_pawn_a":{"id":"white_pawn_a","type":"pawn","color":"white","position":"a2","hasMoved":false,"captured":false},"white_pawn_b":{"id":"white_pawn_b","type":"pawn","color":"white","position":"b2","hasMoved":false,"captured":false},"white_pawn_c":{"id":"white_pawn_c","type":"pawn","color":"white","position":"c2","hasMoved":false,"captured":false},"white_pawn_d":{"id":"white_pawn_d","type":"pawn","color":"white","position":"d2","hasMoved":false,"captured":false},"white_pawn_e":{"id":"white_pawn_e","type":"pawn","color":"white","position":"e2","hasMoved":false,"captured":false},"white_pawn_f":{"id":"white_pawn_f","type":"pawn","color":"white","position":"f2","hasMoved":false,"captured":false},"white_pawn_g":{"id":"white_pawn_g","type":"pawn","color":"white","position":"g2","hasMoved":false,"captured":false},"white_pawn_h":{"id":"white_pawn_h","type":"pawn","color":"white","position":"h2","hasMoved":false,"captured":false},"black_rook_a":{"id":"black_rook_a","type":"rook","color":"black","position":"a8","hasMoved":false,"captured":false},"black_rook_h":{"id":"black_rook_h","type":"rook","color":"black","position":"h8","hasMoved":false,"captured":false},"black_knight_b":{"id":"black_knight_b","type":"knight","color":"black","position":"b8","hasMoved":false,"captured":false},"black_knight_g":{"id":"black_knight_g","type":"knight","color":"black","position":"g8","hasMoved":false,"captured":false},"black_bishop_c":{"id":"black_bishop_c","type":"bishop","color":"black","position":"c8","hasMoved":false,"captured":false},"black_bishop_f":{"id":"black_bishop_f","type":"bishop","color":"black","position":"f8","hasMoved":false,"captured":false},"black_queen":{"id":"black_queen","type":"queen","color":"black","position":"d8","hasMoved":false,"captured":false},"black_king":{"id":"black_king","type":"king","color":"black","position":"e8","hasMoved":false,"captured":false},"black_pawn_a":{"id":"black_pawn_a","type":"pawn","color":"black","position":"a7","hasMoved":false,"captured":false},"black_pawn_b":{"id":"black_pawn_b","type":"pawn","color":"black","position":"b7","hasMoved":false,"captured":false},"black_pawn_c":{"id":"black_pawn_c","type":"pawn","color":"black","position":"c7","hasMoved":false,"captured":false},"black_pawn_d":{"id":"black_pawn_d","type":"pawn","color":"black","position":"d7","hasMoved":false,"captured":false},"black_pawn_e":{"id":"black_pawn_e","type":"pawn","color":"black","position":"e7","hasMoved":false,"captured":false},"black_pawn_f":{"id":"black_pawn_f","type":"pawn","color":"black","position":"f7","hasMoved":false,"captured":false},"black_pawn_g":{"id":"black_pawn_g","type":"pawn","color":"black","position":"g7","hasMoved":false,"captured":false},"black_pawn_h":{"id":"black_pawn_h","type":"pawn","color":"black","position":"h7","hasMoved":false,"captured":false}},"selectedPieceId":null,"turn":"white","gameOver":false,"winner":null,"check":null,"checkmate":false,"highlightedSquares":[]};
-    export const ASSET_MAP = {"board":"/generated-assets/board.png","white_rook_a":"/generated-assets/white_rook_a.png","white_rook_h":"/generated-assets/white_rook_h.png"};
-    export const GAME_RULES = "Standard chess rules.";
-    
+export default Game;
 
-    export const Game = (props: { initialState?: any, assetMap?: any }) => {
-        const state = props.initialState || INITIAL_STATE;
-        const assets = props.assetMap || ASSET_MAP;
-        return <_Game initialState={state} assetMap={assets} />;
-    };
-    
+
+export const ASSET_MAP = {
+  "minion_board_space": "/generated-assets/minion_board_space.png",
+  "card_text_display": "/generated-assets/card_text_display.png",
+  "player_mana_display": "/generated-assets/player_mana_display.png",
+  "player_hand_area": "/generated-assets/player_hand_area.png",
+  "icon_shield": "/generated-assets/icon_shield.png",
+  "turn_indicator": "/generated-assets/turn_indicator.png",
+  "card_cost_display": "/generated-assets/card_cost_display.png",
+  "icon_mana_crystal_filled": "/generated-assets/icon_mana_crystal_filled.png",
+  "player_graveyard_stack": "/generated-assets/player_graveyard_stack.png",
+  "game_board_background": "/generated-assets/game_board_background.png",
+  "player_health_display": "/generated-assets/player_health_display.png",
+  "card_attack_display": "/generated-assets/card_attack_display.png",
+  "minion_card_asset": "/generated-assets/minion_card_asset.png",
+  "icon_sword": "/generated-assets/icon_sword.png",
+  "icon_heart": "/generated-assets/icon_heart.png",
+  "icon_mana_crystal_empty": "/generated-assets/icon_mana_crystal_empty.png",
+  "player_deck_count": "/generated-assets/player_deck_count.png",
+  "card_health_display": "/generated-assets/card_health_display.png",
+  "player_graveyard_count": "/generated-assets/player_graveyard_count.png",
+  "player_deck_stack": "/generated-assets/player_deck_stack.png",
+  "spell_card_asset": "/generated-assets/spell_card_asset.png"
+};

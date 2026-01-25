@@ -6,6 +6,7 @@
 export interface GraphState {
     // 1. Input
     userInput: string;
+    runId?: string;
 
     // 2. Planner Output
     designDoc: string | null;
