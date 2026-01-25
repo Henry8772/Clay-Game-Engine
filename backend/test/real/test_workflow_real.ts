@@ -17,7 +17,7 @@ describe('REAL: Workflow E2E', () => {
 
     it.skipIf(!shouldRun)('should run E2E workflow with real calls', async () => {
         const client = new LLMClient("gemini", "gemini-2.5-flash", false);
-        const userInput = "A minimal hearthstone card game";
+        const userInput = "A minimal chess game";
 
         const app = compileGenerationGraph();
 
