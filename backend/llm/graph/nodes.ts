@@ -8,6 +8,23 @@ import * as Mocks from "./mocks";
 import { runUIDesignerAgent } from "../agents/ui_designer";
 import { runAssetGeneratorAgent } from "../agents/asset_generator";
 
+// Helper to save artifacts
+const saveRunArtifact = async (runId: string | undefined, filename: string, content: string | Buffer) => {
+    if (!runId) return;
+    try {
+        const fs = await import("fs");
+        const path = await import("path");
+        const runDir = path.resolve(process.cwd(), ".tmp/runs", runId);
+        if (!fs.existsSync(runDir)) {
+            fs.mkdirSync(runDir, { recursive: true });
+        }
+        await fs.promises.writeFile(path.join(runDir, filename), content);
+        console.log(`[Nodes] Saved ${filename} for run ${runId}`);
+    } catch (e) {
+        console.error(`[Nodes] Failed to save ${filename}:`, e);
+    }
+};
+
 export interface GenerationGraphConfig {
     client: LLMClient;
     useMock?: boolean;
@@ -23,6 +40,10 @@ export const nodePlanner = async (state: GraphState, config?: { configurable?: G
     }
 
     const designDoc = await runPlannerAgent(client, state.userInput);
+
+    // Save progress
+    await saveRunArtifact(state.runId, "design_doc.md", designDoc);
+
     return { designDoc };
 };
 
@@ -41,13 +62,23 @@ export const nodeArchitect = async (state: GraphState, config?: { configurable?:
 
     if (!state.designDoc) throw new Error("Design Doc missing");
     const result = await runArchitectAgent(client, state.designDoc);
+
+    // Save progress
+    const architectDump = JSON.stringify({
+        initialState: result.initialState,
+        rules: result.rules,
+        entityList: result.entityList
+    }, null, 2);
+    await saveRunArtifact(state.runId, "architect_output.json", architectDump);
+
     return {
         initialState: result.initialState,
-        rules: result.rules
+        rules: result.rules,
+        entityList: result.entityList
     };
 };
 
-// 3. UI Designer Node (Replaces Artist)
+// 3. UI Designer Node
 export const nodeUIDesigner = async (state: GraphState, config?: { configurable?: GenerationGraphConfig }) => {
     const { client, useMock } = config?.configurable || {};
     if (!client) throw new Error("Client not found");
@@ -65,17 +96,27 @@ export const nodeUIDesigner = async (state: GraphState, config?: { configurable?
 
     // Save image to a temporary path for downstream consumption (Asset Swarm)
     let generatedImagePath: string | null = null;
-    if (result.image) {
+    const runId = state.runId;
+
+    if (result.image && runId) {
         const fs = await import("fs");
         const path = await import("path");
-        const tmpDir = path.resolve(process.cwd(), ".tmp/generated");
+        const tmpDir = path.resolve(process.cwd(), ".tmp/runs", runId, "generated");
         if (!fs.existsSync(tmpDir)) {
             fs.mkdirSync(tmpDir, { recursive: true });
         }
-        generatedImagePath = path.join(tmpDir, `scene_${Date.now()}.png`);
+        generatedImagePath = path.join(tmpDir, `scene.png`);
         fs.writeFileSync(generatedImagePath, result.image);
         console.log(`[Nodes] Saved generated scene to: ${generatedImagePath}`);
     }
+
+    // Save metadata
+    const uiDump = JSON.stringify({
+        imagePrompt: result.imagePrompt,
+        visualLayout: result.visualLayout,
+        generatedImagePath
+    }, null, 2);
+    await saveRunArtifact(runId, "ui_designer_output.json", uiDump);
 
     return {
         imagePrompt: result.imagePrompt,
@@ -94,25 +135,6 @@ export const nodeAssetGenSwarm = async (state: GraphState, config?: { configurab
     }
 
     if (!state.entityList) throw new Error("Entity List missing from Architect output");
-    // We also need the reference image from UI Designer, but it might be just a prompt or ID in some designs.
-    // For now, let's assume we have a way to get the reference image.
-    // The current UI Designer returns `image` buffer but it's not in GraphState explicitly as a buffer, just `generatedImage` (URL/Base64?).
-    // We need to ensure we can access the buffer.
-    // The `nodeUIDesigner` (in previous code) returned `imagePrompt` and `visualLayout`.
-    // Wait, my `nodeUIDesigner` implementation in `nodes.ts` DOES NOT return the image buffer to state, only implicitly via `result`?
-    // Let's check `nodeUIDesigner` again. It returns `imagePrompt` and `visualLayout`.
-    // The `ui_designer.ts` AGENT returns `image` buffer.
-    // We need to update `nodeUIDesigner` to store the image buffer in state or pass it along.
-    // Let's assume validation will catch this. For now, I will implement the swarm logic assuming inputs.
-
-    // Constraint: The real `generatedImage` buffer might need to be stored in state or we re-fetch/regenerate?
-    // Ideally, `nodeUIDesigner` should return { generatedImage: ... } where this is the buffer or path.
-    // The `GraphState` has `generatedImage: string | null`. Let's assume it's a path or base64.
-
-    // For the Purpose of this node:
-    // 1. Get Entity List
-    // 2. Get Reference Image (Placeholder for now if not in state)
-    // 3. Parallel Execution
 
     const entityList = state.entityList;
     const assetMap: Record<string, string> = {};
@@ -142,18 +164,23 @@ export const nodeAssetGenSwarm = async (state: GraphState, config?: { configurab
             const assetBuffer = await runAssetGeneratorAgent(client, entity.visualPrompt, referenceImageBuffer);
 
             // Save asset to disk
-            const assetPath = `/.tmp/assets/${entity.id}.png`; // Simple pathing
-            // Ensure dir exists
-            // fs.mkdirSync(path.dirname(assetPath), { recursive: true });
-            // fs.writeFileSync(assetPath, assetBuffer);
+            const path = await import("path");
+            const runId = state.runId || "default";
+            const assetsDir = path.resolve(process.cwd(), ".tmp/runs", runId, "assets");
 
-            // For now, just mocking the save or returning a data URI?
-            // Let's return a fake path for the map
-            assetMap[entity.id] = `generated_assets/${entity.id}.png`;
+            if (!fs.existsSync(assetsDir)) {
+                fs.mkdirSync(assetsDir, { recursive: true });
+            }
+
+            const assetPath = path.join(assetsDir, `${entity.id}.png`);
+            fs.writeFileSync(assetPath, assetBuffer);
+            assetMap[entity.id] = assetPath;
         } catch (e) {
             console.error(`Failed to generate asset for ${entity.id}:`, e);
         }
     }));
+
+    await saveRunArtifact(state.runId, "asset_map.json", JSON.stringify(assetMap, null, 2));
 
     return { assetMap };
 };
@@ -173,5 +200,8 @@ export const nodeRenderer = async (state: GraphState, config?: { configurable?: 
     if (!state.visualLayout || !state.initialState || !state.assetMap) throw new Error("Missing inputs for Renderer");
 
     const reactCode = await runRendererAgent(client, state.visualLayout, state.initialState, state.assetMap);
+
+    await saveRunArtifact(state.runId, "game-slot.tsx", reactCode);
+
     return { reactCode };
 };

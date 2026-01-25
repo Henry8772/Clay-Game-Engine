@@ -16,6 +16,7 @@ export function compileGenerationGraph() {
     // 1. Define State Channels
     const graphState: StateGraphArgs<GraphState>["channels"] = {
         userInput: { value: (x, y) => y ?? x, default: () => "" },
+        runId: { value: (x, y) => y ?? x, default: () => "" },
         designDoc: { value: (x, y) => y ?? x, default: () => null },
         initialState: { value: (x, y) => y ?? x, default: () => null },
         rules: { value: (x, y) => y ?? x, default: () => null },

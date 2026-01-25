@@ -54,6 +54,11 @@ export const MOCK_ASSET_MAP = {
 
 export const MOCK_REACT_CODE = `
 import React from 'react';
+
+export const INITIAL_STATE = { entities: [] };
+export const GAME_RULES = "Mock Rules";
+export const ASSET_MAP = {};
+
 export function Game() {
   return <div>Mock Game</div>;
 }
