@@ -76,6 +76,9 @@ cd backend
 npm run test test/real/test_workflow_real.ts
 ```
 
+### 4. Interaction Workflow (Test)
+Open url at `http://localhost:3000/play`, click `Load Test Run`
+
 
 ## Test
 All test are hosted in Vitest UI for interactive debug.
