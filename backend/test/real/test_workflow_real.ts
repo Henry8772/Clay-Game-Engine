@@ -46,6 +46,7 @@ describe('REAL: Workflow E2E', () => {
         expect(result).toBeDefined();
         expect(result.designDoc).toBeDefined();
         expect(result.initialState).toBeDefined();
+        expect(result.blueprints).toBeDefined();
         expect(result.reactCode).toBeDefined();
 
         console.log("Summary:", {

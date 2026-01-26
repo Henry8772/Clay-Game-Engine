@@ -18,6 +18,8 @@ Your goal is to write the React code (\`Game.tsx\`).
    - Use \`initialState.entities[id]\` for dynamic data (pos, hp).
    - Use the Blueprint Manifest to look up static data (visuals, max stats) using \`entity.t\`.
 3. **Assets:** Use the provided asset paths from \`ASSET_MAP\`.
+4. **Hydration:** Create a helper utility to merge static Blueprints with dynamic Entity State.
+   - Example: \`const getEntity = (id) => { return { ...BLUEPRINTS[state.entities[id].t], ...state.entities[id] } }\`
 
 **CRITICAL Output Rules:**
 - You MUST export the component as a named export: \`export const Game = ...\` (Do NOT use default export).
