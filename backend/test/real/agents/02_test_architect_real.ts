@@ -17,33 +17,45 @@ describe('REAL: 02 Architect Agent', () => {
         client = new LLMClient("gemini", "gemini-2.5-flash", false);
     });
 
-    it.skipIf(!shouldRun)('should generate initial state and rules from design doc', async () => {
+    it.skipIf(!shouldRun)('should generate initial state and blueprints from design doc', async () => {
         // Load input from chain if available
         const fs = await import("fs");
         const path = await import("path");
         const chainDir = path.resolve(__dirname, "../../../.tmp/real_chain");
         const inputFile = path.join(chainDir, "design_doc.json");
-        const outputFile = path.join(chainDir, "architect_output.json");
 
-        let designDoc = "";
-        const data = JSON.parse(fs.readFileSync(inputFile, "utf-8"));
-        designDoc = data.designDoc;
+        // Use mock input if previous step didn't run
+        let designDoc = "Game: Chess. Board: 8x8. Pieces: King, Queen, etc.";
+        if (fs.existsSync(inputFile)) {
+            const data = JSON.parse(fs.readFileSync(inputFile, "utf-8"));
+            designDoc = data.designDoc;
+        }
 
         console.log(`[Real] Architect Input Doc Length: ${designDoc.length}`);
 
         const res = await runArchitectAgent(client, designDoc);
 
-        console.log(`[Real] Architect Output State:\n`, JSON.stringify(res.initialState, null, 2));
+        console.log(`[Real] Architect Output State:\n`, res.initialState);
         console.log(`[Real] Architect Output Rules:\n`, res.rules);
-        console.log(`[Real] Architect Output Entity List:\n`, JSON.stringify(res.entityList, null, 2));
+        console.log(`[Real] Architect Output Blueprints:\n`, res.blueprints);
 
+        // Universal State Structure Checks
         expect(res.initialState).toBeDefined();
+        expect(res.initialState.meta).toBeDefined();
+        expect(res.initialState.zones).toBeDefined();
+        expect(res.initialState.entities).toBeDefined();
+
         expect(res.rules).toBeDefined();
-        expect(res.entityList).toBeDefined();
-        expect(Array.isArray(res.entityList)).toBe(true);
-        expect(res.entityList.length).toBeGreaterThan(0);
-        expect(res.entityList[0].visualPrompt).toBeDefined();
-        expect(res.entityList[0].visualPrompt).toBeDefined();
+
+        // Blueprint Checks
+        expect(res.blueprints).toBeDefined();
+        const blueprintKeys = Object.keys(res.blueprints);
+        expect(blueprintKeys.length).toBeGreaterThan(0);
+
+        // Check one blueprint
+        const firstBP = res.blueprints[blueprintKeys[0]];
+        expect(firstBP.visualPrompt).toBeDefined();
+        expect(firstBP.renderType).toBeDefined();
 
         // Save output for chaining
         if (!fs.existsSync(chainDir)) {

@@ -56,7 +56,7 @@ export const nodeArchitect = async (state: GraphState, config?: { configurable?:
         return {
             initialState: Mocks.MOCK_INITIAL_STATE,
             rules: Mocks.MOCK_RULES,
-            entityList: Mocks.MOCK_ENTITY_LIST
+            blueprints: Mocks.MOCK_BLUEPRINTS
         };
     }
 
@@ -67,14 +67,14 @@ export const nodeArchitect = async (state: GraphState, config?: { configurable?:
     const architectDump = JSON.stringify({
         initialState: result.initialState,
         rules: result.rules,
-        entityList: result.entityList
+        blueprints: result.blueprints
     }, null, 2);
     await saveRunArtifact(state.runId, "architect_output.json", architectDump);
 
     return {
         initialState: result.initialState,
         rules: result.rules,
-        entityList: result.entityList
+        blueprints: result.blueprints
     };
 };
 
@@ -134,9 +134,9 @@ export const nodeAssetGenSwarm = async (state: GraphState, config?: { configurab
         return { assetMap: Mocks.MOCK_ASSET_MAP };
     }
 
-    if (!state.entityList) throw new Error("Entity List missing from Architect output");
+    if (!state.blueprints) throw new Error("Blueprints missing from Architect output");
 
-    const entityList = state.entityList;
+    const blueprints = state.blueprints;
     const assetMap: Record<string, string> = {};
 
     // Mocking reference buffer for now if not available, or we need to fix Upstream.
@@ -158,10 +158,13 @@ export const nodeAssetGenSwarm = async (state: GraphState, config?: { configurab
         return { assetMap: {} };
     }
 
-    await Promise.all(entityList.map(async (entity: any) => {
+    const tasks = Object.values(blueprints).map(async (blueprint: any) => {
         try {
-            if (!entity.visualPrompt) return;
-            const assetBuffer = await runAssetGeneratorAgent(client, entity.visualPrompt, referenceImageBuffer);
+            // only generate assets for ASSET renderType
+            if (blueprint.renderType !== "ASSET") return;
+            if (!blueprint.visualPrompt) return;
+
+            const assetBuffer = await runAssetGeneratorAgent(client, blueprint.visualPrompt, referenceImageBuffer);
 
             // Save asset to disk
             const path = await import("path");
@@ -172,20 +175,20 @@ export const nodeAssetGenSwarm = async (state: GraphState, config?: { configurab
                 fs.mkdirSync(assetsDir, { recursive: true });
             }
 
-            const assetPath = path.join(assetsDir, `${entity.id}.png`);
+            const assetPath = path.join(assetsDir, `${blueprint.id}.png`);
             fs.writeFileSync(assetPath, assetBuffer);
-            assetMap[entity.id] = assetPath;
+            assetMap[blueprint.id] = assetPath;
         } catch (e) {
-            console.error(`Failed to generate asset for ${entity.id}:`, e);
+            console.error(`Failed to generate asset for ${blueprint.id}:`, e);
         }
-    }));
+    });
+
+    await Promise.all(tasks);
 
     await saveRunArtifact(state.runId, "asset_map.json", JSON.stringify(assetMap, null, 2));
 
     return { assetMap };
 };
-
-
 
 // Renderer Node
 export const nodeRenderer = async (state: GraphState, config?: { configurable?: GenerationGraphConfig }) => {
@@ -197,17 +200,23 @@ export const nodeRenderer = async (state: GraphState, config?: { configurable?: 
     }
 
     // Now we should have state.assetMap from the Swarm!
-    if (!state.visualLayout || !state.initialState || !state.assetMap) throw new Error("Missing inputs for Renderer");
+    if (!state.visualLayout || !state.initialState || !state.assetMap || !state.blueprints) throw new Error("Missing inputs for Renderer");
 
-    const reactCode = await runRendererAgent(client, state.visualLayout, state.initialState, state.assetMap);
+    const reactCode = await runRendererAgent(client, state.visualLayout, state.initialState, state.blueprints, state.assetMap);
 
-    // Safeguard: Inject INITIAL_STATE and GAME_RULES if missing
+    // Safeguard: Inject INITIAL_STATE, BLUEPRINTS and GAME_RULES if missing
     let finalCode = reactCode;
 
     // Check and inject INITIAL_STATE
     if (!finalCode.includes("export const INITIAL_STATE")) {
         const stateStr = JSON.stringify(state.initialState, null, 2);
         finalCode += `\n\nexport const INITIAL_STATE = ${stateStr};\n`;
+    }
+
+    // Check and inject BLUEPRINTS
+    if (!finalCode.includes("export const BLUEPRINTS")) {
+        const bpStr = JSON.stringify(state.blueprints, null, 2);
+        finalCode += `\n\nexport const BLUEPRINTS = ${bpStr};\n`;
     }
 
     // Check and inject GAME_RULES
@@ -235,12 +244,6 @@ export const nodeRenderer = async (state: GraphState, config?: { configurable?: 
             finalCode = finalCode.replace("function Game", "export function Game");
         }
     }
-
-    // Safeguard: Ensure Game accepts initialState prop (simplified check, regex would be better for full parsing)
-    // We look for "({ initialState" or "props.initialState" or similar, but simplified: 
-    // We just warn or rely on the agent prompt for the prop structure, 
-    // BUT we can try to patch the functional component signature if completely missing.
-    // For now, the prompt update is the primary defense for props.
 
     await saveRunArtifact(state.runId, "game-slot.tsx", finalCode);
 

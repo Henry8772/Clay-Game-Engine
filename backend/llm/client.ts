@@ -46,7 +46,8 @@ export class LLMClient {
             MOCK_REACT_CODE,
             MOCK_DETECTED_REGIONS,
             MOCK_RESTORED_ASSETS,
-            MOCK_ENTITY_LIST
+            MOCK_ENTITY_LIST,
+            MOCK_BLUEPRINTS
         } = await import("./graph/mocks");
         const { mockGameStateExtraction } = await import("./agents/mocks");
 
@@ -58,7 +59,7 @@ export class LLMClient {
                 return {
                     initialState: JSON.stringify(MOCK_INITIAL_STATE),
                     rules: MOCK_RULES,
-                    entityList: MOCK_ENTITY_LIST
+                    blueprints: JSON.stringify(MOCK_BLUEPRINTS)
                 };
             case "artist_agent":
                 return { imagePrompt: MOCK_IMAGE_PROMPT, visualLayout: MOCK_VISUAL_LAYOUT };
