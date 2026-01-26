@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "dev:all": "node scripts/start-all.mjs",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
