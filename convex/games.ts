@@ -31,9 +31,11 @@ export const reset = mutation({
         const gameId = await ctx.db.insert("games", {
             state: args.initialState,
             rules: args.rules,
-            history: [],
+            // history: [], // Deprecated
             isActive: true,
         });
+
+        // No initial history needed for now, or could insert a system message
         return gameId;
     },
 });
@@ -51,17 +53,26 @@ export const updateState = mutation({
         const game = await ctx.db.get(args.gameId);
         if (!game) throw new Error("Game not found");
 
-        // Add user command to history if any
-        const newHistory = [...game.history];
+        // Insert user command into messages table
         if (args.command) {
-            newHistory.push({ role: "user", content: args.command });
+            await ctx.db.insert("messages", {
+                gameId: args.gameId,
+                role: "user",
+                content: args.command,
+                timestamp: Date.now() - 1 // ensure slightly before agent
+            });
         }
-        // Add agent summary
-        newHistory.push({ role: "agent", content: args.summary });
+
+        // Insert agent summary into messages table
+        await ctx.db.insert("messages", {
+            gameId: args.gameId,
+            role: "agent",
+            content: args.summary,
+            timestamp: Date.now()
+        });
 
         await ctx.db.patch(args.gameId, {
             state: args.newState,
-            history: newHistory
         });
     }
 });
