@@ -26,6 +26,7 @@ export function compileGenerationGraph() {
         finalState: { value: (x, y) => y ?? x, default: () => null },
         assetMap: { value: (x, y) => y ?? x, default: () => null },
         entityList: { value: (x, y) => y ?? x, default: () => null },
+        blueprints: { value: (x, y) => y ?? x, default: () => null },
         reactCode: { value: (x, y) => y ?? x, default: () => null },
     };
 

@@ -92,7 +92,8 @@ export const nodeUIDesigner = async (state: GraphState, config?: { configurable?
     }
 
     if (!state.designDoc) throw new Error("Design Doc missing");
-    const result = await runUIDesignerAgent(client, state.designDoc);
+    if (!state.blueprints) throw new Error("Blueprints missing related to UI Designer");
+    const result = await runUIDesignerAgent(client, state.designDoc, state.blueprints);
 
     // Save image to a temporary path for downstream consumption (Asset Swarm)
     let generatedImagePath: string | null = null;
