@@ -28,6 +28,7 @@ export interface GraphState {
 
     // New Fields
     entityList: any[] | null;
+    blueprints: Record<string, any> | null;
 
     // 7. Renderer Output
     reactCode: string | null;

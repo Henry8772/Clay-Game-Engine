@@ -16,46 +16,57 @@ Conveyor belt at bottom. Kitchen counters at top.
 `;
 
 export const MOCK_INITIAL_STATE = {
-    entities: [],
-    resources: { gold: 100 }
+    meta: { turnCount: 1, activePlayerId: "p1", phase: "setup", vars: {} },
+    zones: {
+        conveyor: { type: "grid", visibility: "public", ownerId: null },
+        kitchen: { type: "set", visibility: "public", ownerId: "p1" }
+    },
+    entities: {
+        chef_1: { t: "chef", loc: "kitchen", pos: 1, owner: "p1", props: { level: 1 } },
+        tuna_1: { t: "tuna", loc: "conveyor", pos: 0, owner: "cpu", props: { hp: 10 } }
+    }
+};
+
+export const MOCK_BLUEPRINTS = {
+    chef: {
+        id: "chef",
+        name: "Sushi Chef",
+        renderType: "ASSET",
+        description: "The main tower that throws knives",
+        visualPrompt: "A pixel art sushi chef in white uniform holding a knife",
+        baseStats: { cost: 50, damage: 10 }
+    },
+    tuna: {
+        id: "tuna",
+        name: "Tuna Roll",
+        renderType: "ASSET",
+        description: "Basic enemy unit",
+        visualPrompt: "A pixel art tuna sushi roll with angry eyes",
+        baseStats: { speed: 1, reward: 5 }
+    }
 };
 
 export const MOCK_RULES = "Enemies spawn every 5 seconds.";
 
-export const MOCK_ENTITY_LIST = [
-    {
-        id: "chef_1",
-        name: "Sushi Chef",
-        description: "The main tower that throws knives",
-        visualPrompt: "A pixel art sushi chef in white uniform holding a knife"
-    },
-    {
-        id: "tuna_roll",
-        name: "Tuna Roll",
-        description: "Basic enemy unit",
-        visualPrompt: "A pixel art tuna sushi roll with angry eyes"
-    }
-];
+export const MOCK_ENTITY_LIST = Object.values(MOCK_BLUEPRINTS); // Backward compat if needed
 
 export const MOCK_IMAGE_PROMPT = "Cyberpunk sushi kitchen with neon lights.";
 export const MOCK_VISUAL_LAYOUT = ["conveyor_belt", "chef_station_1"];
 
 export const MOCK_GENERATED_IMAGE = "http://mock-image/sushi.png";
 
-export const MOCK_FINAL_STATE = {
-    entities: [{ id: "chef_1", type: "chef", x: 100, y: 100 }],
-    resources: { gold: 100 }
-};
+export const MOCK_FINAL_STATE = MOCK_INITIAL_STATE;
 
 export const MOCK_ASSET_MAP = {
-    "chef_1": "assets/chef.png",
+    "chef": "assets/chef.png",
     "tuna": "assets/tuna.png"
 };
 
 export const MOCK_REACT_CODE = `
 import React from 'react';
 
-export const INITIAL_STATE = { entities: [] };
+export const INITIAL_STATE = ${JSON.stringify(MOCK_INITIAL_STATE)};
+export const BLUEPRINTS = ${JSON.stringify(MOCK_BLUEPRINTS)};
 export const GAME_RULES = "Mock Rules";
 export const ASSET_MAP = {};
 
@@ -70,6 +81,6 @@ export const MOCK_DETECTED_REGIONS = [
 ];
 
 export const MOCK_RESTORED_ASSETS = [
-    { id: "chef_1", name: "Sushi Chef", description: "Pixel art chef", imagePath: "assets/chef.png" },
-    { id: "conveyor_belt", name: "Conveyor Belt", description: "Industrial belt", imagePath: "assets/belt.png" }
+    { id: "chef", name: "Sushi Chef", description: "Pixel art chef", imagePath: "assets/chef.png" },
+    { id: "conveyor", name: "Conveyor Belt", description: "Industrial belt", imagePath: "assets/belt.png" }
 ];
