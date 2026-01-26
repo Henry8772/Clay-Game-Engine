@@ -140,24 +140,11 @@ export const nodeAssetGenSwarm = async (state: GraphState, config?: { configurab
     const blueprints = state.blueprints;
     const assetMap: Record<string, string> = {};
 
-    // Mocking reference buffer for now if not available, or we need to fix Upstream.
-    // In a real flow, we'd read `state.generatedImage` path.
+    // Reference image logic removed as we now use direct text-to-image generation for better isolation.
     const fs = await import("fs"); // dynamic import for node usage
 
-    // Placeholder reference (should come from state)
-    let referenceImageBuffer: Buffer;
-    try {
-        if (state.generatedImage && (state.generatedImage.startsWith("/") || state.generatedImage.startsWith("."))) {
-            referenceImageBuffer = fs.readFileSync(state.generatedImage);
-        } else {
-            // Fallback or error
-            console.warn("No valid generatedImage path in state, using placeholder or failing.");
-            throw new Error("Reference image missing");
-        }
-    } catch (e) {
-        console.warn("Failed to load reference image, skipping generation:", e);
-        return { assetMap: {} };
-    }
+    // let referenceImageBuffer: Buffer;
+    // ... (removed)
 
     const tasks = Object.values(blueprints).map(async (blueprint: any) => {
         try {
@@ -165,7 +152,8 @@ export const nodeAssetGenSwarm = async (state: GraphState, config?: { configurab
             if (blueprint.renderType !== "ASSET") return;
             if (!blueprint.visualPrompt) return;
 
-            const assetBuffer = await runAssetGeneratorAgent(client, blueprint.visualPrompt, referenceImageBuffer);
+            // Pass only the prompt; the agent handles isolation now.
+            const assetBuffer = await runAssetGeneratorAgent(client, blueprint.visualPrompt);
 
             // Save asset to disk
             const path = await import("path");

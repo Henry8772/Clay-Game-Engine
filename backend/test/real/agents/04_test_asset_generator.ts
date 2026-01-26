@@ -37,13 +37,33 @@ describe('REAL: 04 Asset Generator Agent', () => {
         }
 
         if (assetList.length === 0) {
-            console.warn("[Real] Chain input not found or empty, using default single asset.");
-            assetList = [{
-                id: "default_king",
-                name: "Default King",
-                visualPrompt: "A detailed pixel art chess king piece.",
-                renderType: "ASSET"
-            }];
+            console.warn("[Real] Chain input not found or empty, using default varied assets.");
+            assetList = [
+                {
+                    id: "king",
+                    name: "Chess King",
+                    visualPrompt: "A pixel art chess king piece, regal gold and purple",
+                    renderType: "ASSET"
+                },
+                {
+                    id: "white_tile",
+                    name: "White Tile",
+                    visualPrompt: "A single white square grid tile for a game board, pixel art, flat top-down",
+                    renderType: "ASSET"
+                },
+                {
+                    id: "black_tile",
+                    name: "Black Tile",
+                    visualPrompt: "A single black square grid tile for a game board, pixel art, flat top-down",
+                    renderType: "ASSET"
+                },
+                {
+                    id: "game_board",
+                    name: "Chess Board",
+                    visualPrompt: "A top-down 8x8 chess board, strict checkerboard pattern, black and white squares, pixel art, no pieces, empty board",
+                    renderType: "ASSET"
+                }
+            ];
         }
 
         // Ensure assets directory exists
@@ -51,24 +71,19 @@ describe('REAL: 04 Asset Generator Agent', () => {
             fs.mkdirSync(assetsDir, { recursive: true });
         }
 
-        let referenceImageBuffer: Buffer;
-        if (fs.existsSync(uiImageFile)) {
-            referenceImageBuffer = fs.readFileSync(uiImageFile);
-            console.log(`[Real] Loaded reference image from: ${uiImageFile}`);
-        } else {
-            console.warn("⚠️  Skipping test: Reference Image not found at " + uiImageFile);
-            return;
-        }
+        // Reference image check removed as we don't use it anymore
+        // let referenceImageBuffer: Buffer;
+        // ...
 
-        // Generate for up to 3 assets to save time/cost in test
-        const assetsToGenerate = assetList.slice(0, 3);
+        // Generate for up to 4 assets to cover the requested variety
+        const assetsToGenerate = assetList.slice(0, 10);
         const generatedAssets: Record<string, string> = {};
 
         for (const targetAsset of assetsToGenerate) {
             console.log(`[Real] Generating Asset: ${targetAsset.name} (${targetAsset.id})`);
 
-            // Use the new agent function
-            const resultImageBuffer = await runAssetGeneratorAgent(client, targetAsset.visualPrompt, referenceImageBuffer);
+            // Use the new agent function (no reference image needed)
+            const resultImageBuffer = await runAssetGeneratorAgent(client, targetAsset.visualPrompt);
 
             expect(resultImageBuffer).toBeDefined();
             expect(resultImageBuffer.length).toBeGreaterThan(0);

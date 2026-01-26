@@ -15,12 +15,24 @@ import { LLMClient } from "../client";
 export async function runAssetGeneratorAgent(
     client: LLMClient,
     prompt: string,
-    referenceImageBuffer: Buffer
+    // referenceImageBuffer: Buffer // Removed as we are switching to direct generation
 ): Promise<Buffer> {
-    console.log(`[Asset Generator] Generating asset with prompt: "${prompt}"`);
+    // Enforce isolation in the prompt
+    const isolationPrompt = `${prompt}, isolated entity on a solid white background, no scene, no noise, single object, game sprite style`;
 
-    // Call the client's editImage method
-    const resultImageBuffer = await client.editImage(prompt, referenceImageBuffer);
+    console.log(`[Asset Generator] Generating asset with prompt: "${isolationPrompt}"`);
+
+    // Call the client's generateImage method
+    let resultImageBuffer = await client.generateImage(isolationPrompt);
+
+    // Post-processing: Remove white background
+    try {
+        const { removeWhiteBackground } = await import("../utils/image_processor");
+        resultImageBuffer = await removeWhiteBackground(resultImageBuffer);
+        console.log(`[Asset Generator] Background removed.`);
+    } catch (e) {
+        console.warn(`[Asset Generator] Failed to remove background:`, e);
+    }
 
     console.log(`[Asset Generator] Asset generated (${resultImageBuffer.length} bytes)`);
     return resultImageBuffer;
