@@ -7,6 +7,8 @@ import { processGameMoveAction } from "../actions/game-move";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 
+import { GameErrorBoundary } from "../components/GameErrorBoundary";
+
 export default function PlayPage() {
     const [prompt, setPrompt] = useState("");
     const [isGenerating, setIsGenerating] = useState(false);
@@ -87,8 +89,8 @@ export default function PlayPage() {
                         <div className="absolute right-1 top-1 bottom-1">
                             <button
                                 className={`h-full px-3 text-xs font-medium rounded transition-colors ${prompt && !isGenerating
-                                        ? "bg-white text-black hover:bg-neutral-200"
-                                        : "bg-transparent text-neutral-600 cursor-not-allowed"
+                                    ? "bg-white text-black hover:bg-neutral-200"
+                                    : "bg-transparent text-neutral-600 cursor-not-allowed"
                                     }`}
                                 onClick={handleGenerate}
                                 disabled={!prompt || isGenerating}
@@ -142,7 +144,9 @@ export default function PlayPage() {
 
                     <div className="flex-1 relative overflow-hidden flex items-center justify-center p-8 bg-neutral-950">
                         <div className="relative z-10 w-full h-full border border-neutral-800 rounded bg-black shadow-2xl overflow-hidden">
-                            <Game initialState={currentGameState} />
+                            <GameErrorBoundary>
+                                <Game initialState={currentGameState} />
+                            </GameErrorBoundary>
                         </div>
                     </div>
                 </section>
