@@ -46,3 +46,5 @@ next-env.d.ts
 node_modules/
 package-lock.json
 public
+app/generated
+app/generated/game-slot.tsx
