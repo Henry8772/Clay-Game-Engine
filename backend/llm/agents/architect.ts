@@ -63,7 +63,7 @@ type UniversalState = {
    - Keys: Template IDs (e.g., "king", "dragon", "pawn").
    - Values: { id, name, renderType (ASSET/COMPONENT), visualPrompt, baseStats, description }.
      - \`renderType\`: "ASSET" for generated images (characters, items), "COMPONENT" for UI/CSS elements.
-     - \`visualPrompt\`: Description for image generation (if ASSET).
+     - \`visualPrompt\`: Description for image generation (if ASSET). MUST include style keywords like "pixel art", "game sprite", "icon", "isometric".
      - \`baseStats\`: Static rules (e.g., { maxHp: 100, moveSet: "diagonal" }).
 3. **rules**: The game rules in Markdown.
 `;
