@@ -17,7 +17,11 @@ export default function PlayPage() {
     const gameStateFromConvex = useQuery(api.games.get);
 
     // Derived State
-    const currentGameState = gameStateFromConvex?.state || INITIAL_STATE;
+    const convexState = gameStateFromConvex?.state;
+    // Fallback to INITIAL_STATE if convex state is missing or appears empty/invalid (no entities)
+    const currentGameState = (convexState && convexState.entities && Object.keys(convexState.entities).length > 0)
+        ? convexState
+        : INITIAL_STATE;
     const rules = gameStateFromConvex?.rules || GAME_RULES || "Standard game rules";
     const gameId = gameStateFromConvex?._id;
 
@@ -66,8 +70,8 @@ export default function PlayPage() {
                         <div className="absolute right-1 top-1 bottom-1">
                             <button
                                 className={`h-full px-3 text-xs font-medium rounded transition-colors ${prompt && !isGenerating
-                                        ? "bg-white text-black hover:bg-neutral-200"
-                                        : "bg-transparent text-neutral-600 cursor-not-allowed"
+                                    ? "bg-white text-black hover:bg-neutral-200"
+                                    : "bg-transparent text-neutral-600 cursor-not-allowed"
                                     }`}
                                 onClick={handleGenerate}
                                 disabled={!prompt || isGenerating}
