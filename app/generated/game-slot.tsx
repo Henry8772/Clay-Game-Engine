@@ -6,3 +6,6 @@ export function Game() {
     </div>
   );
 }
+
+export const INITIAL_STATE = {};
+export const GAME_RULES = "";
