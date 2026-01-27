@@ -56,33 +56,18 @@ npm install
 ```
 
 ## Running the Application
-
-### 1. Frontend
-Start the Next.js development server:
 ```bash
-npm run dev
+
+npm run dev:all
 ```
 
-### 2. Convex (Backend Database)
-Start the Convex dev server to sync the database:
-```bash
-npx convex dev
-```
-
-### 3. Generation Workflow (Test)
+### Generation Workflow 
 To run the detailed generation workflow using Vitest (Real Mode):
 ```bash
 cd backend
-npm run test test/real/test_workflow_real.ts
+npm run test
 ```
 
-### 4. Interaction Workflow (Test)
+run test/real/test_workflow_real test in Vitet UI
+
 Open url at `http://localhost:3000/play`, click `Load Test Run`
-
-
-## Test
-All test are hosted in Vitest UI for interactive debug.
-```bash
-cd backend
-npm run test # Opens Vitest UI
-```
