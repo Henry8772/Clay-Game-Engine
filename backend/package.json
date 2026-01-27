@@ -12,7 +12,9 @@
     "@google/generative-ai": "^0.24.1",
     "@langchain/core": "^1.1.15",
     "@langchain/langgraph": "^1.1.0",
+    "@types/sharp": "^0.31.1",
     "dotenv": "^16.0.0",
+    "sharp": "^0.34.5",
     "zod": "^3.0.0"
   },
   "devDependencies": {
