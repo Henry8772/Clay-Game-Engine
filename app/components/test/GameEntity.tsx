@@ -85,7 +85,34 @@ export const GameEntity = ({ id, name, initialX, initialY, color, src, onAction,
         // 4. Interaction Logic
         let dragOffset = { x: 0, y: 0 };
 
+        const onDragMove = (e: PIXI.FederatedPointerEvent) => {
+            if (isDragging.current && container.parent) {
+                const newPosition = e.getLocalPosition(container.parent);
+                container.x = newPosition.x - dragOffset.x;
+                container.y = newPosition.y - dragOffset.y;
+            }
+        };
+
+        const onDragEnd = (e?: PIXI.FederatedPointerEvent) => {
+            if (isDragging.current) {
+                isDragging.current = false;
+                container.alpha = 1;
+                const gridLoc = getGridLocation(container.x, container.y);
+                onAction(`Move ${name} to ${gridLoc}`);
+
+                // CLEANUP: Remove global listeners from stage
+                if (stage) {
+                    stage.off('pointermove', onDragMove);
+                    stage.off('pointerup', onDragEnd);
+                    stage.off('pointerupoutside', onDragEnd);
+                }
+            }
+        };
+
         const onDragStart = (e: PIXI.FederatedPointerEvent) => {
+            // Prevent bubbling if needed, but usually fine
+            // e.stopPropagation(); 
+
             isDragging.current = true;
             const currentPosition = e.getLocalPosition(container.parent);
             dragOffset = {
@@ -94,42 +121,21 @@ export const GameEntity = ({ id, name, initialX, initialY, color, src, onAction,
             };
             container.alpha = 0.5;
             onAction(`User picked up ${name}`);
-        };
 
-        const onDragMove = (e: PIXI.FederatedPointerEvent) => {
-            if (isDragging.current) {
-                const newPosition = e.getLocalPosition(container.parent);
-                container.x = newPosition.x - dragOffset.x;
-                container.y = newPosition.y - dragOffset.y;
-            }
-        };
-
-        const onDragEnd = () => {
-            if (isDragging.current) {
-                isDragging.current = false;
-                container.alpha = 1;
-                const gridLoc = getGridLocation(container.x, container.y);
-                onAction(`Move ${name} to ${gridLoc}`);
+            // FIX: Bind move/up to STAGE to catch fast movements or outside releases
+            if (stage) {
+                stage.eventMode = 'static'; // Ensure stage can emit events
+                // app.screen might change, but usually fine. 
+                // Using 'static' allows stage to catch bubbling events from children, 
+                // AND if we want to catch events on background, we might need hitArea.
+                // For now, attaching to stage ensures we get the events as long as the mouse is over the canvas.
+                stage.on('pointermove', onDragMove);
+                stage.on('pointerup', onDragEnd);
+                stage.on('pointerupoutside', onDragEnd);
             }
         };
 
         container.on('pointerdown', onDragStart);
-        // Bind move/up to stage/window to capture fast movements or outside releases
-        // But for simplicity in this specific container structure, binding to stage is better usually.
-        // For this mock, we'll listen on the container for simplicity, but often stage is safer for global drag.
-        // Let's attach move/up to the container for now, but usually 'global' is safer.
-        // Actually, app.stage is better.
-
-        // Using container 'pointermove' only triggers when over the container, which is bad for dragging.
-        // We must attach move/up listeners to the stage or simple handle it in the container if we assume mouse stays over it (bad assumption).
-        // Let's use the object itself for 'down', and the stage for 'move'/'up' if possible, or just keeping it simple:
-        // Pixi 7 handles 'pointermove' on the object if you hold it? No, standard DOM rules don't apply.
-        // Best practice: Set 'pointermove' on the stage when dragging starts.
-
-        // SIMPLIFIED DRAG:
-        container.on('pointermove', onDragMove);
-        container.on('pointerup', onDragEnd);
-        container.on('pointerupoutside', onDragEnd);
 
         // Add to Stage
         stage.addChild(container);
