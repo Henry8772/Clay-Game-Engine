@@ -6,8 +6,9 @@ export async function* extractGameState(
     client: LLMClient,
     rules: string,
     description: string,
-    useMock: boolean = false
+    useMock?: boolean
 ): AsyncGenerator<GameStateList, void, unknown> {
+    const shouldUseMock = useMock ?? (process.env.USE_MOCK_MODE === 'true');
     const systemPrompt = `You are an expert Game Designer and System Architect.
 Your goal is to analyze a Game Design Document (Rules + Description) and extract the necessary "Game State" variables required to implement the game in code.
 
@@ -27,7 +28,7 @@ Output: { "states": [{ "name": "turn", "type": "string", "initialValue": "white"
         inputData,
         null,
         "game_state_extraction",
-        useMock ? mockGameStateExtraction() : null
+        shouldUseMock ? mockGameStateExtraction() : null
     );
 
     for await (const item of stream) {

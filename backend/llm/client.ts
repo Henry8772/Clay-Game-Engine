@@ -1,6 +1,8 @@
 import { LLMBackend, GeminiBackend } from "./backend";
 import { config } from "dotenv";
 
+// Load .env.local first (if exists), then fall back to .env
+config({ path: '.env.local' });
 config();
 
 export class LLMClient {
@@ -11,9 +13,9 @@ export class LLMClient {
     constructor(
         manufacturer: "gemini" = "gemini",
         model?: string,
-        debugMode: boolean = true
+        debugMode?: boolean
     ) {
-        this.debugMode = debugMode;
+        this.debugMode = debugMode ?? (process.env.USE_MOCK_MODE === 'true');
         this.model = model || process.env.DEFAULT_LLM_MODEL || "gemini-2.5-flash";
 
         if (manufacturer === "gemini") {
