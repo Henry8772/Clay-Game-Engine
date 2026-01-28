@@ -13,7 +13,7 @@ const HEARTHSTONE_MANIFEST: SceneManifest = {
                 role: 'BACKGROUND',
                 // Using a placeholder tavern image (or color for now)
                 color: '#1a0b00', // Dark wood brown
-                src: '/assets/hearthstone/background.png'
+                src: '/assets/hearthstone/generated_background.png'
             }
         ],
         stage: [],
@@ -109,8 +109,8 @@ export default function HearthstoneTestPage() {
                 <SmartScene
                     manifest={HEARTHSTONE_MANIFEST}
                     onAction={handleAction}
-                    width={800}
-                    height={600}
+                    width={1280}
+                    height={720}
                     displayMode={isGeneratingMask ? 'mask' : 'normal'}
                     onSnapshot={isGeneratingMask ? handleSnapshot : undefined}
                 />
