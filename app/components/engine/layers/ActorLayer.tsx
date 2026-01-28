@@ -38,6 +38,7 @@ export const ActorLayer = ({ assets, onAction }: ActorLayerProps) => {
                             initialX={asset.initialState?.x || 0}
                             initialY={asset.initialState?.y || 0}
                             color={asset.color || 'white'}
+                            src={asset.src}
                             onAction={onAction}
                         />
                     );

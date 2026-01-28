@@ -20,14 +20,15 @@ export const SmartScene = ({ manifest, onAction, width = 800, height = 600 }: Sm
     return (
         <PixiStage width={width} height={height}>
             <CollisionProvider>
+
+                {/* Layer 2: Actors (Zones + Entities) */}
+                <ActorLayer assets={manifest.layers.actors} onAction={onAction} />
+
                 {/* Layer 0: Ambience (Background) */}
                 <AmbienceLayer assets={manifest.layers.ambience} width={width} height={height} />
 
                 {/* Layer 1: Stage (The Board) */}
-                <StageLayer assets={manifest.layers.stage} width={width} height={height} />
-
-                {/* Layer 2: Actors (Zones + Entities) */}
-                <ActorLayer assets={manifest.layers.actors} onAction={onAction} />
+                {/* <StageLayer assets={manifest.layers.stage} width={width} height={height} /> */}
 
                 {/* Layer 3: Juice (VFX) - TODO */}
 

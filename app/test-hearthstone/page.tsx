@@ -13,17 +13,10 @@ const HEARTHSTONE_MANIFEST: SceneManifest = {
                 role: 'BACKGROUND',
                 // Using a placeholder tavern image (or color for now)
                 color: '#1a0b00', // Dark wood brown
-                src: '/brain/31afbba5-8f10-40ef-aa31-4b9520c881b6/hearthstone_tavern_bg_1769590537783.png'
+                src: '/assets/hearthstone/background.png'
             }
         ],
-        stage: [
-            {
-                id: 'game_board',
-                role: 'CONTAINER_FIT',
-                color: '#d2b48c', // Tan/Stone color
-                src: '/brain/31afbba5-8f10-40ef-aa31-4b9520c881b6/hearthstone_board_mat_1769590741086.png',
-            }
-        ],
+        stage: [],
         actors: [
             // --- ZONES ---
             {
@@ -56,14 +49,14 @@ const HEARTHSTONE_MANIFEST: SceneManifest = {
                 role: 'SPRITE',
                 color: 'blue',
                 initialState: { x: 200, y: 520 }, // Starts in hand
-                src: '/brain/31afbba5-8f10-40ef-aa31-4b9520c881b6/card_azure_dragon_1769590881827.png'
+                src: '/assets/hearthstone/card-1.png'
             },
             {
                 id: 'Card_Ragnaros',
                 role: 'SPRITE',
                 color: 'red',
                 initialState: { x: 300, y: 520 }, // Starts in hand
-                src: '/brain/31afbba5-8f10-40ef-aa31-4b9520c881b6/card_fire_lord_1769591148030.png'
+                src: '/assets/hearthstone/card-2.png'
             }
         ],
         juice: []
@@ -82,7 +75,7 @@ export default function HearthstoneTestPage() {
         <div className="min-h-screen bg-black flex flex-col items-center justify-center font-sans text-white">
             <h1 className="mb-4 text-xl font-bold text-amber-500">Hearthstone Mock: 4-Layer Engine</h1>
 
-            <div className="relative border-4 border-amber-900 rounded-lg overflow-hidden shadow-[0_0_50px_rgba(255,100,0,0.2)]">
+            <div className="relative overflow-hidden">
                 <SmartScene
                     manifest={HEARTHSTONE_MANIFEST}
                     onAction={handleAction}
