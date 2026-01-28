@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { Game, INITIAL_STATE, GAME_RULES } from "../generated/game-slot";
 import { generateGameAction } from "../actions/generate";
 import { useQuery } from "convex/react";
+import { fetchMutation } from "convex/nextjs";
 import { api } from "../../convex/_generated/api";
 
 import { GameErrorBoundary } from "../components/GameErrorBoundary";
@@ -25,6 +26,21 @@ export default function PlayPage() {
     const rules = gameStateFromConvex?.rules || GAME_RULES || "Standard game rules";
     const gameId = gameStateFromConvex?._id;
 
+    const handleGameStateChange = async (newState: any) => {
+        if (!gameId) return;
+        try {
+            await fetchMutation(api.games.updateState, {
+                gameId,
+                newState,
+                summary: "Player move",
+                role: "player",
+                command: ""
+            });
+        } catch (error) {
+            console.error("Failed to save game state:", error);
+        }
+    };
+
     const handleGenerate = async () => {
         if (!prompt) return;
         setIsGenerating(true);
@@ -32,6 +48,10 @@ export default function PlayPage() {
             const result = await generateGameAction(prompt);
             if (result.success) {
                 console.log("Game generated successfully!");
+                // Reload the page to fetch the new generated code
+                if (result.shouldReload) {
+                    window.location.reload();
+                }
             } else {
                 console.error("Failed to generate game");
             }
@@ -126,7 +146,7 @@ export default function PlayPage() {
                     <div className="flex-1 relative overflow-hidden flex items-center justify-center p-8 bg-neutral-950">
                         <div className="relative z-10 w-full h-full border border-neutral-800 rounded bg-black shadow-2xl overflow-hidden">
                             <GameErrorBoundary>
-                                <Game initialState={currentGameState} />
+                                <Game initialState={currentGameState} onStateChange={handleGameStateChange} />
                             </GameErrorBoundary>
                         </div>
                     </div>
