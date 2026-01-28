@@ -14,17 +14,15 @@ export async function generateGameAction(prompt: string) {
 
         console.log("Invoking generation graph with prompt:", prompt);
 
-        // Use Mock mode for now mostly, but Real is supported via ENV.
-        // We set useMock to true by default unless we want to burn tokens.
-        // Adjust this logic as needed.
-        const useMock = process.env.USE_MOCK === "true";
+        // Read mock mode from environment variable, default to true for safety during dev
+        const useMock = process.env.USE_MOCK_MODE === 'true' || process.env.USE_MOCK_MODE !== 'false';
 
         const result = await app.invoke(
             { userInput: prompt },
-            { configurable: { client, useMock: true } } // defaulting to Mock for safety during dev
+            { configurable: { client, useMock } }
         );
 
-        if (result.reactCode) {
+        if (result.reactCode && typeof result.reactCode === 'string') {
             // 1. Process Assets (Mirroring Test Logic)
             const publicAssetsDir = path.join(process.cwd(), "public", "generated-assets");
             if (!fs.existsSync(publicAssetsDir)) {
@@ -55,40 +53,36 @@ export async function generateGameAction(prompt: string) {
                 }
             }
 
-            // 2. Write Code File
+            // 2. Write Code File (matching test files pattern)
             const filePath = path.join(process.cwd(), "app", "generated", "game-slot.tsx");
 
-            // Inject Asset Map if needed, similar to test logic
-            let finalCode = result.reactCode;
+            // Update ASSET_MAP in the generated code
+            let finalCode: string = result.reactCode
+                .replace(/\\n/g, '\n')
+                .replace(/\\"/g, '"');
             const assetMapString = JSON.stringify(frontendAssetMap, null, 2);
             const r = /export const ASSET_MAP = \{[\s\S]*?\};/m;
             if (r.test(finalCode)) {
-                finalCode = finalCode.replace(r, `export const ASSET_MAP = ${assetMapString};`);
+                finalCode = finalCode.replace(r, `export const ASSET_MAP = ${assetMapString};\n`);
             } else {
                 finalCode += `\n\nexport const ASSET_MAP = ${assetMapString};\n`;
             }
 
-            const fileContent = `
-"use client";
-import React, { useState, useEffect, useRef } from "react";
-import { LucideIcon, Heart, Star, Sparkles, Zap, Ghost } from "lucide-react";
-
-${finalCode}
-`;
             console.log("Writing generated code to:", filePath);
-            fs.writeFileSync(filePath, fileContent);
+            fs.writeFileSync(filePath, finalCode);
 
             // 3. Seed Database (Convex)
             console.log("Seeding Convex DB with Initial State...");
             await fetchMutation(api.games.reset, {
-                initialState: result.initialState as any,
+                initialState: result.initialState as Record<string, unknown>,
                 rules: (result.rules as string) || "Standard Rules"
             });
 
-            // 4. Revalidate
+            // 4. Revalidate paths
+            revalidatePath("/play");
             revalidatePath("/");
 
-            return { success: true };
+            return { success: true, shouldReload: true };
         } else {
             console.error("No reactCode returned from graph execution.");
         }
