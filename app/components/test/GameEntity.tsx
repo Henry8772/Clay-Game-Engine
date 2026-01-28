@@ -3,6 +3,7 @@
 import * as PIXI from 'pixi.js';
 import React, { useEffect, useRef } from 'react';
 import { usePixiApp } from './PixiStage';
+import { useCollision } from './CollisionSystem';
 
 interface GameEntityProps {
     id: string;
