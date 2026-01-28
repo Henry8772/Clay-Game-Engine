@@ -63,8 +63,9 @@ export async function processGameMove(
     currentState: any,
     rules: string,
     playerCommand: string,
-    useMock: boolean = false
+    useMock?: boolean
 ): Promise<GameUpdateResult> {
+    const shouldUseMock = useMock ?? (process.env.USE_MOCK_MODE === 'true');
     const systemPrompt = `You are an expert Game Referee and Engine.
 Your task is to process a player's move in a turn-based game.
 
@@ -132,7 +133,7 @@ ${playerCommand}
         required: ["patches", "summary", "isValid"]
     };
 
-    if (useMock) {
+    if (shouldUseMock) {
         return mockGameReferee(currentState);
     }
 
