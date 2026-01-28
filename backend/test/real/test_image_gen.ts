@@ -12,7 +12,7 @@ describe('REAL: Image Gen', () => {
 
     it.skipIf(!shouldRun)('should generate a real image', async () => {
         const client = new LLMClient("gemini", "gemini-2.5-flash-image", false); // debugMode = false
-        const prompt = "A small red apple pixel art";
+        const prompt = "16-bit pixel art game asset, Hearthstone UI attack icon, a single yellow sword diagonally crossing a circular emblem, heavy black pixel outline, vibrant yellow and orange palette, flat 2D vector style, perfectly centered, isolated on a transparent background, pixel-perfect alignment, minimal shading, retro SNES style, no anti-aliasing";
         const buffer = await client.generateImage(prompt);
 
         expect(buffer).toBeDefined();

@@ -82,9 +82,10 @@ interface DropZoneProps {
     cellSize?: number; // For grid math
     label?: string;
     onDrop?: (location: string) => void; // Optional callback if zone handles logic directly
+    displayMode?: 'normal' | 'mask';
 }
 
-export const DropZone = ({ id, x, y, width, height, debugColor = 0x222222, cellSize = 100, label }: DropZoneProps) => {
+export const DropZone = ({ id, x, y, width, height, debugColor = 0x222222, cellSize = 100, label, displayMode = 'normal' }: DropZoneProps) => {
     const { app, stage } = usePixiApp();
     const { registerZone, unregisterZone } = useCollision();
 
@@ -97,15 +98,23 @@ export const DropZone = ({ id, x, y, width, height, debugColor = 0x222222, cellS
 
         // Draw Zone Visuals
         const g = new PIXI.Graphics();
-        g.beginFill(debugColor, 0.5); // Semi-transparent
-        g.drawRect(0, 0, width, height);
-        g.endFill();
-        g.lineStyle(2, 0xFFFFFF, 0.3);
-        g.drawRect(0, 0, width, height);
+
+        if (displayMode === 'mask') {
+            // Solid Opaque for Mask
+            g.beginFill(debugColor, 1.0);
+            g.drawRect(0, 0, width, height);
+            g.endFill();
+        } else {
+            g.beginFill(debugColor, 0.5); // Semi-transparent
+            g.drawRect(0, 0, width, height);
+            g.endFill();
+            g.lineStyle(2, 0xFFFFFF, 0.3);
+            g.drawRect(0, 0, width, height);
+        }
         container.addChild(g);
 
-        // Draw Grid Lines (Visual Aid only)
-        if (cellSize) {
+        // Draw Grid Lines (Visual Aid only) - Only in normal mode
+        if (cellSize && displayMode === 'normal') {
             g.lineStyle(1, 0xFFFFFF, 0.1);
             for (let ix = 0; ix <= width; ix += cellSize) {
                 g.moveTo(ix, 0); g.lineTo(ix, height);
@@ -115,7 +124,7 @@ export const DropZone = ({ id, x, y, width, height, debugColor = 0x222222, cellS
             }
         }
 
-        if (label) {
+        if (label && displayMode === 'normal') {
             const text = new PIXI.Text(label, { fill: 'gray', fontSize: 16 });
             text.x = 10;
             text.y = 10;
@@ -154,7 +163,7 @@ export const DropZone = ({ id, x, y, width, height, debugColor = 0x222222, cellS
             stage.removeChild(container);
             container.destroy({ children: true });
         };
-    }, [app, stage, x, y, width, height, cellSize, id, registerZone, unregisterZone]);
+    }, [app, stage, x, y, width, height, cellSize, id, registerZone, unregisterZone, displayMode]);
 
     return null;
 };

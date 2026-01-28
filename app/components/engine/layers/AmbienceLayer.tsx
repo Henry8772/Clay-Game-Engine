@@ -9,9 +9,10 @@ interface AmbienceLayerProps {
     assets: AssetManifest[];
     width: number;
     height: number;
+    displayMode?: 'normal' | 'mask';
 }
 
-export const AmbienceLayer = ({ assets, width, height }: AmbienceLayerProps) => {
+export const AmbienceLayer = ({ assets, width, height, displayMode = 'normal' }: AmbienceLayerProps) => {
     const { app, stage } = usePixiApp();
 
     useEffect(() => {
@@ -22,14 +23,26 @@ export const AmbienceLayer = ({ assets, width, height }: AmbienceLayerProps) => 
 
         // Ambient Backgrounds are "COVER" scaled
         assets.forEach(asset => {
-            const sprite = PIXI.Sprite.from(asset.src || PIXI.Texture.WHITE);
-            if (!asset.src && asset.color) {
-                // Mock texture if no src
+            let sprite: PIXI.Sprite;
+
+            if (displayMode === 'mask') {
+                // MASK MODE: Use solid color from asset (or default black/dark)
                 const g = new PIXI.Graphics();
-                g.beginFill(asset.color);
+                g.beginFill(asset.color || '#000000');
                 g.drawRect(0, 0, 100, 100);
                 g.endFill();
-                sprite.texture = app.renderer.generateTexture(g);
+                sprite = new PIXI.Sprite(app.renderer.generateTexture(g));
+            } else {
+                // NORMAL MODE
+                sprite = PIXI.Sprite.from(asset.src || PIXI.Texture.WHITE);
+                if (!asset.src && asset.color) {
+                    // Mock texture if no src
+                    const g = new PIXI.Graphics();
+                    g.beginFill(asset.color);
+                    g.drawRect(0, 0, 100, 100);
+                    g.endFill();
+                    sprite.texture = app.renderer.generateTexture(g);
+                }
             }
 
             sprite.anchor.set(0.5);
@@ -66,7 +79,7 @@ export const AmbienceLayer = ({ assets, width, height }: AmbienceLayerProps) => 
             stage.removeChild(layerContainer);
             layerContainer.destroy({ children: true });
         };
-    }, [app, stage, assets, width, height]);
+    }, [app, stage, assets, width, height, displayMode]);
 
     return null;
 };

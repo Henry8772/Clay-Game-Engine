@@ -13,9 +13,10 @@ interface GameEntityProps {
     color: string; // Hex string handling if needed, but PIXI takes number/string usually
     src?: string;
     onAction: (command: string) => void;
+    displayMode?: 'normal' | 'mask';
 }
 
-export const GameEntity = ({ id, name, initialX, initialY, color, src, onAction }: GameEntityProps) => {
+export const GameEntity = ({ id, name, initialX, initialY, color, src, onAction, displayMode = 'normal' }: GameEntityProps) => {
     const { app, stage } = usePixiApp();
     const containerRef = useRef<PIXI.Container | null>(null);
     const isDragging = useRef(false);
@@ -40,7 +41,16 @@ export const GameEntity = ({ id, name, initialX, initialY, color, src, onAction 
         container.cursor = 'pointer';
 
         // 2. Create Visuals (Sprite or Graphics)
-        if (src) {
+        // MASK MODE: Previously handled here, now filtered in ActorLayer.
+        // But keeping logic just in case useful later, or we can revert.
+        // Actually, let's keep it simple: if somehow called in mask mode, render solid.
+        if (displayMode === 'mask') {
+            const graphics = new PIXI.Graphics();
+            graphics.beginFill(color);
+            graphics.drawRect(-50, -75, 100, 150); // Approximating card size/anchor centered
+            graphics.endFill();
+            container.addChild(graphics);
+        } else if (src) {
             const sprite = PIXI.Sprite.from(src);
             sprite.anchor.set(0.5);
             // Optional: Scale sprite if needed, or assume src is sized correctly for now
@@ -56,19 +66,21 @@ export const GameEntity = ({ id, name, initialX, initialY, color, src, onAction 
             container.addChild(graphics);
         }
 
-        // 3. Create Text Label
-        const textStyle = new PIXI.TextStyle({
-            fill: 'white',
-            fontSize: 14,
-            fontFamily: 'Arial',
-            align: 'center',
-            stroke: 'black',
-            strokeThickness: 2
-        });
-        const text = new PIXI.Text(name, textStyle);
-        text.anchor.set(0.5);
-        text.y = src ? 100 : 40; // Adjust label position below image
-        container.addChild(text);
+        // 3. Create Text Label (Only in normal mode)
+        if (displayMode === 'normal') {
+            const textStyle = new PIXI.TextStyle({
+                fill: 'white',
+                fontSize: 14,
+                fontFamily: 'Arial',
+                align: 'center',
+                stroke: 'black',
+                strokeThickness: 2
+            });
+            const text = new PIXI.Text(name, textStyle);
+            text.anchor.set(0.5);
+            text.y = src ? 100 : 40; // Adjust label position below image
+            container.addChild(text);
+        }
 
         // 4. Interaction Logic
         let dragOffset = { x: 0, y: 0 };
@@ -130,7 +142,7 @@ export const GameEntity = ({ id, name, initialX, initialY, color, src, onAction 
                 container.destroy({ children: true }); // Clean up texture memory if generated (graphics are auto-cleaned mostly)
             }
         };
-    }, [app, stage, initialX, initialY, color, name, onAction, src]);
+    }, [app, stage, initialX, initialY, color, name, onAction, src, displayMode]);
 
     return null; // This component renders nothing in React DOM
 };

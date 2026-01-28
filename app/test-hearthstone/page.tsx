@@ -65,15 +65,45 @@ const HEARTHSTONE_MANIFEST: SceneManifest = {
 
 export default function HearthstoneTestPage() {
     const [lastLog, setLastLog] = useState("Waiting...");
+    const [isGeneratingMask, setIsGeneratingMask] = useState(false);
 
     const handleAction = useCallback((cmd: string) => {
         setLastLog(cmd);
         console.log("AI ACTION:", cmd);
     }, []);
 
+    const handleGenerateColorMap = useCallback(() => {
+        setIsGeneratingMask(true);
+        // creating the mask effect by switching mode
+    }, []);
+
+    const handleSnapshot = useCallback((dataUrl: string) => {
+        // Create a link to download the image
+        const link = document.createElement('a');
+        link.download = 'hearthstone-colormap.png';
+        link.href = dataUrl;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        // Reset state
+        setIsGeneratingMask(false);
+        setLastLog("Color Map Generated!");
+    }, []);
+
     return (
         <div className="min-h-screen bg-black flex flex-col items-center justify-center font-sans text-white">
             <h1 className="mb-4 text-xl font-bold text-amber-500">Hearthstone Mock: 4-Layer Engine</h1>
+
+            <div className="mb-4">
+                <button
+                    onClick={handleGenerateColorMap}
+                    className="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded text-white font-bold transition-colors"
+                    disabled={isGeneratingMask}
+                >
+                    {isGeneratingMask ? 'Generating...' : 'Generate Color Map'}
+                </button>
+            </div>
 
             <div className="relative overflow-hidden">
                 <SmartScene
@@ -81,6 +111,8 @@ export default function HearthstoneTestPage() {
                     onAction={handleAction}
                     width={800}
                     height={600}
+                    displayMode={isGeneratingMask ? 'mask' : 'normal'}
+                    onSnapshot={isGeneratingMask ? handleSnapshot : undefined}
                 />
 
                 {/* UI OVERLAY (Layer 4) */}
