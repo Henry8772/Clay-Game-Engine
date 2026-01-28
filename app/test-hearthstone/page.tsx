@@ -17,7 +17,8 @@ const BOARD_HEIGHT = 720; // Full height, or less if you want padding top/bottom
 const CENTER_X = (CANVAS_WIDTH - BOARD_WIDTH) / 2;
 
 // --- MOCK MANIFEST (This is what the AI Agent would generate) ---
-const HEARTHSTONE_MANIFEST: SceneManifest = {
+// Defined outside component to keep stable, but we might need state for dynamic updates
+const INITIAL_MANIFEST: SceneManifest = {
     layers: {
         ambience: [
             {
@@ -76,6 +77,7 @@ const HEARTHSTONE_MANIFEST: SceneManifest = {
 };
 
 export default function HearthstoneTestPage() {
+    const [manifest, setManifest] = useState<SceneManifest>(INITIAL_MANIFEST);
     const [lastLog, setLastLog] = useState("Waiting...");
     const [isGeneratingMask, setIsGeneratingMask] = useState(false);
 
@@ -89,37 +91,70 @@ export default function HearthstoneTestPage() {
         // creating the mask effect by switching mode
     }, []);
 
-    const handleSnapshot = useCallback((dataUrl: string) => {
-        // Create a link to download the image
-        const link = document.createElement('a');
-        link.download = 'hearthstone-colormap.png';
-        link.href = dataUrl;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+    const handleSnapshot = useCallback(async (dataUrl: string) => {
+        setLastLog("Uploading Color Map...");
+
+        try {
+            const res = await fetch('/api/save-colormap', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ image: dataUrl })
+            });
+
+            if (res.ok) {
+                setLastLog("Color Map Saved to Backend!");
+            } else {
+                setLastLog("Error Saving Color Map");
+            }
+        } catch (e) {
+            console.error(e);
+            setLastLog("Network Error");
+        }
 
         // Reset state
         setIsGeneratingMask(false);
-        setLastLog("Color Map Generated!");
+    }, []);
+
+    const handleLoadBackground = useCallback(() => {
+        // Force reload by updating the src with a timestamp
+        const timestamp = Date.now();
+        setManifest(prev => ({
+            ...prev,
+            layers: {
+                ...prev.layers,
+                ambience: prev.layers.ambience.map(l => ({
+                    ...l,
+                    src: `/assets/hearthstone/generated_background.png?t=${timestamp}`
+                }))
+            }
+        }));
+        setLastLog("Reloaded Background Asset");
     }, []);
 
     return (
         <div className="min-h-screen bg-black flex flex-col items-center justify-center font-sans text-white">
             <h1 className="mb-4 text-xl font-bold text-amber-500">Hearthstone Mock: 4-Layer Engine</h1>
 
-            <div className="mb-4">
+            <div className="mb-4 flex gap-4">
                 <button
                     onClick={handleGenerateColorMap}
                     className="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded text-white font-bold transition-colors"
                     disabled={isGeneratingMask}
                 >
-                    {isGeneratingMask ? 'Generating...' : 'Generate Color Map'}
+                    {isGeneratingMask ? 'Generating...' : 'Generate & Save Color Map'}
+                </button>
+
+                <button
+                    onClick={handleLoadBackground}
+                    className="px-4 py-2 bg-green-600 hover:bg-green-500 rounded text-white font-bold transition-colors"
+                >
+                    Load Generated Background
                 </button>
             </div>
 
             <div className="relative overflow-hidden">
                 <SmartScene
-                    manifest={HEARTHSTONE_MANIFEST}
+                    manifest={manifest}
                     onAction={handleAction}
                     width={1280}
                     height={720}

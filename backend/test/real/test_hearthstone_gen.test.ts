@@ -37,27 +37,27 @@ describe('REAL: Hearthstone Background Gen', () => {
         console.log(`Loaded color map from ${colorMapPath}`);
 
         // 2. Prompt
-        const prompt = `
-            You are a master pixel artist for a 1990s SNES fantasy RPG.
+        const prompt = `You are a master pixel artist for a 1990s SNES fantasy RPG.
 
-Task: Create a detailed, organic top-down game board scene situated on a tavern table.
+Task: Transform the provided layout image into a high-fidelity top-down tavern scene, treating the input image as a STRICT BLUEPRINT.
 
-Layout Guide:
-Use the provided image as a **loose geometric guide** for the placement of the main game elements. Do not treat the colored areas as strict, rigid boundaries. Instead, view them as general zones where objects are placed on the table.
+STRICT LAYOUT RULES (Crucial):
+- The provided image is a **pixel-perfect blueprint**. Do not deviate from the geometry.
+- The colored rectangles are **NOT** just "zones" to place small objects in. They **ARE** the objects. You must fill the entire colored area with the specified material.
+- **Red Rectangle (Top):** This entire block is the Opponent's Hand Zone. Texture this exact rectangle as a red velvet mat or dark wooden rack that spans the full width of the block.
+- **Green Rectangle (Bottom):** This entire block is the Player's Hand Zone. Texture this exact rectangle as a hunter-green felt mat or wooden rack. It must fill the green footprint completely.
+- **Black/Dark Rectangle (Center):** This is the Battlefield. Texture it as a dark green or grey felt battle mat.
+- **Brown Side Areas:** These are the wooden tavern table visible on the sides.
 
 Style & Perspective:
 - **Strict top-down, orthographic perspective.**
 - 16-bit pixel art style with sharp, crisp pixels. No blur.
-- Warm, cozy tavern lighting from unseen candles, creating soft cast shadows.
+- Warm, cozy tavern lighting.
 
-Detailed Instructions for "Free Drawing":
-1.  **The Table Surface (Brown Area):** Do not just fill this with a flat wood texture. Illustrate a worn, cluttered wooden tavern table. **Add organic details** like scattered coins, a spilled ale mug, a few loose playing cards, candle stubs, and crumbs. The wood should have natural grain, scratches, and stains.
-2.  **The Game Board Zones:**
-    -   **Top Zone (Red Area):** Design an ornate, dark red velvet tray for the opponent's deck (NO CARDS). It should have a carved wooden frame with iron accents.
-    -   **Bottom Zone (Green Area):** Design a similar wooden tray for the player's deck (NO CARDS), with a hunter-green felt lining and polished gold trim.
-    -   **Center Zone (Dark Area):** Create a large, textured felt battle mat (like green baize on a pool table) in the center.
-The goal is a lived-in, natural scene, not a rigid geometric pattern.
-        `;
+Art Direction:
+1.  **The Table (Background):** Worn, cluttered wooden surface (scratches, stains) visible *only* in the empty space around the central board. Add organic details like coins or a spilled mug here, but keep them outside the play zones.
+2.  **The Board (Center Column):** The Red, Black, and Green zones should look like they are parts of a single cohesive game board or a set of mats laid out on the table.
+    -   **Important:** Do not draw small isolated trays. The "Deck Areas" must be wide rectangular surfaces that match the input image's width.`;
 
         console.log("Generating image with prompt...");
         // Pass only layout map to avoid multimodal confusion
