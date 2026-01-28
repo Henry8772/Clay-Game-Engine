@@ -146,7 +146,7 @@ export class LLMClient {
         return this.backend.generateImage(prompt, model);
     }
 
-    public async editImage(prompt: string, image: Buffer, model: string = "gemini-2.5-flash-image"): Promise<Buffer> {
+    public async editImage(prompt: string, image: Buffer | Buffer[], model: string = "gemini-2.5-flash-image"): Promise<Buffer> {
         if (this.debugMode) {
             console.log(`DEBUG: Editing mock image for prompt: ${prompt}`);
             const mockPng = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==";

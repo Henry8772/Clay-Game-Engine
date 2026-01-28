@@ -16,7 +16,7 @@ export interface LLMBackend {
 
     editImage(
         prompt: string,
-        image: Buffer,
+        image: Buffer | Buffer[],
         model: string
     ): Promise<Buffer>;
 
@@ -97,20 +97,21 @@ export class GeminiBackend implements LLMBackend {
         throw new Error("No image data found in response");
     }
 
-    async editImage(prompt: string, image: Buffer, modelName: string): Promise<Buffer> {
+    async editImage(prompt: string, images: Buffer | Buffer[], modelName: string): Promise<Buffer> {
         const model = this.client.getGenerativeModel({ model: modelName });
 
-        const imagePart = {
+        const imageBuffers = Array.isArray(images) ? images : [images];
+        const imageParts = imageBuffers.map(img => ({
             inlineData: {
-                data: image.toString('base64'),
-                mimeType: "image/png" // Assuming PNG for simplicity, could be parametrized
+                data: img.toString('base64'),
+                mimeType: "image/png"
             }
-        };
+        }));
 
-        const result = await model.generateContent([prompt, imagePart]);
+        const result = await model.generateContent([prompt, ...imageParts]);
         const response = result.response;
 
-        if (response.candidates && response.candidates[0].content.parts) {
+        if (response.candidates && response.candidates.length > 0 && response.candidates[0].content && response.candidates[0].content.parts) {
             for (const part of response.candidates[0].content.parts) {
                 if (part.inlineData && part.inlineData.data) {
                     return Buffer.from(part.inlineData.data, 'base64');
@@ -118,7 +119,8 @@ export class GeminiBackend implements LLMBackend {
             }
         }
 
-        throw new Error("No image data found in response");
+        console.error("Gemini Generation Failed. Response:", JSON.stringify(result, null, 2));
+        throw new Error("No image data found in response. Check logs for safety filters or other issues.");
     }
 
     async segmentImage(image: Buffer, labels: string[], modelName: string = "gemini-2.0-flash"): Promise<any[]> {

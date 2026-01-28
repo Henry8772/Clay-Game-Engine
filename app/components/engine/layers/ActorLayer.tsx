@@ -8,9 +8,10 @@ import { GameEntity } from '../../test/GameEntity';
 interface ActorLayerProps {
     assets: AssetManifest[];
     onAction: (cmd: string) => void;
+    displayMode?: 'normal' | 'mask';
 }
 
-export const ActorLayer = ({ assets, onAction }: ActorLayerProps) => {
+export const ActorLayer = ({ assets, onAction, displayMode = 'normal' }: ActorLayerProps) => {
 
     return (
         <>
@@ -27,9 +28,13 @@ export const ActorLayer = ({ assets, onAction }: ActorLayerProps) => {
                             cellSize={asset.config?.cellSize || 0}
                             label={asset.id}
                             debugColor={asset.color ? parseInt(asset.color.replace('#', '0x')) : 0x333333}
+                            displayMode={displayMode}
                         />
                     );
                 } else if (asset.role === 'SPRITE') {
+                    // In Mask Mode, we only want layout (Zones), not entities (Cards)
+                    if (displayMode === 'mask') return null;
+
                     return (
                         <GameEntity
                             key={asset.id}
@@ -40,6 +45,7 @@ export const ActorLayer = ({ assets, onAction }: ActorLayerProps) => {
                             color={asset.color || 'white'}
                             src={asset.src}
                             onAction={onAction}
+                            displayMode={displayMode}
                         />
                     );
                 }
