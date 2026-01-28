@@ -35,12 +35,20 @@ export const StageLayer = ({ assets, width, height }: StageLayerProps) => {
             sprite.x = width / 2;
             sprite.y = height / 2;
 
-            // CONTAINER_FIT Logic (80% of screen)
+            // CONTAINER_FIT Logic (Smaller to show ambience)
             const applyScale = () => {
-                const targetW = width * 0.9;
-                const targetH = height * 0.8;
-                const scale = Math.min(targetW / sprite.width, targetH / sprite.height);
-                sprite.scale.set(scale); // Start scale
+                if (sprite.destroyed) return;
+                // Original usage was sprite.width/height which changes as we scale.
+                // Better to use texture dimensions for calculation base or reset scale.
+                sprite.scale.set(1);
+                const texW = sprite.width;
+                const texH = sprite.height;
+
+                const targetW = width * 0.95; // Increased to fill more width
+                const targetH = height * 0.9; // Increased to fill more height
+
+                const scale = Math.min(targetW / texW, targetH / texH);
+                sprite.scale.set(scale);
             };
 
             if (sprite.texture.baseTexture.valid) {

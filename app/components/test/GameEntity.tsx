@@ -11,10 +11,11 @@ interface GameEntityProps {
     initialX: number;
     initialY: number;
     color: string; // Hex string handling if needed, but PIXI takes number/string usually
+    src?: string;
     onAction: (command: string) => void;
 }
 
-export const GameEntity = ({ id, name, initialX, initialY, color, onAction }: GameEntityProps) => {
+export const GameEntity = ({ id, name, initialX, initialY, color, src, onAction }: GameEntityProps) => {
     const { app, stage } = usePixiApp();
     const containerRef = useRef<PIXI.Container | null>(null);
     const isDragging = useRef(false);
@@ -38,23 +39,35 @@ export const GameEntity = ({ id, name, initialX, initialY, color, onAction }: Ga
         container.eventMode = 'static';
         container.cursor = 'pointer';
 
-        // 2. Create Graphics (Circle)
-        const graphics = new PIXI.Graphics();
-        graphics.beginFill(color); // 'red', 'blue', etc work in PIXI 7
-        graphics.drawCircle(0, 0, 30);
-        graphics.endFill();
-        container.addChild(graphics);
+        // 2. Create Visuals (Sprite or Graphics)
+        if (src) {
+            const sprite = PIXI.Sprite.from(src);
+            sprite.anchor.set(0.5);
+            // Optional: Scale sprite if needed, or assume src is sized correctly for now
+            // But let's limit size just in case it's huge
+            sprite.width = 100;
+            sprite.height = 150; // Approximating card ratio
+            container.addChild(sprite);
+        } else {
+            const graphics = new PIXI.Graphics();
+            graphics.beginFill(color);
+            graphics.drawCircle(0, 0, 30);
+            graphics.endFill();
+            container.addChild(graphics);
+        }
 
         // 3. Create Text Label
         const textStyle = new PIXI.TextStyle({
             fill: 'white',
             fontSize: 14,
             fontFamily: 'Arial',
-            align: 'center'
+            align: 'center',
+            stroke: 'black',
+            strokeThickness: 2
         });
         const text = new PIXI.Text(name, textStyle);
         text.anchor.set(0.5);
-        text.y = 40;
+        text.y = src ? 100 : 40; // Adjust label position below image
         container.addChild(text);
 
         // 4. Interaction Logic
@@ -117,7 +130,7 @@ export const GameEntity = ({ id, name, initialX, initialY, color, onAction }: Ga
                 container.destroy({ children: true }); // Clean up texture memory if generated (graphics are auto-cleaned mostly)
             }
         };
-    }, [app, stage, initialX, initialY, color, name, onAction]);
+    }, [app, stage, initialX, initialY, color, name, onAction, src]);
 
     return null; // This component renders nothing in React DOM
 };
