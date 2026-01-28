@@ -4,7 +4,6 @@ import { LLMClient } from "../../llm/client";
 import { config } from "dotenv";
 import * as path from 'path';
 import * as fs from 'fs';
-import sharp from 'sharp';
 
 config();
 
@@ -13,6 +12,9 @@ const backendEnvPath = path.resolve(__dirname, '../../.env');
 if (fs.existsSync(backendEnvPath)) config({ path: backendEnvPath });
 const envPath = path.resolve(process.cwd(), '.env.local');
 if (fs.existsSync(envPath)) config({ path: envPath });
+// Also check root .env.local explicitly in case we are running from backend dir
+const rootEnvPath = path.resolve(__dirname, '../../../.env.local');
+if (fs.existsSync(rootEnvPath)) config({ path: rootEnvPath });
 
 describe('REAL: Hearthstone Background Gen', () => {
     const key = process.env.GEMINI_API_KEY;
@@ -21,49 +23,20 @@ describe('REAL: Hearthstone Background Gen', () => {
     it.skipIf(!shouldRun)('should generate a background from color map', async () => {
         const client = new LLMClient("gemini", "gemini-2.5-flash-image", false);
 
-        // 1. Create a Synthetic Color Map (16:9)
-        // Opponent Hand (Top) = Red
-        // Battlefield (Middle) = Green
-        // Player Hand (Bottom) = Blue
-        // Background = Dark Gray
-        const width = 640;
-        const height = 360; // 16:9
+        // 1. Read the Saved Color Map
+        // This file is saved by the Frontend via /api/save-colormap
+        const colorMapPath = path.join(__dirname, "ref_color_map.png");
 
-        // Ensure sharp or canvas is available, or just create a raw buffer?
-        // Using sharp is cleaner if installed, or we can just construct a simple PNG if we don't want deps.
-        // For this test environment, let's assume we can use 'sharp' or install it. 
-        // If not, I can create a simple BMP or raw pixel buffer.
-        // Let's try to just write a simple SVG and convert it or just use a helper if we have one.
-        // Actually, the user asked to "Load the color map image", but I don't have one.
-        // I will generate one using sharp.
+        if (!fs.existsSync(colorMapPath)) {
+            console.warn("No color map found at " + colorMapPath + ". Skipping test logic or using fallback.");
+            // For now, fail if no map exists - the user must run the frontend step first.
+            throw new Error("No ref_color_map.png found. Please run the Frontend 'Generate Color Map' first.");
+        }
 
-        const svgImage = `
-        <svg width="${width}" height="${height}" version="1.1" xmlns="http://www.w3.org/2000/svg">
-            <!-- Background -->
-            <rect x="0" y="0" width="${width}" height="${height}" fill="#1a0b00"/>
+        const layoutMapBuffer = fs.readFileSync(colorMapPath);
+        console.log(`Loaded color map from ${colorMapPath}`);
 
-            <!-- Opponent Hand (Red) -->
-            <rect x="120" y="0" width="400" height="60" fill="#4a0404"/>
-
-            <!-- Battlefield (Black/Invisible usually, but let's make it distinct for map) -->
-            <rect x="120" y="90" width="400" height="180" fill="#000000"/>
-
-            <!-- Player Hand (Green) -->
-            <rect x="120" y="300" width="400" height="60" fill="#004400"/>
-        </svg>
-        `;
-
-        const layoutMapBuffer = await sharp(Buffer.from(svgImage)).png().toBuffer();
-
-        // Save Map for verification
-        fs.writeFileSync(path.join(__dirname, "ref_color_map.png"), layoutMapBuffer);
-        console.log("Color map created.");
-
-        // 2. Style Reference - REMOVED to avoid IMAGE_OTHER error from Gemini
-        // Passing multiple images (layout + style) seems to trigger refusals.
-        // We rely on the prompt for style.
-
-        // 3. Prompt
+        // 2. Prompt
         const prompt = `
             You are a master pixel artist for a 1990s SNES fantasy RPG.
 
@@ -88,14 +61,23 @@ The goal is a lived-in, natural scene, not a rigid geometric pattern.
 
         console.log("Generating image with prompt...");
         // Pass only layout map to avoid multimodal confusion
+        // Use a high integer parameter for "timeout" if supported or handle via test timeout
         const buffer = await client.editImage(prompt, [layoutMapBuffer]);
 
         expect(buffer).toBeDefined();
         expect(buffer.length).toBeGreaterThan(0);
         console.log(`Generated size: ${buffer.length}`);
 
-        const outputPath = path.join(__dirname, "generated_hearthstone_background.png");
+        // 3. Save to Public Assets
+        // public is at project root: backend/test/real -> ../../../public
+        const publicAssetsDir = path.resolve(__dirname, "../../../public/assets/hearthstone");
+        if (!fs.existsSync(publicAssetsDir)) {
+            fs.mkdirSync(publicAssetsDir, { recursive: true });
+        }
+
+        const outputPath = path.join(publicAssetsDir, "generated_background.png");
         fs.writeFileSync(outputPath, buffer);
         console.log(`Saved to ${outputPath}`);
-    }, 60000); // Increased timeout for image generation
+    }, 120000); // Increased timeout for image generation
 });
+

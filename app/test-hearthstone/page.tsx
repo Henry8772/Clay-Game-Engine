@@ -4,6 +4,18 @@ import { useState, useCallback } from 'react';
 import { SmartScene } from '../components/engine/SmartScene';
 import { SceneManifest } from '../components/engine/types';
 
+// 1. The Screen Size
+const CANVAS_WIDTH = 1280;
+const CANVAS_HEIGHT = 720;
+
+// 2. The Desired "Board" Size (The central column)
+const BOARD_WIDTH = 500; // This controls how "fat" the middle column is
+const BOARD_HEIGHT = 720; // Full height, or less if you want padding top/bottom
+
+// 3. Calculate Center Offset
+// This pushes the board away from the left edge (x=0) to the middle
+const CENTER_X = (CANVAS_WIDTH - BOARD_WIDTH) / 2;
+
 // --- MOCK MANIFEST (This is what the AI Agent would generate) ---
 const HEARTHSTONE_MANIFEST: SceneManifest = {
     layers: {
@@ -24,38 +36,38 @@ const HEARTHSTONE_MANIFEST: SceneManifest = {
                 role: 'ZONE',
                 type: 'FREE', // Just a visual area
                 color: '#4a0404',
-                initialState: { x: 150, y: 0 },
-                config: { width: 500, height: 100 }
+                initialState: { x: CENTER_X, y: 0 },
+                config: { width: BOARD_WIDTH, height: 150 }
             },
             {
                 id: 'Battlefield',
                 role: 'ZONE',
                 type: 'GRID',
                 color: '#000000', // Invisible usually
-                initialState: { x: 150, y: 150 },
-                config: { width: 500, height: 300, cellSize: 100 } // 5x3 Grid
+                initialState: { x: CENTER_X, y: 150 },
+                config: { width: BOARD_WIDTH, height: 420, cellSize: 100 }
             },
             {
                 id: 'PlayerHand',
                 role: 'ZONE',
                 type: 'FAN',
                 color: '#004400',
-                initialState: { x: 150, y: 500 },
-                config: { width: 500, height: 100 }
+                initialState: { x: CENTER_X, y: 570 },
+                config: { width: BOARD_WIDTH, height: 150 }
             },
             // --- ENTITIES ---
             {
                 id: 'Card_AzureDrake',
                 role: 'SPRITE',
                 color: 'blue',
-                initialState: { x: 200, y: 520 }, // Starts in hand
+                initialState: { x: CENTER_X, y: 570 - 60 },
                 src: '/assets/hearthstone/card-1.png'
             },
             {
                 id: 'Card_Ragnaros',
                 role: 'SPRITE',
                 color: 'red',
-                initialState: { x: 300, y: 520 }, // Starts in hand
+                initialState: { x: CENTER_X, y: 570 - 120 },
                 src: '/assets/hearthstone/card-2.png'
             }
         ],

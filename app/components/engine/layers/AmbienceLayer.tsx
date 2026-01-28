@@ -29,7 +29,7 @@ export const AmbienceLayer = ({ assets, width, height, displayMode = 'normal' }:
                 // MASK MODE: Use solid color from asset (or default black/dark)
                 const g = new PIXI.Graphics();
                 g.beginFill(asset.color || '#000000');
-                g.drawRect(0, 0, 100, 100);
+                g.drawRect(0, 0, width, height);
                 g.endFill();
                 sprite = new PIXI.Sprite(app.renderer.generateTexture(g));
             } else {
@@ -54,7 +54,10 @@ export const AmbienceLayer = ({ assets, width, height, displayMode = 'normal' }:
             const texture = sprite.texture;
             const applyScale = () => {
                 if (sprite.destroyed) return;
-                const scale = Math.min(width / texture.width, height / texture.height);
+
+                // FIX: Change Math.min to Math.max for "Cover" style
+                const scale = Math.max(width / texture.width, height / texture.height);
+
                 sprite.scale.set(scale);
             };
 
