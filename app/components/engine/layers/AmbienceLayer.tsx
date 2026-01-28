@@ -26,11 +26,17 @@ export const AmbienceLayer = ({ assets, width, height, displayMode = 'normal' }:
             let sprite: PIXI.Sprite;
 
             if (displayMode === 'mask') {
-                // MASK MODE: Use solid color from asset (or default black/dark)
                 const g = new PIXI.Graphics();
-                g.beginFill(asset.color || '#000000');
+
+                // 1. Fill with slightly lower alpha (so AI can add texture easier)
+                // Use the defined color, or fallback
+                const color = asset.color ? parseInt(asset.color.replace('#', '0x')) : 0x000000;
+                g.beginFill(color, 0.9);
+
+                // Draw the rect
                 g.drawRect(0, 0, width, height);
                 g.endFill();
+
                 sprite = new PIXI.Sprite(app.renderer.generateTexture(g));
             } else {
                 // NORMAL MODE
