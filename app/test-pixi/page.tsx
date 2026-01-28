@@ -3,6 +3,7 @@
 import { useState, useCallback } from 'react';
 import { PixiStage } from '../components/test/PixiStage';
 import { GameEntity } from '../components/test/GameEntity';
+import { CollisionProvider, DropZone } from '../components/test/CollisionSystem';
 
 export default function TestPixiPage() {
     const [lastCommand, setLastCommand] = useState<string>("Waiting for interaction...");
