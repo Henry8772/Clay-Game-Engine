@@ -1,0 +1,162 @@
+[
+  {
+    "box_2d": [
+      15,
+      321,
+      118,
+      365
+    ],
+    "label": "card",
+    "name": "card_sword"
+  },
+  {
+    "box_2d": [
+      16,
+      378,
+      118,
+      424
+    ],
+    "label": "card",
+    "name": "card_skull_wings"
+  },
+  {
+    "box_2d": [
+      16,
+      438,
+      118,
+      482
+    ],
+    "label": "card",
+    "name": "card_tree_monster"
+  },
+  {
+    "box_2d": [
+      16,
+      500,
+      118,
+      544
+    ],
+    "label": "card",
+    "name": "card_skull_wings"
+  },
+  {
+    "box_2d": [
+      16,
+      559,
+      118,
+      604
+    ],
+    "label": "card",
+    "name": "card_skull_wings"
+  },
+  {
+    "box_2d": [
+      358,
+      464,
+      442,
+      530
+    ],
+    "label": "character",
+    "name": "character_spider_boss"
+  },
+  {
+    "box_2d": [
+      401,
+      537,
+      478,
+      573
+    ],
+    "label": "character",
+    "name": "character_robot"
+  },
+  {
+    "box_2d": [
+      506,
+      405,
+      589,
+      447
+    ],
+    "label": "character",
+    "name": "character_archer"
+  },
+  {
+    "box_2d": [
+      566,
+      475,
+      642,
+      515
+    ],
+    "label": "character",
+    "name": "character_mage"
+  },
+  {
+    "box_2d": [
+      601,
+      584,
+      649,
+      618
+    ],
+    "label": "token",
+    "name": "token_coin"
+  },
+  {
+    "box_2d": [
+      323,
+      740,
+      479,
+      806
+    ],
+    "label": "card",
+    "name": "card_skull"
+  },
+  {
+    "box_2d": [
+      836,
+      356,
+      973,
+      404
+    ],
+    "label": "card",
+    "name": "card_knight"
+  },
+  {
+    "box_2d": [
+      836,
+      412,
+      973,
+      461
+    ],
+    "label": "card",
+    "name": "card_dwarf"
+  },
+  {
+    "box_2d": [
+      836,
+      475,
+      973,
+      523
+    ],
+    "label": "card",
+    "name": "card_wizard"
+  },
+  {
+    "box_2d": [
+      836,
+      533,
+      973,
+      576
+    ],
+    "label": "card",
+    "name": "card_warrior"
+  },
+  {
+    "box_2d": [
+      836,
+      584,
+      973,
+      633
+    ],
+    "label": "card",
+    "name": "card_elf"
+  }
+]
