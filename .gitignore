@@ -48,3 +48,4 @@ package-lock.json
 backend/test/real/experiment/extracted
 public/assets/hearthstone/workflow/extracted
 backend/test/real/experiment-1/extracted
+backend/test/real/experiment-2/extracted
