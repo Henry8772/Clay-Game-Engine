@@ -11,8 +11,7 @@
             }
         },
         "background": {
-            "setting": "transparent",
-            "alpha_channel": true
+            "color": "white"
         },
         "color_palette_hex": {
             "base_tone": "#2f1d14",
