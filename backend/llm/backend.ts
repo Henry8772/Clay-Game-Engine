@@ -8,19 +8,30 @@ export interface LLMBackend {
         system: string,
         inputData: string | any[],
         model: string,
-        schema?: any // Zod schema or similar, used more for type inference in caller usually
+        schema?: any, // Zod schema or similar, used more for type inference in caller usually
+        config?: any  // GenerationConfig
     ): AsyncGenerator<T, void, unknown>;
+
+    generateContent(
+        prompt: string | any[],
+        model: string,
+        options?: {
+            systemInstruction?: string;
+            config?: any; // GenerationConfig
+        }
+    ): Promise<string>;
 
     generateImage(
         prompt: string,
         model: string,
-        options?: { imageConfig?: any }
+        options?: { imageConfig?: any, config?: any }
     ): Promise<Buffer>;
 
     editImage(
         prompt: string,
         image: Buffer | Buffer[],
-        model: string
+        model: string,
+        options?: { imageConfig?: any, config?: any }
     ): Promise<Buffer>;
 
     segmentImage(
@@ -43,15 +54,22 @@ export class GeminiBackend implements LLMBackend {
         system: string,
         inputData: string | any[],
         modelName: string,
-        schema?: any
+        schema?: any,
+        config?: any
     ): AsyncGenerator<T, void, unknown> {
+        const generationConfig: any = {
+            responseMimeType: "application/json",
+            responseSchema: schema
+        };
+
+        if (config) {
+            Object.assign(generationConfig, config);
+        }
+
         const model = this.client.getGenerativeModel({
             model: modelName,
             systemInstruction: system,
-            generationConfig: {
-                responseMimeType: "application/json",
-                responseSchema: schema
-            },
+            generationConfig: generationConfig,
         });
 
         const processor = new PartialJSONProcessor();
@@ -85,7 +103,45 @@ export class GeminiBackend implements LLMBackend {
         }
     }
 
-    async generateImage(prompt: string, modelName: string, options?: { imageConfig?: any }): Promise<Buffer> {
+    async generateContent(
+        prompt: string | any[],
+        modelName: string,
+        options?: {
+            systemInstruction?: string;
+            config?: any;
+        }
+    ): Promise<string> {
+        const generationConfig: any = {};
+        if (options?.config) {
+            Object.assign(generationConfig, options.config);
+        }
+
+        const model = this.client.getGenerativeModel({
+            model: modelName,
+            systemInstruction: options?.systemInstruction,
+            generationConfig: generationConfig,
+        });
+
+        let contents: any[] = [];
+        if (typeof prompt === "string") {
+            contents = [{ role: "user", parts: [{ text: prompt }] }];
+        } else {
+            // Assume prompt is already in the correct format or is an array of parts
+            // Checks if it is already in [{role, parts}] format
+            if (Array.isArray(prompt) && prompt.length > 0 && prompt[0].role) {
+                contents = prompt;
+            } else {
+                // Assume it's just parts for a single user message if it's not the full conversation
+                contents = [{ role: "user", parts: prompt }];
+            }
+        }
+
+        const result = await model.generateContent({ contents });
+        const response = result.response;
+        return response.text();
+    }
+
+    async generateImage(prompt: string, modelName: string, options?: { imageConfig?: any, config?: any }): Promise<Buffer> {
         const ai = new GoogleGenAI({ apiKey: this.apiKey });
 
         const config: any = {
@@ -94,6 +150,10 @@ export class GeminiBackend implements LLMBackend {
 
         if (options?.imageConfig) {
             config.imageConfig = options.imageConfig;
+        }
+
+        if (options?.config) {
+            Object.assign(config, options.config);
         }
 
         console.log(`[GeminiBackend] generateImage (new SDK) config: ${JSON.stringify(config)}`);
@@ -120,29 +180,54 @@ export class GeminiBackend implements LLMBackend {
         throw new Error("No image data found in response");
     }
 
-    async editImage(prompt: string, images: Buffer | Buffer[], modelName: string): Promise<Buffer> {
-        const model = this.client.getGenerativeModel({ model: modelName });
+    async editImage(prompt: string, images: Buffer | Buffer[], modelName: string, options?: { imageConfig?: any, config?: any }): Promise<Buffer> {
+        const ai = new GoogleGenAI({ apiKey: this.apiKey });
 
         const imageBuffers = Array.isArray(images) ? images : [images];
-        const imageParts = imageBuffers.map(img => ({
-            inlineData: {
-                data: img.toString('base64'),
-                mimeType: "image/png"
-            }
-        }));
+        const parts: any[] = [{ text: prompt }];
 
-        const result = await model.generateContent([prompt, ...imageParts]);
-        const response = result.response;
+        for (const img of imageBuffers) {
+            parts.push({
+                inlineData: {
+                    data: img.toString('base64'),
+                    mimeType: "image/png"
+                }
+            });
+        }
 
-        if (response.candidates && response.candidates.length > 0 && response.candidates[0].content && response.candidates[0].content.parts) {
-            for (const part of response.candidates[0].content.parts) {
+        const config: any = {
+            responseModalities: ['IMAGE'],
+        };
+
+        if (options?.imageConfig) {
+            config.imageConfig = options.imageConfig;
+        }
+
+        if (options?.config) {
+            Object.assign(config, options.config);
+        }
+
+        console.log(`[GeminiBackend] editImage (new SDK) config: ${JSON.stringify(config)}`);
+
+        const response = await ai.models.generateContent({
+            model: modelName,
+            config: config,
+            contents: [{
+                role: 'user',
+                parts: parts
+            }]
+        });
+
+        const candidates = response.candidates;
+        if (candidates && candidates[0]?.content?.parts) {
+            for (const part of candidates[0].content.parts) {
                 if (part.inlineData && part.inlineData.data) {
                     return Buffer.from(part.inlineData.data, 'base64');
                 }
             }
         }
 
-        console.error("Gemini Generation Failed. Response:", JSON.stringify(result, null, 2));
+        console.error("Gemini Generation Failed. Response:", JSON.stringify(response, null, 2));
         throw new Error("No image data found in response. Check logs for safety filters or other issues.");
     }
 
