@@ -1,4 +1,6 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenAI } from "@google/genai";
+import mime from "mime";
 import { PartialJSONProcessor } from "./parser";
 
 export interface LLMBackend {
@@ -11,7 +13,8 @@ export interface LLMBackend {
 
     generateImage(
         prompt: string,
-        model: string
+        model: string,
+        options?: { imageConfig?: any }
     ): Promise<Buffer>;
 
     editImage(
@@ -29,8 +32,10 @@ export interface LLMBackend {
 
 export class GeminiBackend implements LLMBackend {
     private client: GoogleGenerativeAI;
+    private apiKey: string;
 
     constructor(apiKey: string) {
+        this.apiKey = apiKey;
         this.client = new GoogleGenerativeAI(apiKey);
     }
 
@@ -80,14 +85,32 @@ export class GeminiBackend implements LLMBackend {
         }
     }
 
-    async generateImage(prompt: string, modelName: string): Promise<Buffer> {
-        const model = this.client.getGenerativeModel({ model: modelName });
-        const result = await model.generateContent(prompt);
-        const response = result.response;
+    async generateImage(prompt: string, modelName: string, options?: { imageConfig?: any }): Promise<Buffer> {
+        const ai = new GoogleGenAI({ apiKey: this.apiKey });
 
-        // Check for inlineData (image)
-        if (response.candidates && response.candidates[0].content.parts) {
-            for (const part of response.candidates[0].content.parts) {
+        const config: any = {
+            responseModalities: ['IMAGE'],
+        };
+
+        if (options?.imageConfig) {
+            config.imageConfig = options.imageConfig;
+        }
+
+        console.log(`[GeminiBackend] generateImage (new SDK) config: ${JSON.stringify(config)}`);
+
+        // Using the new SDK structure
+        const response = await ai.models.generateContent({
+            model: modelName,
+            config: config,
+            contents: [{
+                role: 'user',
+                parts: [{ text: prompt }]
+            }]
+        });
+
+        const candidates = response.candidates;
+        if (candidates && candidates[0]?.content?.parts) {
+            for (const part of candidates[0].content.parts) {
                 if (part.inlineData && part.inlineData.data) {
                     return Buffer.from(part.inlineData.data, 'base64');
                 }

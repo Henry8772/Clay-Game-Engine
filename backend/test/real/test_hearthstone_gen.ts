@@ -21,7 +21,7 @@ describe('REAL: Hearthstone Background Gen', () => {
     const shouldRun = key && !key.includes("dummy");
 
     it.skipIf(!shouldRun)('should generate a background from color map', async () => {
-        const client = new LLMClient("gemini", "gemini-2.5-flash-image", false);
+        const client = new LLMClient("gemini", "gemini-3-pro-image-preview", false);
 
         // 1. Read the Saved Color Map
         // This file is saved by the Frontend via /api/save-colormap

@@ -15,7 +15,7 @@ import { LLMClient } from "../client";
 export async function runAssetGeneratorAgent(
     client: LLMClient,
     prompt: string,
-    // referenceImageBuffer: Buffer // Removed as we are switching to direct generation
+    imageConfig: any = { aspectRatio: "1:1" }
 ): Promise<Buffer> {
     // Enforce isolation in the prompt
     const isolationPrompt = `${prompt}, isolated entity on a solid white background, no scene, no noise, single object, game sprite style`;
@@ -23,7 +23,9 @@ export async function runAssetGeneratorAgent(
     console.log(`[Asset Generator] Generating asset with prompt: "${isolationPrompt}"`);
 
     // Call the client's generateImage method
-    let resultImageBuffer = await client.generateImage(isolationPrompt);
+    let resultImageBuffer = await client.generateImage(isolationPrompt, undefined, {
+        imageConfig
+    });
 
     // Post-processing: Remove white background
     try {
