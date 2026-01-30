@@ -49,7 +49,7 @@ describe('EXPERIMENT-2: Step 1 - Background Generation', () => {
         const prompt = `
 ${gameBoardDescription}
 
-Style Configuration (Apply strictly, but ignore any background transparency settings as this IS the background):
+Style Configuration):
 ${JSON.stringify(backgroundStyle, null, 2)}
         `;
 

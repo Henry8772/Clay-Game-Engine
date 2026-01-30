@@ -77,7 +77,7 @@ describe('EXPERIMENT-2: Step 4 - Extraction', () => {
                 continue;
             }
 
-            const outputName = `${item.label}_${Date.now()}.png`;
+            const outputName = `${item.label}.png`;
             const outPath = path.join(extractedDir, outputName);
 
             // 1. Extract raw box
