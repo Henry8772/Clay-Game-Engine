@@ -62,14 +62,14 @@ const INITIAL_MANIFEST: SceneManifest = {
                 role: 'SPRITE',
                 color: 'blue',
                 initialState: { x: CENTER_X, y: 570 - 60 },
-                src: '/assets/hearthstone/card-1.png'
+                src: '/api/experiment-2/assets/extracted/Ancient%20Wyrm.png'
             },
             {
                 id: 'Card_Ragnaros',
                 role: 'SPRITE',
                 color: 'red',
                 initialState: { x: CENTER_X, y: 570 - 120 },
-                src: '/assets/hearthstone/card-2.png'
+                src: '/api/experiment-2/assets/extracted/Arcane%20Mage.png'
             }
         ],
         juice: []
@@ -124,11 +124,11 @@ export default function HearthstoneTestPage() {
                 ...prev.layers,
                 ambience: prev.layers.ambience.map(l => ({
                     ...l,
-                    src: `/assets/hearthstone/generated_background.png?t=${timestamp}`
+                    src: `/api/experiment-2/assets/background.png?t=${timestamp}`
                 }))
             }
         }));
-        setLastLog("Reloaded Background Asset");
+        setLastLog("Reloaded Background Asset from Experiment-2");
     }, []);
 
     return (

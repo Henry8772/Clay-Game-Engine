@@ -55,8 +55,6 @@ export const GameEntity = ({ id, name, initialX, initialY, color, src, onAction,
             sprite.anchor.set(0.5);
             // Optional: Scale sprite if needed, or assume src is sized correctly for now
             // But let's limit size just in case it's huge
-            sprite.width = 100;
-            sprite.height = 150; // Approximating card ratio
             container.addChild(sprite);
         } else {
             const graphics = new PIXI.Graphics();
