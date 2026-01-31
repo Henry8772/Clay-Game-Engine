@@ -1,0 +1,207 @@
+{
+  "grid": {
+    "rows": 6,
+    "cols": 6
+  },
+  "entities": [
+    {
+      "id": "entity_0",
+      "label": "lightning spell icon",
+      "team": "neutral",
+      "type": "ui",
+      "location": "sidebar_left",
+      "pixel_box": [
+        37,
+        113,
+        149,
+        315
+      ]
+    },
+    {
+      "id": "entity_1",
+      "label": "heal spell icon",
+      "team": "neutral",
+      "type": "ui",
+      "location": "sidebar_left",
+      "pixel_box": [
+        52,
+        409,
+        134,
+        611
+      ]
+    },
+    {
+      "id": "entity_2",
+      "label": "haste spell icon",
+      "team": "neutral",
+      "type": "ui",
+      "location": "sidebar_left",
+      "pixel_box": [
+        52,
+        701,
+        134,
+        903
+      ]
+    },
+    {
+      "id": "entity_3",
+      "label": "fire demon",
+      "team": "red",
+      "type": "unit",
+      "grid_position": {
+        "r": 2,
+        "c": 0
+      },
+      "pixel_box": [
+        428,
+        93,
+        494,
+        260
+      ]
+    },
+    {
+      "id": "entity_4",
+      "label": "archer",
+      "team": "blue",
+      "type": "unit",
+      "grid_position": {
+        "r": 4,
+        "c": 0
+      },
+      "pixel_box": [
+        747,
+        131,
+        811,
+        277
+      ]
+    },
+    {
+      "id": "entity_5",
+      "label": "skeleton warrior",
+      "team": "red",
+      "type": "unit",
+      "grid_position": {
+        "r": 1,
+        "c": 2
+      },
+      "pixel_box": [
+        304,
+        297,
+        368,
+        458
+      ]
+    },
+    {
+      "id": "entity_6",
+      "label": "rock",
+      "team": "neutral",
+      "type": "obstacle",
+      "grid_position": {
+        "r": 3,
+        "c": 2
+      },
+      "pixel_box": [
+        629,
+        301,
+        716,
+        463
+      ]
+    },
+    {
+      "id": "entity_7",
+      "label": "rocks",
+      "team": "neutral",
+      "type": "obstacle",
+      "grid_position": {
+        "r": 1,
+        "c": 3
+      },
+      "pixel_box": [
+        372,
+        519,
+        445,
+        668
+      ]
+    },
+    {
+      "id": "entity_8",
+      "label": "knight",
+      "team": "blue",
+      "type": "unit",
+      "grid_position": {
+        "r": 0,
+        "c": 4
+      },
+      "pixel_box": [
+        199,
+        569,
+        263,
+        727
+      ]
+    },
+    {
+      "id": "entity_9",
+      "label": "slime",
+      "team": "red",
+      "type": "unit",
+      "grid_position": {
+        "r": 3,
+        "c": 4
+      },
+      "pixel_box": [
+        545,
+        611,
+        616,
+        723
+      ]
+    },
+    {
+      "id": "entity_10",
+      "label": "archer",
+      "team": "blue",
+      "type": "unit",
+      "grid_position": {
+        "r": 4,
+        "c": 5
+      },
+      "pixel_box": [
+        740,
+        741,
+        804,
+        887
+      ]
+    },
+    {
+      "id": "entity_11",
+      "label": "knight",
+      "team": "blue",
+      "type": "unit",
+      "grid_position": {
+        "r": 1,
+        "c": 5
+      },
+      "pixel_box": [
+        290,
+        752,
+        354,
+        910
+      ]
+    },
+    {
+      "id": "entity_12",
+      "label": "wizard",
+      "team": "blue",
+      "type": "unit",
+      "grid_position": {
+        "r": 2,
+        "c": 5
+      },
+      "pixel_box": [
+        456,
+        760,
+        515,
+        901
+      ]
+    }
+  ]
+}
