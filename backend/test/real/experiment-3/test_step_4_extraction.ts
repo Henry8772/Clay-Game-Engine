@@ -77,7 +77,7 @@ describe('EXPERIMENT: Step 4 - Extraction', () => {
                 continue;
             }
 
-            const outputName = `${item.label}_${Date.now()}.png`;
+            const outputName = `${item.label}.png`;
             const outPath = path.join(extractedDir, outputName);
 
             await sharp(spriteBuffer)
