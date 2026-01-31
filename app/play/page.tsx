@@ -1,13 +1,20 @@
 "use client";
 
-import React, { useState } from "react";
-import { Game, INITIAL_STATE, GAME_RULES } from "../generated/game-slot";
+import React, { useState, useMemo, useEffect } from "react";
+// import { Game, INITIAL_STATE, GAME_RULES } from "../generated/game-slot";
+import { SmartScene } from "../components/engine/SmartScene";
+import { SceneManifest, AssetManifest } from "../components/engine/types";
 import { generateGameAction } from "../actions/generate";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 
 import { GameErrorBoundary } from "../components/GameErrorBoundary";
-import { Chat } from "../components/Chat";
+// import { Chat } from "../components/Chat";
+
+// Temporary Initial State reflecting the structure we expect from the backend
+const FALLBACK_GAMESTATE = {
+    entities: []
+};
 
 export default function PlayPage() {
     const [prompt, setPrompt] = useState("");
@@ -18,12 +25,103 @@ export default function PlayPage() {
 
     // Derived State
     const convexState = gameStateFromConvex?.state;
-    // Fallback to INITIAL_STATE if convex state is missing or appears empty/invalid (no entities)
-    const currentGameState = (convexState && convexState.entities && Object.keys(convexState.entities).length > 0)
+
+    // Local state for fetched gamestate (Dev workflow)
+    const [localGameState, setLocalGameState] = useState<any>(null);
+
+    useEffect(() => {
+        // FETCH WORKFLOW:
+        // In this experiment, we generate gamestate.json in the backend.
+        // We fetch it via the proxy to iterate quickly without DB sync.
+        fetch('/api/asset-proxy/experiment-3/gamestate.json')
+            .then(res => res.json())
+            .then(data => {
+                console.log("Loaded gamestate from proxy:", data);
+                setLocalGameState(data);
+            })
+            .catch(err => console.error("Failed to load local gamestate:", err));
+    }, []);
+
+    // Fallback logic: Convex -> Local File -> Empty
+    const currentGameState = (convexState && convexState.entities)
         ? convexState
-        : INITIAL_STATE;
-    const rules = gameStateFromConvex?.rules || GAME_RULES || "Standard game rules";
-    const gameId = gameStateFromConvex?._id;
+        : (localGameState || FALLBACK_GAMESTATE);
+
+    console.log("Current Game State:", currentGameState);
+
+    // const rules = gameStateFromConvex?.rules || "Standard game rules";
+    // const gameId = gameStateFromConvex?._id;
+
+    // Transform GameState to SceneManifest
+    const manifest: SceneManifest = useMemo(() => {
+        // SCENE DIMENSIONS (Matches background.png)
+        const SCENE_WIDTH = 1408;
+        const SCENE_HEIGHT = 736;
+
+        // 1. Ambience Layer
+        const ambience: AssetManifest = {
+            id: 'background',
+            role: 'BACKGROUND',
+            src: '/api/asset-proxy/experiment-3/background.png',
+            initialState: {
+                x: 0,
+                y: 0
+            }
+        };
+
+        // 2. Actor Layer
+        // Map gamestate entities to sprite props
+        // NOTE: backend data is normalized to 0-1000 range
+        const actors = (currentGameState.entities || []).map((entity: any): AssetManifest => {
+            const ymin = entity.pixel_box ? entity.pixel_box[0] : 0;
+            const xmin = entity.pixel_box ? entity.pixel_box[1] : 0;
+            const ymax = entity.pixel_box ? entity.pixel_box[2] : 100;
+            const xmax = entity.pixel_box ? entity.pixel_box[3] : 100;
+
+            const boxWidth = xmax - xmin;
+            const boxHeight = ymax - ymin;
+
+            // Scale to Scene Dimensions
+            // Original analysis is 1000x1000 (normalized)
+            const scaleX = SCENE_WIDTH / 1000;
+            const scaleY = SCENE_HEIGHT / 1000;
+
+            return {
+                id: entity.id,
+                role: 'SPRITE',
+                src: entity.src || '/placeholder.png',
+                initialState: {
+                    x: xmin * scaleX + (boxWidth * scaleX / 2), // Center X
+                    y: ymin * scaleY + (boxHeight * scaleY / 2), // Center Y
+                },
+                config: {
+                    label: entity.label,
+                    width: boxWidth * scaleX,
+                    height: boxHeight * scaleY,
+                    draggable: true,
+                    // If the box is inverted in JSON (ymin/xmin confusion), we might need to swap indices
+                    // Usually: [ymin, xmin, ymax, xmax]
+                }
+            };
+        });
+
+        return {
+            layers: {
+                ambience: [ambience],
+                actors: actors,
+                stage: [],
+                juice: []
+            },
+            physics: {
+                enabled: true,
+                zones: []
+            }
+        };
+    }, [currentGameState]);
+
+    const handleAction = (command: string) => {
+        console.log("Scene Action:", command);
+    };
 
     const handleGenerate = async () => {
         if (!prompt) return;
@@ -52,7 +150,7 @@ export default function PlayPage() {
                     </div>
                     <div className="flex items-baseline gap-2">
                         <h1 className="text-sm font-semibold tracking-tight">Gemini Engine</h1>
-                        <span className="text-xs text-neutral-500 font-mono">BETA</span>
+                        <span className="text-xs text-neutral-500 font-mono">VISUAL MODE</span>
                     </div>
                 </div>
 
@@ -118,27 +216,32 @@ export default function PlayPage() {
                     {/* Toolbar for Game Panel */}
                     <div className="h-10 border-b border-neutral-800 bg-black flex items-center px-4 justify-between">
                         <div className="flex items-center gap-2">
-                            <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-                            <span className="text-[10px] font-mono text-neutral-500 uppercase tracking-wider">Preview Environment</span>
+                            <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                            <span className="text-[10px] font-mono text-neutral-500 uppercase tracking-wider">Live Sreaming</span>
                         </div>
                     </div>
 
                     <div className="flex-1 relative overflow-hidden flex items-center justify-center p-8 bg-neutral-950">
-                        <div className="relative z-10 w-full h-full border border-neutral-800 rounded bg-black shadow-2xl overflow-hidden">
+                        <div className="relative z-10 w-full h-full border border-neutral-800 rounded bg-black shadow-2xl overflow-hidden flex items-center justify-center">
                             <GameErrorBoundary>
-                                <Game initialState={currentGameState} />
+                                <SmartScene
+                                    manifest={manifest}
+                                    onAction={handleAction}
+                                    width={1408}
+                                    height={736}
+                                />
                             </GameErrorBoundary>
                         </div>
                     </div>
                 </section>
 
-                {/* Chat / Agent Sidebar */}
-                <Chat
+                {/* Chat / Agent Sidebar - Commented out for now to focus on Visual Mode */}
+                {/* <Chat
                     className="w-[400px] z-20"
                     gameId={gameId}
                     currentGameState={currentGameState}
                     gameRules={rules}
-                />
+                /> */}
             </main>
         </div>
     );

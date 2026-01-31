@@ -9,12 +9,12 @@
       "label": "lightning spell icon",
       "team": "neutral",
       "type": "ui",
-      "location": "sidebar_left",
+      "src": "/api/asset-proxy/experiment-3/extracted/lightning%20spell%20icon.png",
       "pixel_box": [
-        37,
         113,
-        149,
-        315
+        37,
+        315,
+        149
       ]
     },
     {
@@ -22,12 +22,12 @@
       "label": "heal spell icon",
       "team": "neutral",
       "type": "ui",
-      "location": "sidebar_left",
+      "src": "/api/asset-proxy/experiment-3/extracted/heal%20spell%20icon.png",
       "pixel_box": [
-        52,
         409,
-        134,
-        611
+        52,
+        611,
+        134
       ]
     },
     {
@@ -35,12 +35,12 @@
       "label": "haste spell icon",
       "team": "neutral",
       "type": "ui",
-      "location": "sidebar_left",
+      "src": "/api/asset-proxy/experiment-3/extracted/haste%20spell%20icon.png",
       "pixel_box": [
-        52,
         701,
-        134,
-        903
+        52,
+        903,
+        134
       ]
     },
     {
@@ -48,15 +48,12 @@
       "label": "fire demon",
       "team": "red",
       "type": "unit",
-      "grid_position": {
-        "r": 2,
-        "c": 0
-      },
+      "src": "/api/asset-proxy/experiment-3/extracted/fire%20demon.png",
       "pixel_box": [
-        428,
         93,
-        494,
-        260
+        428,
+        260,
+        494
       ]
     },
     {
@@ -64,15 +61,12 @@
       "label": "archer",
       "team": "blue",
       "type": "unit",
-      "grid_position": {
-        "r": 4,
-        "c": 0
-      },
+      "src": "/api/asset-proxy/experiment-3/extracted/archer.png",
       "pixel_box": [
-        747,
         131,
-        811,
-        277
+        747,
+        277,
+        811
       ]
     },
     {
@@ -80,15 +74,12 @@
       "label": "skeleton warrior",
       "team": "red",
       "type": "unit",
-      "grid_position": {
-        "r": 1,
-        "c": 2
-      },
+      "src": "/api/asset-proxy/experiment-3/extracted/skeleton%20warrior.png",
       "pixel_box": [
-        304,
         297,
-        368,
-        458
+        304,
+        458,
+        368
       ]
     },
     {
@@ -96,15 +87,12 @@
       "label": "rock",
       "team": "neutral",
       "type": "obstacle",
-      "grid_position": {
-        "r": 3,
-        "c": 2
-      },
+      "src": "/api/asset-proxy/experiment-3/extracted/rock.png",
       "pixel_box": [
-        629,
         301,
-        716,
-        463
+        629,
+        463,
+        716
       ]
     },
     {
@@ -112,15 +100,12 @@
       "label": "rocks",
       "team": "neutral",
       "type": "obstacle",
-      "grid_position": {
-        "r": 1,
-        "c": 3
-      },
+      "src": "/api/asset-proxy/experiment-3/extracted/rocks.png",
       "pixel_box": [
-        372,
         519,
-        445,
-        668
+        372,
+        668,
+        445
       ]
     },
     {
@@ -128,15 +113,12 @@
       "label": "knight",
       "team": "blue",
       "type": "unit",
-      "grid_position": {
-        "r": 0,
-        "c": 4
-      },
+      "src": "/api/asset-proxy/experiment-3/extracted/knight.png",
       "pixel_box": [
-        199,
         569,
-        263,
-        727
+        199,
+        727,
+        263
       ]
     },
     {
@@ -144,15 +126,12 @@
       "label": "slime",
       "team": "red",
       "type": "unit",
-      "grid_position": {
-        "r": 3,
-        "c": 4
-      },
+      "src": "/api/asset-proxy/experiment-3/extracted/slime.png",
       "pixel_box": [
-        545,
         611,
-        616,
-        723
+        545,
+        723,
+        616
       ]
     },
     {
@@ -160,15 +139,12 @@
       "label": "archer",
       "team": "blue",
       "type": "unit",
-      "grid_position": {
-        "r": 4,
-        "c": 5
-      },
+      "src": "/api/asset-proxy/experiment-3/extracted/archer.png",
       "pixel_box": [
-        740,
         741,
-        804,
-        887
+        740,
+        887,
+        804
       ]
     },
     {
@@ -176,15 +152,12 @@
       "label": "knight",
       "team": "blue",
       "type": "unit",
-      "grid_position": {
-        "r": 1,
-        "c": 5
-      },
+      "src": "/api/asset-proxy/experiment-3/extracted/knight.png",
       "pixel_box": [
-        290,
         752,
-        354,
-        910
+        290,
+        910,
+        354
       ]
     },
     {
@@ -192,15 +165,12 @@
       "label": "wizard",
       "team": "blue",
       "type": "unit",
-      "grid_position": {
-        "r": 2,
-        "c": 5
-      },
+      "src": "/api/asset-proxy/experiment-3/extracted/wizard.png",
       "pixel_box": [
-        456,
         760,
-        515,
-        901
+        456,
+        901,
+        515
       ]
     }
   ]
