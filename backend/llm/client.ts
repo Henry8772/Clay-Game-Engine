@@ -136,6 +136,22 @@ export class LLMClient {
         }
     }
 
+    public async generateContent(
+        prompt: string | any[],
+        model: string = "gemini-2.5-flash",
+        options?: {
+            systemInstruction?: string;
+            config?: any;
+            label?: string; // For mocking
+        }
+    ): Promise<string> {
+        if (this.debugMode) {
+            console.log(`DEBUG: Generating mock content for label: ${options?.label || 'unknown'}`);
+            return "MOCK_CONTENT";
+        }
+        return this.backend.generateContent(prompt, model, options);
+    }
+
     public async generateImage(
         prompt: string,
         model: string = "gemini-2.5-flash-image",
