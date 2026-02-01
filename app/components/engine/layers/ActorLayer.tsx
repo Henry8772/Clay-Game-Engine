@@ -10,9 +10,10 @@ interface ActorLayerProps {
     onAction: (cmd: string) => void;
     displayMode?: 'normal' | 'mask';
     debugZones?: boolean;
+    refreshTrigger?: number;
 }
 
-export const ActorLayer = ({ assets, onAction, displayMode = 'normal', debugZones = false }: ActorLayerProps) => {
+export const ActorLayer = ({ assets, onAction, displayMode = 'normal', debugZones = false, refreshTrigger = 0 }: ActorLayerProps) => {
 
     return (
         <>
@@ -39,7 +40,7 @@ export const ActorLayer = ({ assets, onAction, displayMode = 'normal', debugZone
 
                     return (
                         <GameEntity
-                            key={asset.id}
+                            key={`${asset.id}-${refreshTrigger}`}
                             id={asset.id}
                             name={asset.id} // Simple name for now
                             initialX={asset.initialState?.x || 0}
