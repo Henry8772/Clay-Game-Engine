@@ -83,9 +83,10 @@ interface DropZoneProps {
     label?: string;
     onDrop?: (location: string) => void; // Optional callback if zone handles logic directly
     displayMode?: 'normal' | 'mask';
+    visible?: boolean;
 }
 
-export const DropZone = ({ id, x, y, width, height, debugColor = 0x222222, cellSize = 100, label, displayMode = 'normal' }: DropZoneProps) => {
+export const DropZone = ({ id, x, y, width, height, debugColor = 0x222222, cellSize = 100, label, displayMode = 'normal', visible = true }: DropZoneProps) => {
     const { app, stage } = usePixiApp();
     const { registerZone, unregisterZone } = useCollision();
 
@@ -95,6 +96,10 @@ export const DropZone = ({ id, x, y, width, height, debugColor = 0x222222, cellS
         const container = new PIXI.Container();
         container.x = x;
         container.y = y;
+        container.zIndex = 1; // Layer 1 (Middle - Zones)
+
+        // Visibility control: We use alpha 0 so it's hidden but still has dimensions for getBounds()
+        container.alpha = visible ? 1 : 0;
 
         // Draw Zone Visuals
         const g = new PIXI.Graphics();
@@ -163,7 +168,7 @@ export const DropZone = ({ id, x, y, width, height, debugColor = 0x222222, cellS
             stage.removeChild(container);
             container.destroy({ children: true });
         };
-    }, [app, stage, x, y, width, height, cellSize, id, registerZone, unregisterZone, displayMode]);
+    }, [app, stage, x, y, width, height, cellSize, id, registerZone, unregisterZone, displayMode, visible]);
 
     return null;
 };
