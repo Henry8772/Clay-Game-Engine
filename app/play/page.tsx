@@ -2,9 +2,11 @@
 
 import React, { useState, useMemo, useEffect } from "react";
 // import { Game, INITIAL_STATE, GAME_RULES } from "../generated/game-slot";
+import { BASE_GAME_RULES, SPRITE_RULES } from "../game-rules";
 import { SmartScene } from "../components/engine/SmartScene";
 import { SceneManifest, AssetManifest } from "../components/engine/types";
 import { generateGameAction } from "../actions/generate";
+import { processGameMoveAction } from "../actions/game-move";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 
@@ -171,8 +173,45 @@ export default function PlayPage() {
         };
     }, [currentGameState, navMesh]);
 
-    const handleAction = (command: string) => {
-        console.log("Scene Action:", command);
+    const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+    const handleAction = async (commandOrEvent: string) => {
+        // console.log("Scene Action:", commandOrEvent);
+        try {
+            // Check if it's a JSON event from SmartScene
+            if (commandOrEvent.startsWith('{')) {
+                const event = JSON.parse(commandOrEvent);
+                if (event.type === 'MOVE') {
+                    const { entity, entityId, to } = event;
+                    if (!to || to === event.from) {
+                        console.log("Move cancelled or dropped on same tile.");
+                        setRefreshTrigger(p => p + 1); // Ensure revert if dragged but dropped on same
+                        return;
+                    }
+
+                    // Strip unique suffix from DropZone ID (e.g. "tile_r0_c0_0" -> "tile_r0_c0")
+                    // We need unique IDs for React keys, but the game logic expects the raw label.
+                    const targetLabel = to.replace(/_\d+$/, '');
+
+                    // Construct Natural Language Command
+                    // We include ID to be precise
+                    const moveCommand = `Move ${entity} (id: ${entityId}) to ${targetLabel}`;
+                    console.log("Generated Command from Drag:", moveCommand);
+
+                    const fullRules = BASE_GAME_RULES + "\n" + SPRITE_RULES;
+
+                    await processGameMoveAction(currentGameState, fullRules, moveCommand, navMesh);
+
+                    // Force refresh - if invalid, this snaps back. If valid, this remounts at new position.
+                    setRefreshTrigger(p => p + 1);
+                }
+            } else {
+                console.log("Unknown action format:", commandOrEvent);
+            }
+        } catch (e) {
+            console.error("Failed to parse action:", e);
+            setRefreshTrigger(p => p + 1); // Safety revert
+        }
     };
 
     const handleGenerate = async () => {
@@ -296,6 +335,7 @@ export default function PlayPage() {
                                     width={1408}
                                     height={736}
                                     debugZones={showDebug}
+                                    refreshTrigger={refreshTrigger}
                                 />
                             </GameErrorBoundary>
                         </div>

@@ -18,6 +18,7 @@ interface SmartSceneProps {
     displayMode?: 'normal' | 'mask';
     onSnapshot?: (dataUrl: string) => void;
     debugZones?: boolean;
+    refreshTrigger?: number; // Version/Tick to force re-renders
 }
 
 // Helper to configure global stage properties
@@ -31,7 +32,7 @@ const StageSetup = () => {
     return null;
 };
 
-export const SmartScene = ({ manifest, onAction, width = 800, height = 600, displayMode = 'normal', onSnapshot, debugZones = false }: SmartSceneProps) => {
+export const SmartScene = ({ manifest, onAction, width = 800, height = 600, displayMode = 'normal', onSnapshot, debugZones = false, refreshTrigger = 0 }: SmartSceneProps) => {
 
     return (
         <PixiStage width={width} height={height}>
@@ -39,7 +40,7 @@ export const SmartScene = ({ manifest, onAction, width = 800, height = 600, disp
             <CollisionProvider>
 
                 {/* Layer 2: Actors (Zones + Entities) */}
-                <ActorLayer assets={manifest.layers.actors} onAction={onAction} displayMode={displayMode} debugZones={debugZones} />
+                <ActorLayer assets={manifest.layers.actors} onAction={onAction} displayMode={displayMode} debugZones={debugZones} refreshTrigger={refreshTrigger} />
 
                 {/* Layer 0: Ambience (Background) */}
                 <AmbienceLayer assets={manifest.layers.ambience} width={width} height={height} displayMode={displayMode} />
