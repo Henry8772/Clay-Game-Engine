@@ -19,6 +19,7 @@ export const reset = mutation({
     args: {
         initialState: v.any(),
         rules: v.string(),
+        runId: v.optional(v.string()), // <--- NEW
     },
     handler: async (ctx, args) => {
         // Deactivate all old games
@@ -32,6 +33,7 @@ export const reset = mutation({
             state: args.initialState,
             rules: args.rules,
             isActive: true,
+            runId: args.runId, // <--- NEW
         });
 
         // No initial history needed for now, or could insert a system message

@@ -18,15 +18,35 @@ export async function GET(
     }
 
     // Security: Root Jail
-    // We only allow access to backend/test/real
-    const BASE_DIR = path.join(process.cwd(), 'backend', 'test', 'real');
+    // We only allow access to backend/test/real and backend/data/runs
+    const TEST_BASE_DIR = path.join(process.cwd(), 'backend', 'test', 'real');
+    const RUNS_BASE_DIR = path.join(process.cwd(), 'backend', 'data', 'runs');
 
     // Construct the full path
-    const potentialPath = path.join(BASE_DIR, ...filePathArray);
+    // IMPORTANT: Client must prefix runs with special segment or we heuristically check?
+    // Let's assume the client sends /api/asset-proxy/runs/{runId}/...
+    // If path starts with "runs", map to RUNS_BASE_DIR, else map to TEST_BASE_DIR (backwards compat)
 
-    // Security check: Ensure the resolved path starts with BASE_DIR
-    if (!potentialPath.startsWith(BASE_DIR)) {
-        return new NextResponse('Forbidden: Access outside base directory', { status: 403 });
+    let potentialPath: string;
+
+    if (filePathArray[0] === 'runs') {
+        // Remove "runs" from the start and join with RUNS_BASE_DIR
+        const relativePath = filePathArray.slice(1);
+        potentialPath = path.join(RUNS_BASE_DIR, ...relativePath);
+
+        // Security check for Runs
+        if (!potentialPath.startsWith(RUNS_BASE_DIR)) {
+            return new NextResponse('Forbidden: Access outside runs directory', { status: 403 });
+        }
+    } else {
+        // Legacy/Experiment path
+        potentialPath = path.join(TEST_BASE_DIR, ...filePathArray);
+
+        // Security check for Tests
+        if (!potentialPath.startsWith(TEST_BASE_DIR)) {
+            console.log("Access attempt outside base:", potentialPath);
+            return new NextResponse('Forbidden: Access outside base directory', { status: 403 });
+        }
     }
 
     // Security check: Extension whitelist

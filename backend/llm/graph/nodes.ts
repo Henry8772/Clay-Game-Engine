@@ -1,12 +1,14 @@
 
 import { GraphState } from "./state";
-import { runPlannerAgent } from "../agents/planner";
-import { runArchitectAgent } from "../agents/architect";
-import { runRendererAgent } from "../agents/renderer";
 import { LLMClient } from "../client";
+import { runSceneAgent } from "../agents/scene_agent";
+import { runBackgroundAgent } from "../agents/background_agent";
+import { runSpriteAgent } from "../agents/sprite_agent";
+import { runVisionAgent } from "../agents/vision_agent";
+import { runExtractionAgent } from "../agents/extraction_agent";
+import { runNavMeshAgent } from "../agents/navmesh_agent";
+import { runStateAgent } from "../agents/state_agent";
 import * as Mocks from "./mocks";
-import { runUIDesignerAgent } from "../agents/ui_designer";
-import { runAssetGeneratorAgent } from "../agents/asset_generator";
 
 // Helper to save artifacts
 const saveRunArtifact = async (runId: string | undefined, filename: string, content: string | Buffer) => {
@@ -14,7 +16,8 @@ const saveRunArtifact = async (runId: string | undefined, filename: string, cont
     try {
         const fs = await import("fs");
         const path = await import("path");
-        const runDir = path.resolve(process.cwd(), ".tmp/runs", runId);
+        const { DATA_RUNS_DIR } = await import("../utils/paths");
+        const runDir = path.resolve(DATA_RUNS_DIR, runId);
         if (!fs.existsSync(runDir)) {
             fs.mkdirSync(runDir, { recursive: true });
         }
@@ -30,211 +33,90 @@ export interface GenerationGraphConfig {
     useMock?: boolean;
 }
 
-// 1. Planner Node
-export const nodePlanner = async (state: GraphState, config?: { configurable?: GenerationGraphConfig }) => {
-    const { client, useMock } = config?.configurable || {};
+// 1. Scene Generator
+export const nodeSceneGenerator = async (state: GraphState, config?: { configurable?: GenerationGraphConfig }) => {
+    const { client } = config?.configurable || {};
     if (!client) throw new Error("Client not found");
 
-    if (useMock) {
-        return { designDoc: Mocks.MOCK_DESIGN_DOC };
-    }
+    const sceneImage = await runSceneAgent(client, state.userInput);
+    await saveRunArtifact(state.runId, "scene.png", sceneImage);
 
-    const designDoc = await runPlannerAgent(client, state.userInput);
-
-    // Save progress
-    await saveRunArtifact(state.runId, "design_doc.md", designDoc);
-
-    return { designDoc };
+    return { sceneImage };
 };
 
-// 2. Architect Node
-export const nodeArchitect = async (state: GraphState, config?: { configurable?: GenerationGraphConfig }) => {
-    const { client, useMock } = config?.configurable || {};
+// 2. Background Extractor
+export const nodeBackgroundExtractor = async (state: GraphState, config?: { configurable?: GenerationGraphConfig }) => {
+    const { client } = config?.configurable || {};
     if (!client) throw new Error("Client not found");
+    if (!state.sceneImage) throw new Error("Scene image missing");
 
-    if (useMock) {
-        return {
-            initialState: Mocks.MOCK_INITIAL_STATE,
-            rules: Mocks.MOCK_RULES,
-            blueprints: Mocks.MOCK_BLUEPRINTS
-        };
-    }
+    const backgroundImage = await runBackgroundAgent(client, state.sceneImage);
+    await saveRunArtifact(state.runId, "background.png", backgroundImage);
 
-    if (!state.designDoc) throw new Error("Design Doc missing");
-    const result = await runArchitectAgent(client, state.designDoc);
-
-    // Save progress
-    const architectDump = JSON.stringify({
-        initialState: result.initialState,
-        rules: result.rules,
-        blueprints: result.blueprints
-    }, null, 2);
-    await saveRunArtifact(state.runId, "architect_output.json", architectDump);
-
-    return {
-        initialState: result.initialState,
-        rules: result.rules,
-        blueprints: result.blueprints
-    };
+    return { backgroundImage };
 };
 
-// 3. UI Designer Node
-export const nodeUIDesigner = async (state: GraphState, config?: { configurable?: GenerationGraphConfig }) => {
-    const { client, useMock } = config?.configurable || {};
+// 3. Sprite Isolator
+export const nodeSpriteIsolator = async (state: GraphState, config?: { configurable?: GenerationGraphConfig }) => {
+    const { client } = config?.configurable || {};
     if (!client) throw new Error("Client not found");
+    if (!state.sceneImage) throw new Error("Scene image missing");
 
-    if (useMock) {
-        return {
-            imagePrompt: Mocks.MOCK_IMAGE_PROMPT,
-            visualLayout: Mocks.MOCK_VISUAL_LAYOUT,
-            generatedImage: Mocks.MOCK_GENERATED_IMAGE
-        };
-    }
+    const spriteImage = await runSpriteAgent(client, state.sceneImage);
+    await saveRunArtifact(state.runId, "sprites.png", spriteImage);
 
-    if (!state.designDoc) throw new Error("Design Doc missing");
-    if (!state.blueprints) throw new Error("Blueprints missing related to UI Designer");
-    const result = await runUIDesignerAgent(client, state.designDoc, state.blueprints);
-
-    // Save image to a temporary path for downstream consumption (Asset Swarm)
-    let generatedImagePath: string | null = null;
-    const runId = state.runId;
-
-    if (result.image && runId) {
-        const fs = await import("fs");
-        const path = await import("path");
-        const tmpDir = path.resolve(process.cwd(), ".tmp/runs", runId, "generated");
-        if (!fs.existsSync(tmpDir)) {
-            fs.mkdirSync(tmpDir, { recursive: true });
-        }
-        generatedImagePath = path.join(tmpDir, `scene.png`);
-        fs.writeFileSync(generatedImagePath, result.image);
-        console.log(`[Nodes] Saved generated scene to: ${generatedImagePath}`);
-    }
-
-    // Save metadata
-    const uiDump = JSON.stringify({
-        imagePrompt: result.imagePrompt,
-        visualLayout: result.visualLayout,
-        generatedImagePath
-    }, null, 2);
-    await saveRunArtifact(runId, "ui_designer_output.json", uiDump);
-
-    return {
-        imagePrompt: result.imagePrompt,
-        visualLayout: result.visualLayout,
-        generatedImage: generatedImagePath
-    };
+    return { spriteImage };
 };
 
-// 4. Asset Generator Swarm Node (New)
-export const nodeAssetGenSwarm = async (state: GraphState, config?: { configurable?: GenerationGraphConfig }) => {
-    const { client, useMock } = config?.configurable || {};
+// 4. Vision Analyzer
+export const nodeVisionAnalyzer = async (state: GraphState, config?: { configurable?: GenerationGraphConfig }) => {
+    const { client } = config?.configurable || {};
     if (!client) throw new Error("Client not found");
+    if (!state.spriteImage) throw new Error("Sprite image missing");
 
-    if (useMock) {
-        return { assetMap: Mocks.MOCK_ASSET_MAP };
-    }
+    const analysisJson = await runVisionAgent(client, state.spriteImage);
+    await saveRunArtifact(state.runId, "analysis.json", JSON.stringify(analysisJson, null, 2));
 
-    if (!state.blueprints) throw new Error("Blueprints missing from Architect output");
-
-    const blueprints = state.blueprints;
-    const assetMap: Record<string, string> = {};
-
-    // Reference image logic removed as we now use direct text-to-image generation for better isolation.
-    const fs = await import("fs"); // dynamic import for node usage
-
-    // let referenceImageBuffer: Buffer;
-    // ... (removed)
-
-    const tasks = Object.values(blueprints).map(async (blueprint: any) => {
-        try {
-            // only generate assets for ASSET renderType
-            if (blueprint.renderType !== "ASSET") return;
-            if (!blueprint.visualPrompt) return;
-
-            // Pass only the prompt; the agent handles isolation now.
-            const assetBuffer = await runAssetGeneratorAgent(client, blueprint.visualPrompt);
-
-            // Save asset to disk
-            const path = await import("path");
-            const runId = state.runId || "default";
-            const assetsDir = path.resolve(process.cwd(), ".tmp/runs", runId, "assets");
-
-            if (!fs.existsSync(assetsDir)) {
-                fs.mkdirSync(assetsDir, { recursive: true });
-            }
-
-            const assetPath = path.join(assetsDir, `${blueprint.id}.png`);
-            fs.writeFileSync(assetPath, assetBuffer);
-            assetMap[blueprint.id] = assetPath;
-        } catch (e) {
-            console.error(`Failed to generate asset for ${blueprint.id}:`, e);
-        }
-    });
-
-    await Promise.all(tasks);
-
-    await saveRunArtifact(state.runId, "asset_map.json", JSON.stringify(assetMap, null, 2));
-
-    return { assetMap };
+    return { analysisJson };
 };
 
-// Renderer Node
-export const nodeRenderer = async (state: GraphState, config?: { configurable?: GenerationGraphConfig }) => {
-    const { client, useMock } = config?.configurable || {};
+// 5. Asset Extractor
+export const nodeAssetExtractor = async (state: GraphState, config?: { configurable?: GenerationGraphConfig }) => {
+    if (!state.spriteImage) throw new Error("Sprite image missing");
+    if (!state.analysisJson) throw new Error("Analysis JSON missing");
+
+    // Determine output directory based on runId
+    const runId = state.runId || "debug_run";
+    const path = await import("path");
+    const { DATA_RUNS_DIR } = await import("../utils/paths");
+    const outputDir = path.resolve(DATA_RUNS_DIR, runId, "extracted");
+
+    const extractedAssets = await runExtractionAgent(state.spriteImage, state.analysisJson, outputDir);
+    // Assets are saved by the agent directly to the outputDir
+
+    return { extractedAssets };
+};
+
+// 6. NavMesh Generator
+export const nodeNavMeshGenerator = async (state: GraphState, config?: { configurable?: GenerationGraphConfig }) => {
+    const { client } = config?.configurable || {};
     if (!client) throw new Error("Client not found");
+    if (!state.backgroundImage) throw new Error("Background image missing");
 
-    if (useMock) {
-        return { reactCode: Mocks.MOCK_REACT_CODE };
-    }
+    const navMesh = await runNavMeshAgent(client, state.backgroundImage);
+    await saveRunArtifact(state.runId, "navmesh.json", JSON.stringify(navMesh, null, 2));
 
-    // Now we should have state.assetMap from the Swarm!
-    if (!state.visualLayout || !state.initialState || !state.assetMap || !state.blueprints) throw new Error("Missing inputs for Renderer");
+    return { navMesh };
+};
 
-    const reactCode = await runRendererAgent(client, state.visualLayout, state.initialState, state.blueprints, state.assetMap);
+// 7. State Generator
+export const nodeStateGenerator = async (state: GraphState, config?: { configurable?: GenerationGraphConfig }) => {
+    if (!state.analysisJson) throw new Error("Analysis JSON missing");
+    if (!state.navMesh) throw new Error("NavMesh missing");
+    if (!state.runId) throw new Error("Run ID missing");
 
-    // Safeguard: Inject INITIAL_STATE, BLUEPRINTS and GAME_RULES if missing
-    let finalCode = reactCode;
+    const finalGameState = runStateAgent(state.analysisJson, state.navMesh, state.runId);
+    await saveRunArtifact(state.runId, "gamestate.json", JSON.stringify(finalGameState, null, 2));
 
-    // Check and inject INITIAL_STATE
-    if (!finalCode.includes("export const INITIAL_STATE")) {
-        const stateStr = JSON.stringify(state.initialState, null, 2);
-        finalCode += `\n\nexport const INITIAL_STATE = ${stateStr};\n`;
-    }
-
-    // Check and inject BLUEPRINTS
-    if (!finalCode.includes("export const BLUEPRINTS")) {
-        const bpStr = JSON.stringify(state.blueprints, null, 2);
-        finalCode += `\n\nexport const BLUEPRINTS = ${bpStr};\n`;
-    }
-
-    // Check and inject GAME_RULES
-    if (!finalCode.includes("export const GAME_RULES")) {
-        // Use JSON.stringify for safety but we might want just a string literal if it's text
-        // rules is likely a string block
-        const rulesStr = JSON.stringify(state.rules || "");
-        finalCode += `\n\nexport const GAME_RULES = ${rulesStr};\n`;
-    }
-
-    // Safeguard: Ensure "Game" is exported as a named export
-    // Remove "export default Game" if present
-    if (finalCode.includes("export default Game")) {
-        finalCode = finalCode.replace("export default Game;", "");
-        finalCode = finalCode.replace("export default Game", "");
-    }
-
-    // Ensure the function is exported
-    // Regex to find "const Game" or "function Game" and make sure it has "export"
-    if (!finalCode.includes("export const Game") && !finalCode.includes("export function Game")) {
-        // Try to find definition
-        if (finalCode.includes("const Game")) {
-            finalCode = finalCode.replace("const Game", "export const Game");
-        } else if (finalCode.includes("function Game")) {
-            finalCode = finalCode.replace("function Game", "export function Game");
-        }
-    }
-
-    await saveRunArtifact(state.runId, "game-slot.tsx", finalCode);
-
-    return { reactCode: finalCode };
+    return { finalGameState };
 };
