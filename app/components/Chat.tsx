@@ -10,9 +10,10 @@ interface ChatProps {
     currentGameState: any;
     gameRules: string;
     className?: string;
+    navMesh?: any[];
 }
 
-export const Chat = ({ gameId, currentGameState, gameRules, className }: ChatProps) => {
+export const Chat = ({ gameId, currentGameState, gameRules, className, navMesh }: ChatProps) => {
     // 1. Data Fetching
     const messages = useQuery(api.messages.list, gameId ? { gameId: gameId as any } : "skip");
 
@@ -39,7 +40,7 @@ export const Chat = ({ gameId, currentGameState, gameRules, className }: ChatPro
         setIsProcessing(true);
 
         try {
-            const result = await processGameMoveAction(currentGameState, gameRules, command);
+            const result = await processGameMoveAction(currentGameState, gameRules, command, navMesh);
             if (!result.success) {
                 console.error("Move failed:", result.error);
                 // Optionally show toast
