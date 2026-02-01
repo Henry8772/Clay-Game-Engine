@@ -6,6 +6,7 @@ export default defineConfig({
         include: ['test/**/*.{test,spec}.ts', 'test/**/*test_*.ts'],
         globals: true,
         environment: 'node',
-        testTimeout: 30000, // Increase timeout for real API calls if needed
+        testTimeout: 30000,
+        globalSetup: './test/global_setup.ts',
     },
 });

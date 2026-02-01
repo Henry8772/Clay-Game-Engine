@@ -2,11 +2,13 @@
 import { StateGraph, StateGraphArgs, START, END } from "@langchain/langgraph";
 import { GraphState } from "./state";
 import {
-    nodePlanner,
-    nodeArchitect,
-    nodeUIDesigner,
-    nodeAssetGenSwarm,
-    nodeRenderer
+    nodeSceneGenerator,
+    nodeBackgroundExtractor,
+    nodeSpriteIsolator,
+    nodeVisionAnalyzer,
+    nodeAssetExtractor,
+    nodeNavMeshGenerator,
+    nodeStateGenerator
 } from "./nodes";
 
 /**
@@ -17,47 +19,57 @@ export function compileGenerationGraph() {
     const graphState: StateGraphArgs<GraphState>["channels"] = {
         userInput: { value: (x, y) => y ?? x, default: () => "" },
         runId: { value: (x, y) => y ?? x, default: () => "" },
-        designDoc: { value: (x, y) => y ?? x, default: () => null },
-        initialState: { value: (x, y) => y ?? x, default: () => null },
-        rules: { value: (x, y) => y ?? x, default: () => null },
-        imagePrompt: { value: (x, y) => y ?? x, default: () => null },
-        visualLayout: { value: (x, y) => y ?? x, default: () => null },
-        generatedImage: { value: (x, y) => y ?? x, default: () => null },
-        finalState: { value: (x, y) => y ?? x, default: () => null },
-        assetMap: { value: (x, y) => y ?? x, default: () => null },
-        entityList: { value: (x, y) => y ?? x, default: () => null },
-        blueprints: { value: (x, y) => y ?? x, default: () => null },
-        reactCode: { value: (x, y) => y ?? x, default: () => null },
+
+        // New Image Workflow artifacts
+
+        // New Image Workflow artifacts
+        sceneImage: { value: (x, y) => y ?? x, default: () => undefined },
+        backgroundImage: { value: (x, y) => y ?? x, default: () => undefined },
+        spriteImage: { value: (x, y) => y ?? x, default: () => undefined },
+        analysisJson: { value: (x, y) => y ?? x, default: () => undefined },
+        extractedAssets: { value: (x, y) => y ?? x, default: () => undefined },
+        navMesh: { value: (x, y) => y ?? x, default: () => undefined },
+        finalGameState: { value: (x, y) => y ?? x, default: () => undefined },
     };
 
     const builder = new StateGraph<GraphState>({ channels: graphState });
 
     // 2. Add Nodes
-    builder.addNode("planner", nodePlanner as any);
-    builder.addNode("architect", nodeArchitect as any);
-    builder.addNode("ui_designer", nodeUIDesigner as any);
-    builder.addNode("asset_swarm", nodeAssetGenSwarm as any);
-    builder.addNode("renderer", nodeRenderer as any);
+    builder.addNode("scene_generator", nodeSceneGenerator as any);
+    builder.addNode("background_extractor", nodeBackgroundExtractor as any);
+    builder.addNode("sprite_isolator", nodeSpriteIsolator as any);
+    builder.addNode("vision_analyzer", nodeVisionAnalyzer as any);
+    builder.addNode("asset_extractor", nodeAssetExtractor as any);
+    builder.addNode("navmesh_generator", nodeNavMeshGenerator as any);
+    builder.addNode("state_generator", nodeStateGenerator as any);
 
     // 3. Define Edges (Linear Flow)
 
-    // Start -> Planner
-    builder.addEdge(START, "planner" as any);
+    // START -> Scene
+    builder.addEdge(START, "scene_generator" as any);
 
-    // Planner -> Architect
-    builder.addEdge("planner" as any, "architect" as any);
+    // Scene -> Background
+    builder.addEdge("scene_generator" as any, "background_extractor" as any);
 
-    // Architect -> UI Designer
-    builder.addEdge("architect" as any, "ui_designer" as any);
+    // Background -> Sprite
+    // (Note: Sprite uses scene, but we sequence it here to ensure background is done/saved)
+    builder.addEdge("background_extractor" as any, "sprite_isolator" as any);
 
-    // UI Designer -> Asset Swarm
-    builder.addEdge("ui_designer" as any, "asset_swarm" as any);
+    // Sprite -> Vision
+    builder.addEdge("sprite_isolator" as any, "vision_analyzer" as any);
 
-    // Asset Swarm -> Renderer
-    builder.addEdge("asset_swarm" as any, "renderer" as any);
+    // Vision -> Extraction
+    builder.addEdge("vision_analyzer" as any, "asset_extractor" as any);
 
-    // Renderer -> END
-    builder.addEdge("renderer" as any, END);
+    // Extraction -> NavMesh
+    // (NavMesh uses Background, but we sequence it later to allow extraction to finish first)
+    builder.addEdge("asset_extractor" as any, "navmesh_generator" as any);
+
+    // NavMesh -> State
+    builder.addEdge("navmesh_generator" as any, "state_generator" as any);
+
+    // State -> END
+    builder.addEdge("state_generator" as any, END);
 
     return builder.compile();
 }

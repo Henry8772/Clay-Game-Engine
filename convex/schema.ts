@@ -7,6 +7,7 @@ export default defineSchema({
         rules: v.string(), // Natural language rules
         history: v.optional(v.array(v.object({ role: v.string(), content: v.string() }))), // Deprecated
         isActive: v.boolean(),
+        runId: v.optional(v.string()), // <--- NEW: Link to backend/data/runs/{runId}
     }),
     messages: defineTable({
         gameId: v.id("games"),
