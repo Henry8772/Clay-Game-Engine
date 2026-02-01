@@ -1,9 +1,9 @@
 import fs from 'fs';
 import path from 'path';
 
-const PROJECT_ROOT = path.resolve(__dirname, '../../');
-const DATA_RUNS_DIR = path.join(PROJECT_ROOT, 'backend/data/runs');
-const TMP_DIR = path.join(PROJECT_ROOT, 'backend/.tmp');
+import { DATA_RUNS_DIR, BACKEND_ROOT } from '../llm/utils/paths';
+
+const TMP_DIR = path.join(BACKEND_ROOT, '.tmp');
 const RUN_ID_FILE = path.join(TMP_DIR, 'vitest_run_id');
 
 export const getTestRunDir = (dirName?: string): string => {
