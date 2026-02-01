@@ -11,17 +11,24 @@ interface ChatProps {
     gameRules: string;
     className?: string;
     navMesh?: any[];
+    // External Control Props
+    externalOptimisticMessage?: string | null;
+    externalIsProcessing?: boolean;
 }
 
-export const Chat = ({ gameId, currentGameState, gameRules, className, navMesh }: ChatProps) => {
+export const Chat = ({ gameId, currentGameState, gameRules, className, navMesh, externalOptimisticMessage, externalIsProcessing }: ChatProps) => {
     // 1. Data Fetching
     const messages = useQuery(api.messages.list, gameId ? { gameId: gameId as any } : "skip");
 
     // 2. Local State
     const [input, setInput] = useState("");
-    const [isProcessing, setIsProcessing] = useState(false);
-    const [optimisticMessage, setOptimisticMessage] = useState<string | null>(null);
+    const [localIsProcessing, setLocalIsProcessing] = useState(false);
+    const [localOptimisticMessage, setLocalOptimisticMessage] = useState<string | null>(null);
     const scrollRef = useRef<HTMLDivElement>(null);
+
+    // Derived State
+    const isProcessing = localIsProcessing || externalIsProcessing;
+    const optimisticMessage = localOptimisticMessage || externalOptimisticMessage;
 
     // 3. Auto-scroll
     useEffect(() => {
@@ -35,9 +42,9 @@ export const Chat = ({ gameId, currentGameState, gameRules, className, navMesh }
         if (!input.trim() || isProcessing) return;
 
         const command = input;
-        setOptimisticMessage(command); // Show immediately
+        setLocalOptimisticMessage(command); // Show immediately
         setInput("");
-        setIsProcessing(true);
+        setLocalIsProcessing(true);
 
         try {
             const result = await processGameMoveAction(currentGameState, gameRules, command, navMesh);
@@ -48,8 +55,8 @@ export const Chat = ({ gameId, currentGameState, gameRules, className, navMesh }
         } catch (e) {
             console.error(e);
         } finally {
-            setIsProcessing(false);
-            setOptimisticMessage(null); // Clear optimistic message (should be in DB now)
+            setLocalIsProcessing(false);
+            setLocalOptimisticMessage(null); // Clear optimistic message (should be in DB now)
         }
     };
 
