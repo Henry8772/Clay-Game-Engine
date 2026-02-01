@@ -4,10 +4,13 @@ import { compileGenerationGraph } from "../../llm/graph/workflow";
 import { GraphState } from "../../llm/graph/state";
 import { LLMClient } from "../../llm/client";
 import * as dotenv from "dotenv";
+import fs from 'fs';
+import path from 'path';
+import { getTestRunDir } from '../utils';
 
 dotenv.config();
 
-describe('MOCK: Workflow E2E', () => {
+describe('MOCK: Workflow E2E (Image-First)', () => {
     beforeAll(() => {
         if (!process.env.GEMINI_API_KEY) {
             process.env.GEMINI_API_KEY = "dummy-test-key";
@@ -20,8 +23,12 @@ describe('MOCK: Workflow E2E', () => {
 
         const app = compileGenerationGraph();
 
+        const runDir = getTestRunDir('run_test_mock_workflow');
+        const runId = path.basename(runDir);
+
         const result = await app.invoke({
-            userInput: userInput
+            userInput: userInput,
+            runId: runId
         }, {
             configurable: {
                 client,
@@ -30,85 +37,27 @@ describe('MOCK: Workflow E2E', () => {
         }) as unknown as GraphState;
 
         expect(result).toBeDefined();
-        expect(result.designDoc).toBeDefined();
-        expect(result.initialState).toBeDefined();
-        expect(result.rules).toBeDefined();
-        expect(result.imagePrompt).toBeDefined();
-        expect(result.generatedImage).toBeDefined();
-        expect(result.assetMap).toBeDefined();
-        expect(Object.keys(result.assetMap || {}).length).toBeGreaterThan(0);
-        expect(result.reactCode).toBeDefined();
 
-        // Versioning and Sync Logic (Mock)
-        const fs = await import("fs");
-        const path = await import("path");
+        // Check new workflow outputs
+        expect(result.sceneImage).toBeDefined();
+        expect(result.backgroundImage).toBeDefined();
+        expect(result.spriteImage).toBeDefined();
+        expect(result.analysisJson).toBeDefined();
+        expect(result.navMesh).toBeDefined();
+        expect(result.finalGameState).toBeDefined();
+        expect(result.extractedAssets).toBeDefined();
 
-        // 1. Setup Directories
-        const projectRoot = path.resolve(__dirname, "../../../");
-        const runsDir = path.resolve(projectRoot, ".tmp/runs");
+        // Verify Storage (Mock workflow in real test calls save logic, but mocking agents might skip some files if agents don't write them?)
+        // Actually, the graph nodes usually handle saving if they are responsible for it.
+        // Wait, looking at real test, it checks fs.existsSync.
+        // The nodes in `backend/llm/graph/nodes.ts` usually save output if implemented.
+        // Let's assume the graph nodes save outputs. If not, we might need to update nodes to mock save or rely on mocks returning buffers that get saved.
 
-        if (!fs.existsSync(runsDir)) {
-            fs.mkdirSync(runsDir, { recursive: true });
-        }
+        // Since we updated agents to return mock buffers/json, the nodes (if they use the agents) will receive those mock values.
+        // The nodes then save them to disk.
 
-        const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-        const runId = `mock_run_${timestamp}`;
-        const currentRunDir = path.join(runsDir, runId);
-        const currentRunAssetsDir = path.join(currentRunDir, "assets");
-
-        fs.mkdirSync(currentRunDir, { recursive: true });
-        fs.mkdirSync(currentRunAssetsDir, { recursive: true });
-
-        console.log(`[Version Control - Mock] Saving run to: ${currentRunDir}`);
-        fs.writeFileSync(path.join(currentRunDir, "workflow_output.json"), JSON.stringify(result, null, 2));
-
-        // 2. Process Assets (Mock)
-        const publicAssetsDir = path.join(projectRoot, "public/generated-assets");
-        if (!fs.existsSync(publicAssetsDir)) {
-            fs.mkdirSync(publicAssetsDir, { recursive: true });
-        }
-
-        const frontendAssetMap: Record<string, string> = {};
-        if (result.assetMap) {
-            for (const [key, sourcePath] of Object.entries(result.assetMap)) {
-                // In mock, sourcePath might be relative or dummy
-                // MOCK_ASSET_MAP usually has plain strings. 
-                // We should simulate creating/copying for the mock to verify the mechanism.
-                // Let's create dummy files if they don't exist.
-
-                const fileName = path.basename(sourcePath as string); // e.g. "path.png" or "generated_assets/id.png" -> "id.png"
-
-                // For mock verification, let's create a dummy file in the run dir
-                const destRunPath = path.join(currentRunAssetsDir, fileName);
-                const destPublicPath = path.join(publicAssetsDir, fileName);
-
-                fs.writeFileSync(destRunPath, "MOCK IMAGE CONTENT");
-                fs.writeFileSync(destPublicPath, "MOCK IMAGE CONTENT");
-
-                frontendAssetMap[key] = `/generated-assets/${fileName}`;
-            }
-        }
-
-        // 3. Save and Sync React Code
-        if (result.reactCode) {
-            let finalCode = result.reactCode;
-            const assetMapString = JSON.stringify(frontendAssetMap, null, 2);
-
-            const regex = /export const ASSET_MAP = \{[\s\S]*?\};/m;
-            if (regex.test(finalCode)) {
-                finalCode = finalCode.replace(regex, `export const ASSET_MAP = ${assetMapString};`);
-            } else {
-                finalCode += `\n\nexport const ASSET_MAP = ${assetMapString};\n`;
-            }
-
-            fs.writeFileSync(path.join(currentRunDir, "game-slot.tsx"), finalCode);
-
-            const appGeneratedDir = path.join(projectRoot, "app/generated");
-            if (!fs.existsSync(appGeneratedDir)) {
-                fs.mkdirSync(appGeneratedDir, { recursive: true });
-            }
-            fs.writeFileSync(path.join(appGeneratedDir, "game-slot.tsx"), finalCode);
-            console.log(`[Version Control - Mock] Synced latest code to: ${path.join(appGeneratedDir, "game-slot.tsx")}`);
-        }
+        console.log(`[Test] Run saved to: ${runDir}`);
+        expect(fs.existsSync(runDir)).toBe(true);
+        expect(fs.existsSync(path.join(runDir, "gamestate.json"))).toBe(true);
     });
 });

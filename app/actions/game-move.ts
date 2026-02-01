@@ -5,6 +5,7 @@ import { processGameMove } from "../../backend/llm/agents/game_referee";
 import { fetchMutation, fetchQuery } from "convex/nextjs";
 import { api } from "../../convex/_generated/api";
 
+
 export async function processGameMoveAction(currentState: any, rules: string, command: string, navMesh?: any[]) {
     console.log("Processing game move:", command);
     try {
@@ -12,9 +13,15 @@ export async function processGameMoveAction(currentState: any, rules: string, co
         const activeGame = await fetchQuery(api.games.get);
         if (!activeGame) throw new Error("No active game found in DB");
 
-        // 2. Run Agent
+        // 2. Initialize Engine
         const client = new LLMClient();
-        const result = await processGameMove(client, currentState, rules, command, false, navMesh);
+        const { GameEngine } = await import("../../backend/llm/game_controller/game_engine");
+
+        // Instantiate Engine with Current State
+        const engine = new GameEngine(currentState, rules, client, navMesh);
+
+        // 3. Process Move
+        const result = await engine.processCommand(command);
 
         // 3. Persist to Convex (including invalid moves to show error in chat)
         if (result.newState) {
@@ -37,15 +44,11 @@ export async function processGameMoveAction(currentState: any, rules: string, co
             const aiDecision = await generateEnemyMove(client, result.newState, rules, navMesh);
             console.log("Enemy AI Decision:", aiDecision);
 
-            // AI MOVES (Through Referee)
-            const aiMoveResult = await processGameMove(
-                client,
-                result.newState,
-                rules,
-                aiDecision.command,
-                false,
-                navMesh
-            );
+            // AI MOVES (Via Engine)
+            // We need to update the engine's state first (it already is updated internally, but new instance needed?)
+            // Actually `engine` instance has the updated state in `engine.getState()`. It is persistent in memory for this function scope.
+
+            const aiMoveResult = await engine.processCommand(aiDecision.command);
 
             if (aiMoveResult.newState) {
                 // Persist Enemy Move
@@ -56,9 +59,6 @@ export async function processGameMoveAction(currentState: any, rules: string, co
                     role: "agent",
                     command: `(AI) ${aiDecision.command}`
                 });
-
-                // Return final state? Or just let the UI update via subscription?
-                // We return the USER's result, but UI updates via Convex subscription anyway.
             }
         }
 

@@ -44,8 +44,31 @@ export interface Blueprint {
     baseStats?: Record<string, any>; // Static rules/stats (e.g., max_hp, move_pattern)
 }
 
+
 export interface ArchitectOutput {
     initialState: UniversalState;
     blueprints: Record<string, Blueprint>;
     rules: string;
+}
+
+// 4. RULES & ACTIONS
+// Structured way to define what players can do
+export interface GameRule {
+    name: string;
+    description: string;
+    // Potentially structured logic, but for now LLM-driven text is fine
+}
+
+export type GameActionType = "MOVE" | "ATTACK" | "USE_ABILITY" | "END_TURN";
+
+export interface GameAction {
+    type: GameActionType;
+    playerId: string;
+    payload: {
+        entityId?: string;
+        targetId?: string; // Target Entity or Zone
+        targetLocation?: string; // If moving to a zone
+        [key: string]: any;
+    };
+    timestamp: number;
 }

@@ -23,10 +23,10 @@ export class LLMClient {
         } else {
             throw new Error(`Unsupported manufacturer: ${manufacturer}`);
         }
+    }
 
-        console.log(
-            `LLMClient Initialized | Backend: ${manufacturer} | Model: ${this.model} | Debug: ${this.debugMode}`
-        );
+    public get isDebug(): boolean {
+        return this.debugMode;
     }
 
     // TODO: Add mocks integration
