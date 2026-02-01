@@ -69,7 +69,7 @@ function isInside(point: { x: number, y: number }, box: number[]) {
  * Hybrid Engine: 1. Enrich State
  * Adds 'location' (e.g. tile_r5_c2) to entities based on pixel_box overlap with navMesh.
  */
-function enrichStateWithLogicalLocations(state: any, navMesh: any[]) {
+export function enrichStateWithLogicalLocations(state: any, navMesh: any[]) {
     const enriched = JSON.parse(JSON.stringify(state));
     if (!enriched.entities || !navMesh) return enriched;
 
@@ -95,7 +95,7 @@ function enrichStateWithLogicalLocations(state: any, navMesh: any[]) {
  * Hybrid Engine: 2. Strip Geometric Data
  * Removes pixel_box, src, and other visual-only data to save tokens.
  */
-function stripGeometricData(state: any) {
+export function stripGeometricData(state: any) {
     const stripped = JSON.parse(JSON.stringify(state));
     if (Array.isArray(stripped.entities)) {
         stripped.entities = stripped.entities.map((e: any) => {

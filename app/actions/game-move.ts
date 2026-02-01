@@ -27,6 +27,41 @@ export async function processGameMoveAction(currentState: any, rules: string, co
             });
         }
 
+        // 4. Enemy AI Turn (Only if user move was valid AND navMesh exists)
+        if (result.isValid && result.newState && navMesh) {
+            console.log("Triggering Enemy AI turn...");
+            const { generateEnemyMove } = await import("../../backend/llm/agents/enemy_ai");
+
+            // AI THINKS
+            // We use the NEW state from the user's move
+            const aiDecision = await generateEnemyMove(client, result.newState, rules, navMesh);
+            console.log("Enemy AI Decision:", aiDecision);
+
+            // AI MOVES (Through Referee)
+            const aiMoveResult = await processGameMove(
+                client,
+                result.newState,
+                rules,
+                aiDecision.command,
+                false,
+                navMesh
+            );
+
+            if (aiMoveResult.newState) {
+                // Persist Enemy Move
+                await fetchMutation(api.games.updateState, {
+                    gameId: activeGame._id,
+                    newState: aiMoveResult.newState,
+                    summary: `[RED TURN] ${aiDecision.reasoning}\nRef: ${aiMoveResult.summary}`,
+                    role: "agent",
+                    command: `(AI) ${aiDecision.command}`
+                });
+
+                // Return final state? Or just let the UI update via subscription?
+                // We return the USER's result, but UI updates via Convex subscription anyway.
+            }
+        }
+
         return { success: true, ...result };
     } catch (error) {
         console.error("Error processing game move:", error);
