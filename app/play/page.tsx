@@ -9,7 +9,7 @@ import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 
 import { GameErrorBoundary } from "../components/GameErrorBoundary";
-// import { Chat } from "../components/Chat";
+import { Chat } from "../components/Chat";
 
 // Temporary Initial State reflecting the structure we expect from the backend
 const FALLBACK_GAMESTATE = {
@@ -51,8 +51,8 @@ export default function PlayPage() {
 
     console.log("Current Game State:", currentGameState);
 
-    // const rules = gameStateFromConvex?.rules || "Standard game rules";
-    // const gameId = gameStateFromConvex?._id;
+    const rules = gameStateFromConvex?.rules || "Standard game rules";
+    const gameId = gameStateFromConvex?._id;
 
     // Transform GameState to SceneManifest
     const manifest: SceneManifest = useMemo(() => {
@@ -101,6 +101,13 @@ export default function PlayPage() {
             };
         });
 
+        // Helper to check intersection
+        const isInside = (point: { x: number, y: number }, box: number[]) => {
+            // box: [ymin, xmin, ymax, xmax] (Original 1000-space)
+            const [ymin, xmin, ymax, xmax] = box;
+            return point.x >= xmin && point.x <= xmax && point.y >= ymin && point.y <= ymax;
+        };
+
         // 3. Actor Layer
         // Map gamestate entities to sprite props
         const actors = (currentGameState.entities || []).map((entity: any): AssetManifest => {
@@ -112,13 +119,34 @@ export default function PlayPage() {
             const boxWidth = xmax - xmin;
             const boxHeight = ymax - ymin;
 
+            // Raw Center (in 1000-space)
+            const cx = xmin + boxWidth / 2;
+            const cy = ymin + boxHeight / 2;
+
+            // SNAP LOGIC: Find which NavMesh tile this center falls into
+            let finalX = xmin * scaleX + (boxWidth * scaleX / 2);
+            let finalY = ymin * scaleY + (boxHeight * scaleY / 2);
+
+            if (navMesh && navMesh.length > 0) {
+                const matchingZone = navMesh.find((zone: any) => isInside({ x: cx, y: cy }, zone.box_2d));
+                if (matchingZone) {
+                    // Snap to Zone Center
+                    const [zYmin, zXmin, zYmax, zXmax] = matchingZone.box_2d;
+                    const zWidth = zXmax - zXmin;
+                    const zHeight = zYmax - zYmin;
+
+                    finalX = (zXmin * scaleX) + (zWidth * scaleX / 2);
+                    finalY = (zYmin * scaleY) + (zHeight * scaleY / 2);
+                }
+            }
+
             return {
                 id: entity.id,
                 role: 'SPRITE',
                 src: entity.src || '/placeholder.png',
                 initialState: {
-                    x: xmin * scaleX + (boxWidth * scaleX / 2), // Center X
-                    y: ymin * scaleY + (boxHeight * scaleY / 2), // Center Y
+                    x: finalX,
+                    y: finalY,
                 },
                 config: {
                     label: entity.label,
@@ -221,7 +249,10 @@ export default function PlayPage() {
                         onClick={async () => {
                             const { loadTestGameAction } = await import("../actions/load-test");
                             const res = await loadTestGameAction();
-                            if (res.success) console.log("Loaded test game!");
+                            if (res.success) {
+                                console.log("Loaded test game!");
+                                window.location.reload();
+                            }
                             else alert("Failed: " + res.error);
                         }}
                         disabled={isGenerating}
@@ -271,7 +302,13 @@ export default function PlayPage() {
                     </div>
                 </section>
 
-                {/* <Chat ... /> */}
+                <Chat
+                    gameId={gameId}
+                    currentGameState={currentGameState}
+                    gameRules={rules}
+                    navMesh={navMesh}
+                    className="w-96 border-l border-neutral-800"
+                />
             </main>
         </div>
     );

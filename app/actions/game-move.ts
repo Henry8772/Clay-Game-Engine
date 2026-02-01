@@ -5,7 +5,7 @@ import { processGameMove } from "../../backend/llm/agents/game_referee";
 import { fetchMutation, fetchQuery } from "convex/nextjs";
 import { api } from "../../convex/_generated/api";
 
-export async function processGameMoveAction(currentState: any, rules: string, command: string) {
+export async function processGameMoveAction(currentState: any, rules: string, command: string, navMesh?: any[]) {
     console.log("Processing game move:", command);
     try {
         // 1. Get current active game ID if not passed (optional, for safety)
@@ -14,10 +14,10 @@ export async function processGameMoveAction(currentState: any, rules: string, co
 
         // 2. Run Agent
         const client = new LLMClient();
-        const result = await processGameMove(client, currentState, rules, command);
+        const result = await processGameMove(client, currentState, rules, command, false, navMesh);
 
-        // 3. Persist to Convex if valid
-        if (result.isValid && result.newState) {
+        // 3. Persist to Convex (including invalid moves to show error in chat)
+        if (result.newState) {
             await fetchMutation(api.games.updateState, {
                 gameId: activeGame._id,
                 newState: result.newState,

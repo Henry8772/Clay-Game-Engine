@@ -39,56 +39,34 @@ function copyRecursiveSync(src: string, dest: string) {
 }
 
 export async function loadTestGameAction() {
-    console.log("Starting loadTestGameAction...");
+    console.log("Starting loadTestGameAction (Experiment 3)...");
     try {
-        // 1. Find Latest Run
-        if (!fs.existsSync(RUNS_DIR)) {
-            console.error("Runs directory not found at:", RUNS_DIR);
-            return { success: false, error: "No runs found." };
-        }
+        // 1. Define Paths
+        // We load from the static experiment-3 folder which serves as our "Golden Master"
+        const EXPERIMENT_DIR = path.join(process.cwd(), "backend", "test", "real", "experiment-3");
+        const GAMESTATE_PATH = path.join(EXPERIMENT_DIR, "gamestate.json");
+        const NAVMESH_PATH = path.join(EXPERIMENT_DIR, "navmesh.json"); // We might strictly not need to load this for DB unless we store it, but good to check existence.
+        const ASSETS_SRC_DIR = path.join(EXPERIMENT_DIR, "extracted");
 
-        const entries = fs.readdirSync(RUNS_DIR)
-            .filter(name => fs.statSync(path.join(RUNS_DIR, name)).isDirectory() && name.startsWith("run_"))
-            .sort().reverse(); // Sort descending string
+        const PUBLIC_ASSETS_DIR = path.join(process.cwd(), "public", "generated-assets");
 
-        if (entries.length === 0) {
-            return { success: false, error: "No run directories found in .tmp/runs" };
-        }
-
-        const latestRunId = entries[0];
-        const latestRunPath = path.join(RUNS_DIR, latestRunId);
-        console.log("Loading from run:", latestRunId);
-
-        const gameSlotPath = path.join(latestRunPath, "game-slot.tsx");
-        const workflowOutputPath = path.join(latestRunPath, "workflow_output.json");
-        const assetsDir = path.join(latestRunPath, "assets");
-
-        // 2. Validate Files
-        if (!fs.existsSync(gameSlotPath)) {
-            return { success: false, error: `Missing game-slot.tsx in ${latestRunPath}` };
-        }
-        if (!fs.existsSync(workflowOutputPath)) {
-            return { success: false, error: `Missing workflow_output.json in ${latestRunPath}` };
+        // 2. Validate Source Files
+        if (!fs.existsSync(GAMESTATE_PATH)) {
+            return { success: false, error: `Missing gamestate.json in ${EXPERIMENT_DIR}` };
         }
 
         // 3. Read Data
-        const rawCode = fs.readFileSync(gameSlotPath, "utf-8");
-        const workflowData = JSON.parse(fs.readFileSync(workflowOutputPath, "utf-8"));
-        const initialState = workflowData.initialState;
+        const gameState = JSON.parse(fs.readFileSync(GAMESTATE_PATH, "utf-8"));
 
-        if (!initialState || Object.keys(initialState).length === 0) {
-            console.warn("Initial state in workflow_output.json is empty. Skipping DB seed to preserve/default state.");
-        } else {
-            // 4. Seeding Convex
-            console.log("Seeding Convex DB...");
-            // Handle rules which might be a string or object in workflowData
-            const rulesText = typeof workflowData.rules === 'string' ? workflowData.rules : JSON.stringify(workflowData.rules);
+        // 4. Seeding Convex
+        console.log("Seeding Convex DB with Experiment 3 data...");
+        // Experiment 3 uses a generic ruleset
+        const rulesText = "Knights move in an L-shape. Wizards cast spells. Standard grid movement.";
 
-            await fetchMutation(api.games.reset, {
-                initialState: initialState,
-                rules: rulesText || "Standard rules",
-            });
-        }
+        await fetchMutation(api.games.reset, {
+            initialState: gameState,
+            rules: rulesText,
+        });
 
         // 5. Processing Assets
         console.log("Processing assets...");
@@ -96,19 +74,15 @@ export async function loadTestGameAction() {
             fs.mkdirSync(PUBLIC_ASSETS_DIR, { recursive: true });
         }
 
-        if (fs.existsSync(assetsDir)) {
+        if (fs.existsSync(ASSETS_SRC_DIR)) {
             // Use recursive copy to handle subdirectories and robustness
-            copyRecursiveSync(assetsDir, PUBLIC_ASSETS_DIR);
-            console.log(`Copied assets from ${assetsDir} to ${PUBLIC_ASSETS_DIR}`);
+            copyRecursiveSync(ASSETS_SRC_DIR, PUBLIC_ASSETS_DIR);
+            console.log(`Copied assets from ${ASSETS_SRC_DIR} to ${PUBLIC_ASSETS_DIR}`);
         } else {
-            console.warn("No assets directory found in run folder.");
+            console.warn(`No assets directory found at ${ASSETS_SRC_DIR}`);
         }
 
-        // 6. Write Game Component
-        console.log("Writing final code to:", DEST_FILE_PATH);
-        fs.writeFileSync(DEST_FILE_PATH, rawCode);
-
-        console.log("Success!");
+        console.log("Success! Experiment 3 loaded.");
         return { success: true };
 
     } catch (e) {
