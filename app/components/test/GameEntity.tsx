@@ -18,15 +18,14 @@ interface GameEntityProps {
 
 export const GameEntity = ({ id, name, initialX, initialY, color, src, onAction, displayMode = 'normal' }: GameEntityProps) => {
     const { app, stage } = usePixiApp();
+    const { getZoneAt } = useCollision(); // Access Collision System
     const containerRef = useRef<PIXI.Container | null>(null);
     const isDragging = useRef(false);
+    const dragStartZone = useRef<string | null>(null); // Track where drag started
 
     // Helper: Convert Pixels to Chess Notation (Mock)
-    const getGridLocation = (x: number, y: number) => {
-        const col = String.fromCharCode(65 + Math.floor(x / 100)); // 0-100 = A, 100-200 = B
-        const row = Math.floor(y / 100) + 1;
-        return `${col}${row}`;
-    };
+    // REPLACED by CollisionSystem
+    // const getGridLocation = ...
 
     useEffect(() => {
         if (!app || !stage) return;
@@ -35,6 +34,7 @@ export const GameEntity = ({ id, name, initialX, initialY, color, src, onAction,
         const container = new PIXI.Container();
         container.x = initialX;
         container.y = initialY;
+        container.zIndex = 2; // Layer 2 (Top - Entities)
 
         // Enable interactivity
         container.eventMode = 'static';
@@ -95,8 +95,24 @@ export const GameEntity = ({ id, name, initialX, initialY, color, src, onAction,
             if (isDragging.current) {
                 isDragging.current = false;
                 container.alpha = 1;
-                const gridLoc = getGridLocation(container.x, container.y);
-                onAction(`Move ${name} to ${gridLoc}`);
+
+                // Resolve Drop Zone
+                // We use global/stage coordinates (which container.x/y are in this simple setup)
+                // Use the container center for drop detection
+                const dropZone = getZoneAt(container.x, container.y);
+                const toId = dropZone ? dropZone.id : null;
+                const fromId = dragStartZone.current;
+
+                // Semantic Event
+                const event = JSON.stringify({
+                    type: 'MOVE',
+                    entity: name, // Using Label/Name as ID for readability
+                    entityId: id,
+                    from: fromId,
+                    to: toId
+                });
+
+                onAction(event);
 
                 // CLEANUP: Remove global listeners from stage
                 if (stage) {
@@ -118,7 +134,12 @@ export const GameEntity = ({ id, name, initialX, initialY, color, src, onAction,
                 y: currentPosition.y - container.y
             };
             container.alpha = 0.5;
-            onAction(`User picked up ${name}`);
+
+            // Resolve Start Zone
+            const startZone = getZoneAt(container.x, container.y);
+            dragStartZone.current = startZone ? startZone.id : null;
+
+            // onAction(`User picked up ${name} from ${dragStartZone.current || 'Void'}`);
 
             // FIX: Bind move/up to STAGE to catch fast movements or outside releases
             if (stage) {

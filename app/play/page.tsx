@@ -28,18 +28,20 @@ export default function PlayPage() {
 
     // Local state for fetched gamestate (Dev workflow)
     const [localGameState, setLocalGameState] = useState<any>(null);
+    const [navMesh, setNavMesh] = useState<any[]>([]);
 
     useEffect(() => {
         // FETCH WORKFLOW:
         // In this experiment, we generate gamestate.json in the backend.
         // We fetch it via the proxy to iterate quickly without DB sync.
-        fetch('/api/asset-proxy/experiment-3/gamestate.json')
-            .then(res => res.json())
-            .then(data => {
-                console.log("Loaded gamestate from proxy:", data);
-                setLocalGameState(data);
-            })
-            .catch(err => console.error("Failed to load local gamestate:", err));
+        Promise.all([
+            fetch('/api/asset-proxy/experiment-3/gamestate.json').then(res => res.json()),
+            fetch('/api/asset-proxy/experiment-3/navmesh.json').then(res => res.json()).catch(() => [])
+        ]).then(([gameState, navData]) => {
+            console.log("Loaded content from proxy:", { gameState, navData });
+            setLocalGameState(gameState);
+            setNavMesh(navData);
+        }).catch(err => console.error("Failed to load local content:", err));
     }, []);
 
     // Fallback logic: Convex -> Local File -> Empty
@@ -58,6 +60,10 @@ export default function PlayPage() {
         const SCENE_WIDTH = 1408;
         const SCENE_HEIGHT = 736;
 
+        // Scale factors (Input is 1000x1000 normalized)
+        const scaleX = SCENE_WIDTH / 1000;
+        const scaleY = SCENE_HEIGHT / 1000;
+
         // 1. Ambience Layer
         const ambience: AssetManifest = {
             id: 'background',
@@ -69,9 +75,34 @@ export default function PlayPage() {
             }
         };
 
-        // 2. Actor Layer
+        // 2. Zones Layer (From NavMesh)
+        const zones = navMesh.map((zone: any, index: number): AssetManifest => {
+            // box_2d: [ymin, xmin, ymax, xmax]
+            const [ymin, xmin, ymax, xmax] = zone.box_2d;
+            const w = xmax - xmin;
+            const h = ymax - ymin;
+
+            // Ensure unique ID even if labels repeat (e.g. multiple 'sidebar_slot')
+            const uniqueId = `${zone.label}_${index}`;
+
+            return {
+                id: uniqueId,
+                role: 'ZONE',
+                color: '#00FF00', // Debug Green
+                config: {
+                    width: w * scaleX,
+                    height: h * scaleY,
+                    label: zone.label
+                },
+                initialState: {
+                    x: xmin * scaleX, // CollisionSystem expects Top-Left
+                    y: ymin * scaleY
+                }
+            };
+        });
+
+        // 3. Actor Layer
         // Map gamestate entities to sprite props
-        // NOTE: backend data is normalized to 0-1000 range
         const actors = (currentGameState.entities || []).map((entity: any): AssetManifest => {
             const ymin = entity.pixel_box ? entity.pixel_box[0] : 0;
             const xmin = entity.pixel_box ? entity.pixel_box[1] : 0;
@@ -80,11 +111,6 @@ export default function PlayPage() {
 
             const boxWidth = xmax - xmin;
             const boxHeight = ymax - ymin;
-
-            // Scale to Scene Dimensions
-            // Original analysis is 1000x1000 (normalized)
-            const scaleX = SCENE_WIDTH / 1000;
-            const scaleY = SCENE_HEIGHT / 1000;
 
             return {
                 id: entity.id,
@@ -99,8 +125,6 @@ export default function PlayPage() {
                     width: boxWidth * scaleX,
                     height: boxHeight * scaleY,
                     draggable: true,
-                    // If the box is inverted in JSON (ymin/xmin confusion), we might need to swap indices
-                    // Usually: [ymin, xmin, ymax, xmax]
                 }
             };
         });
@@ -108,7 +132,7 @@ export default function PlayPage() {
         return {
             layers: {
                 ambience: [ambience],
-                actors: actors,
+                actors: [...zones, ...actors], // Render zones behind actors
                 stage: [],
                 juice: []
             },
@@ -117,7 +141,7 @@ export default function PlayPage() {
                 zones: []
             }
         };
-    }, [currentGameState]);
+    }, [currentGameState, navMesh]);
 
     const handleAction = (command: string) => {
         console.log("Scene Action:", command);
@@ -139,6 +163,8 @@ export default function PlayPage() {
             setIsGenerating(false);
         }
     };
+
+    const [showDebug, setShowDebug] = useState(false);
 
     return (
         <div className="flex flex-col h-screen bg-black text-white font-sans antialiased selection:bg-white selection:text-black">
@@ -181,6 +207,15 @@ export default function PlayPage() {
                 </div>
 
                 <div className="flex items-center gap-3">
+                    <button
+                        className={`px-3 py-1.5 text-xs font-medium border rounded transition-colors ${showDebug
+                            ? "bg-green-900/30 text-green-400 border-green-800 hover:bg-green-900/50"
+                            : "text-neutral-400 hover:text-white border-neutral-800 hover:border-neutral-600"}`}
+                        onClick={() => setShowDebug(!showDebug)}
+                    >
+                        {showDebug ? "Hide NavMesh" : "Show NavMesh"}
+                    </button>
+
                     <button
                         className="px-3 py-1.5 text-xs font-medium text-neutral-400 hover:text-white border border-neutral-800 hover:border-neutral-600 rounded transition-colors"
                         onClick={async () => {
@@ -229,19 +264,14 @@ export default function PlayPage() {
                                     onAction={handleAction}
                                     width={1408}
                                     height={736}
+                                    debugZones={showDebug}
                                 />
                             </GameErrorBoundary>
                         </div>
                     </div>
                 </section>
 
-                {/* Chat / Agent Sidebar - Commented out for now to focus on Visual Mode */}
-                {/* <Chat
-                    className="w-[400px] z-20"
-                    gameId={gameId}
-                    currentGameState={currentGameState}
-                    gameRules={rules}
-                /> */}
+                {/* <Chat ... /> */}
             </main>
         </div>
     );

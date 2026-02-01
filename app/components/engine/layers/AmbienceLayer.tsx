@@ -20,6 +20,7 @@ export const AmbienceLayer = ({ assets, width, height, displayMode = 'normal' }:
 
         const layerContainer = new PIXI.Container();
         layerContainer.sortableChildren = true;
+        layerContainer.zIndex = 0; // Layer 0 (Bottom)
 
         // Ambient Backgrounds are "COVER" scaled
         assets.forEach(asset => {

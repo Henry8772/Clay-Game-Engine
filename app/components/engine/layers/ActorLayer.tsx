@@ -9,9 +9,10 @@ interface ActorLayerProps {
     assets: AssetManifest[];
     onAction: (cmd: string) => void;
     displayMode?: 'normal' | 'mask';
+    debugZones?: boolean;
 }
 
-export const ActorLayer = ({ assets, onAction, displayMode = 'normal' }: ActorLayerProps) => {
+export const ActorLayer = ({ assets, onAction, displayMode = 'normal', debugZones = false }: ActorLayerProps) => {
 
     return (
         <>
@@ -29,6 +30,7 @@ export const ActorLayer = ({ assets, onAction, displayMode = 'normal' }: ActorLa
                             label={asset.id}
                             debugColor={asset.color ? parseInt(asset.color.replace('#', '0x')) : 0x333333}
                             displayMode={displayMode}
+                            visible={debugZones}
                         />
                     );
                 } else if (asset.role === 'SPRITE') {
