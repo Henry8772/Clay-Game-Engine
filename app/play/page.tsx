@@ -173,6 +173,10 @@ export default function PlayPage() {
         };
     }, [currentGameState, navMesh]);
 
+    // Chat Coordination State
+    const [chatOptimisticMessage, setChatOptimisticMessage] = useState<string | null>(null);
+    const [chatIsProcessing, setChatIsProcessing] = useState(false);
+
     const [refreshTrigger, setRefreshTrigger] = useState(0);
 
     const handleAction = async (commandOrEvent: string) => {
@@ -348,6 +352,8 @@ export default function PlayPage() {
                     gameRules={rules}
                     navMesh={navMesh}
                     className="w-96 border-l border-neutral-800"
+                    externalOptimisticMessage={chatOptimisticMessage}
+                    externalIsProcessing={chatIsProcessing}
                 />
             </main>
         </div>

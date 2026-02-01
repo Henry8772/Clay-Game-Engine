@@ -31,7 +31,6 @@ export const reset = mutation({
         const gameId = await ctx.db.insert("games", {
             state: args.initialState,
             rules: args.rules,
-            // history: [], // Deprecated
             isActive: true,
         });
 
