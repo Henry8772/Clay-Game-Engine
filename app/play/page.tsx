@@ -6,7 +6,8 @@ import { BASE_GAME_RULES, SPRITE_RULES } from "../game-rules";
 import { SmartScene } from "../components/engine/SmartScene";
 import { SceneManifest, AssetManifest } from "../components/engine/types";
 import { generateGameAction } from "../actions/generate";
-import { processGameMoveAction } from "../actions/game-move";
+// import { processGameMoveAction } from "../actions/game-move";
+import { useGameEngine } from "../hooks/useGameEngine";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 
@@ -178,6 +179,7 @@ export default function PlayPage() {
     const [chatIsProcessing, setChatIsProcessing] = useState(false);
 
     const [refreshTrigger, setRefreshTrigger] = useState(0);
+    const { sendAction } = useGameEngine();
 
     const handleAction = async (commandOrEvent: string) => {
         // console.log("Scene Action:", commandOrEvent);
@@ -202,9 +204,18 @@ export default function PlayPage() {
                     const moveCommand = `Move ${entity} (id: ${entityId}) to ${targetLabel}`;
                     console.log("Generated Command from Drag:", moveCommand);
 
-                    const fullRules = BASE_GAME_RULES + "\n" + SPRITE_RULES;
+                    const actionPayload = {
+                        type: "MOVE" as const,
+                        playerId: "local_player",
+                        payload: {
+                            entityId: entityId,
+                            targetLocation: targetLabel,
+                            entityName: entity
+                        },
+                        timestamp: Date.now()
+                    };
 
-                    await processGameMoveAction(currentGameState, fullRules, moveCommand, navMesh);
+                    await sendAction(actionPayload, navMesh);
 
                     // Force refresh - if invalid, this snaps back. If valid, this remounts at new position.
                     setRefreshTrigger(p => p + 1);

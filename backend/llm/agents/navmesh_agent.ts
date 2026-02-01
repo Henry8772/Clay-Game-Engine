@@ -1,9 +1,15 @@
 
 import { GeminiBackend } from '../backend';
 import { LLMClient } from "../client";
+import { MOCK_NAVMESH } from '../graph/mocks';
 
 export async function runNavMeshAgent(client: LLMClient, backgroundBuffer: Buffer): Promise<any[]> {
     console.log("[NavMeshAgent] Generating NavMesh...");
+
+    if (client.isDebug) {
+        console.log("[NavMeshAgent] Returning MOCK_NAVMESH");
+        return MOCK_NAVMESH;
+    }
 
     const NAVMESH_PROMPT = `
         Look at this top-down game board.

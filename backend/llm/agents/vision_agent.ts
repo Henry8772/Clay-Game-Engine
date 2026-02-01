@@ -1,6 +1,7 @@
 
 import { GeminiBackend } from '../backend'; // Adjust import based on location
 import { LLMClient } from "../client"; // We might need LLMClient or GeminiBackend directly
+import { MOCK_VISION_ANALYSIS } from '../graph/mocks';
 
 // We use GeminiBackend directly here because we need specific structured output 
 // and the current LLMClient might mock or wrap things differently. 
@@ -23,6 +24,11 @@ const ANALYSIS_PROMPT = `
 
 export async function runVisionAgent(client: LLMClient, spriteBuffer: Buffer): Promise<DetectedItem[]> {
     console.log("[VisionAgent] Analyzing sprites...");
+
+    if (client.isDebug) {
+        console.log("[VisionAgent] Returning MOCK_VISION_ANALYSIS");
+        return MOCK_VISION_ANALYSIS as unknown as DetectedItem[];
+    }
 
     // We can use client.generateContent if it supports images and config
     // The current LLMClient wrapper has generateContent but it might not support the exact config we need for JSON mode cleanly if not exposed.

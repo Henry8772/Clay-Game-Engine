@@ -84,3 +84,15 @@ export const MOCK_RESTORED_ASSETS = [
     { id: "chef", name: "Sushi Chef", description: "Pixel art chef", imagePath: "assets/chef.png" },
     { id: "conveyor", name: "Conveyor Belt", description: "Industrial belt", imagePath: "assets/belt.png" }
 ];
+
+export const MOCK_VISION_ANALYSIS = [
+    { box_2d: [100, 100, 200, 200], label: "hero_knight" },
+    { box_2d: [300, 300, 400, 400], label: "enemy_goblin" }
+];
+
+export const MOCK_NAVMESH = [
+    { box_2d: [0, 0, 166, 166], label: "tile_r0_c0" },
+    { box_2d: [0, 166, 166, 332], label: "tile_r0_c1" },
+    { box_2d: [166, 0, 332, 166], label: "tile_r1_c0" },
+    { box_2d: [166, 166, 332, 332], label: "tile_r1_c1" }
+];
