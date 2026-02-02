@@ -161,16 +161,21 @@ export default function PlayPage() {
                 initialState = data.initialState;
             }
 
+
             // Call Convex Mutation to Reset/Load Game
+            console.log(`[CLIENT LOAD] Sending content to Convex for run ${selectedRunId}:`, initialState);
             await resetGame({
                 initialState: initialState,
                 rules: "Standard game rules", // Could be loaded from validation.json or similar
                 runId: selectedRunId
             });
 
-            // Reload page to ensure fresh state? 
-            // Better to let subscriptions handle it, but for now we might want a refresh to clear local React state leftovers if any
-            window.location.reload();
+            // Reset local UI state
+            setReachableTiles(new Set());
+            setChatOptimisticMessage(null);
+
+            // No reload - let Convex subscriptions update the UI
+            // window.location.reload(); 
 
         } catch (e) {
             console.error("Failed to load test run:", e);
@@ -510,7 +515,10 @@ export default function PlayPage() {
                             onClick={async () => {
                                 const { resetGameAction } = await import("../actions/reset");
                                 await resetGameAction();
-                                window.location.reload();
+                                // Reset local UI state
+                                setReachableTiles(new Set());
+                                setChatOptimisticMessage(null);
+                                // window.location.reload();
                             }}
                             disabled={isGenerating}
                         >
