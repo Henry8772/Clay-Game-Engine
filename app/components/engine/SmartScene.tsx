@@ -7,6 +7,7 @@ import { AmbienceLayer } from './layers/AmbienceLayer';
 import { StageLayer } from './layers/StageLayer';
 import { ActorLayer } from './layers/ActorLayer';
 import { SceneManifest } from './types';
+import { FXProvider } from './FXSystem';
 
 import { SnapshotHelper } from './SnapshotHelper';
 
@@ -34,28 +35,29 @@ const StageSetup = () => {
 
 export const SmartScene = ({ manifest, onAction, width = 800, height = 600, displayMode = 'normal', onSnapshot, debugZones = false, refreshTrigger = 0 }: SmartSceneProps) => {
 
+    // PixiStage wraps everything, but we can't easily hook into 'stage' here unless we render children INSIDE PixiStage context.
+    // The components below are children of PixiStage.
+
     return (
         <PixiStage width={width} height={height}>
             <StageSetup />
             <CollisionProvider>
+                <FXProvider> {/* New Provider */}
 
-                {/* Layer 2: Actors (Zones + Entities) */}
-                <ActorLayer assets={manifest.layers.actors} onAction={onAction} displayMode={displayMode} debugZones={debugZones} refreshTrigger={refreshTrigger} />
+                    {/* Layer 2: Actors (Zones + Entities) */}
+                    <ActorLayer assets={manifest.layers.actors} onAction={onAction} displayMode={displayMode} debugZones={debugZones} refreshTrigger={refreshTrigger} />
 
-                {/* Layer 0: Ambience (Background) */}
-                <AmbienceLayer assets={manifest.layers.ambience} width={width} height={height} />
+                    {/* Layer 0: Ambience (Background) */}
+                    <AmbienceLayer assets={manifest.layers.ambience} width={width} height={height} />
 
-                {/* Layer 1: Stage (The Board) */}
-                {/* <StageLayer assets={manifest.layers.stage} width={width} height={height} /> */}
-
-                {/* Helper for Snapshots */}
-                {onSnapshot && (
-                    <SnapshotHelper
-                        shouldCapture={displayMode === 'mask'}
-                        onCaptured={onSnapshot}
-                    />
-                )}
-
+                    {/* Helper for Snapshots */}
+                    {onSnapshot && (
+                        <SnapshotHelper
+                            shouldCapture={displayMode === 'mask'}
+                            onCaptured={onSnapshot}
+                        />
+                    )}
+                </FXProvider>
             </CollisionProvider>
         </PixiStage>
     );
