@@ -1,6 +1,5 @@
 import { useState, useCallback } from 'react';
 import { processGameMoveAction } from '../actions/game-move'; // We might need to update this signature or create a new action
-import { GameAction } from '../../backend/llm/agents/universal_state_types';
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 

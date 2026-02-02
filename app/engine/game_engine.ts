@@ -1,6 +1,6 @@
-import { UniversalState, GameAction, GameActionType } from "../agents/universal_state_types";
-import { processGameMove, GameUpdateResult } from "../agents/game_referee";
-import { LLMClient } from "../client";
+import { UniversalState, GameAction, GameActionType } from "../../backend/llm/agents/universal_state_types";
+import { processGameMove, GameUpdateResult } from "../../backend/llm/agents/game_referee";
+import { LLMClient } from "../../backend/llm/client";
 
 export class GameEngine {
     private state: UniversalState;
