@@ -5,7 +5,7 @@ import { runNavMeshAgent } from "../../../llm/agents/navmesh_agent";
 import * as dotenv from "dotenv";
 import fs from 'fs';
 import path from 'path';
-import { getTestRunDir } from '../../utils';
+import { getTestRunDir, DEFAULT_EXPERIMENT_ID } from '../../utils';
 import { drawNavMesh } from '../../visualization';
 
 dotenv.config();
@@ -20,7 +20,7 @@ describe('REAL: NavMesh Agent', () => {
         let bgPath = path.join(runDir, "background.png");
 
         if (!fs.existsSync(bgPath)) {
-            bgPath = path.resolve(__dirname, "../../experiment-3/background.png");
+            bgPath = path.resolve(__dirname, `../../${DEFAULT_EXPERIMENT_ID}/background.png`);
         }
 
         if (!fs.existsSync(bgPath)) {

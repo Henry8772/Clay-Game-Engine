@@ -5,7 +5,7 @@ import { runBackgroundAgent } from "../../../llm/agents/background_agent";
 import * as dotenv from "dotenv";
 import fs from 'fs';
 import path from 'path';
-import { getTestRunDir } from '../../utils';
+import { getTestRunDir, DEFAULT_EXPERIMENT_ID } from '../../utils';
 
 dotenv.config();
 
@@ -30,7 +30,7 @@ describe('REAL: Background Agent', () => {
         // Fallback to experiment-3 if not in current run (for isolated testing)
         let scenePath = runScenePath;
         if (!fs.existsSync(scenePath)) {
-            scenePath = path.resolve(__dirname, "../../experiment-3/scene.png");
+            scenePath = path.resolve(__dirname, `../../${DEFAULT_EXPERIMENT_ID}/scene.png`);
         }
 
         if (!fs.existsSync(scenePath)) {

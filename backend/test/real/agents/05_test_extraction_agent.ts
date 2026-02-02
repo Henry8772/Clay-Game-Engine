@@ -3,7 +3,7 @@ import { describe, it, expect } from 'vitest';
 import { runExtractionAgent } from "../../../llm/agents/extraction_agent";
 import fs from 'fs';
 import path from 'path';
-import { getTestRunDir } from '../../utils';
+import { getTestRunDir, DEFAULT_EXPERIMENT_ID } from '../../utils';
 
 describe('REAL: Extraction Agent', () => {
 
@@ -13,8 +13,8 @@ describe('REAL: Extraction Agent', () => {
         let spritePath = path.join(runDir, "sprites.png");
         let analysisPath = path.join(runDir, "analysis.json");
 
-        if (!fs.existsSync(spritePath)) spritePath = path.resolve(__dirname, "../../experiment-3/sprites.png");
-        if (!fs.existsSync(analysisPath)) analysisPath = path.resolve(__dirname, "../../experiment-3/analysis.json");
+        if (!fs.existsSync(spritePath)) spritePath = path.resolve(__dirname, `../../${DEFAULT_EXPERIMENT_ID}/sprites.png`);
+        if (!fs.existsSync(analysisPath)) analysisPath = path.resolve(__dirname, `../../${DEFAULT_EXPERIMENT_ID}/analysis.json`);
 
         if (!fs.existsSync(spritePath) || !fs.existsSync(analysisPath)) {
             console.warn("Skipping Extraction Agent test because input files missing");

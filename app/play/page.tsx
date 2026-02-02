@@ -30,7 +30,7 @@ export default function PlayPage() {
 
     // Run Management
     const [availableRuns, setAvailableRuns] = useState<string[]>([]);
-    const [selectedRunId, setSelectedRunId] = useState<string>("experiment-3"); // Default
+    const [selectedRunId, setSelectedRunId] = useState<string>(""); // Default to empty, will be set by effect
 
     // Local state for fetched gamestate (Dev workflow)
     const [localGameState, setLocalGameState] = useState<any>(null);
@@ -44,8 +44,15 @@ export default function PlayPage() {
             .then(data => {
                 if (data.runs && Array.isArray(data.runs)) {
                     setAvailableRuns(data.runs);
-                    // Optionally set default if not 'experiment-3'
-                    // if (data.runs.length > 0) setSelectedRunId(data.runs[0]);
+                    // Select the first run if available and none selected
+                    if (data.runs.length > 0 && !selectedRunId) {
+                        // Prefer experiment-3 if it exists for consistency, otherwise first
+                        if (data.runs.includes('experiment-3')) {
+                            setSelectedRunId('experiment-3');
+                        } else {
+                            setSelectedRunId(data.runs[0]);
+                        }
+                    }
                 }
             })
             .catch(err => console.error("Failed to fetch runs:", err));
@@ -58,9 +65,9 @@ export default function PlayPage() {
         // We fetch gamestate and navmesh via the proxy.
         // The proxy path logic: /api/asset-proxy/runs/{runId}/{filename}
 
-        const basePath = selectedRunId === 'experiment-3'
-            ? '/api/asset-proxy/experiment-3' // Legacy path
-            : `/api/asset-proxy/runs/${selectedRunId}`;
+        if (!selectedRunId) return;
+
+        const basePath = `/api/asset-proxy/runs/${selectedRunId}`;
 
         Promise.all([
             fetch(`${basePath}/gamestate.json`).then(res => {
@@ -112,9 +119,7 @@ export default function PlayPage() {
         const SCENE_HEIGHT = 736;
 
         // Dynamic Source Base Path
-        const basePath = selectedRunId === 'experiment-3'
-            ? '/api/asset-proxy/experiment-3'
-            : `/api/asset-proxy/runs/${selectedRunId}`;
+        const basePath = `/api/asset-proxy/runs/${selectedRunId}`;
 
         // Scale factors (Input is 1000x1000 normalized)
         const scaleX = SCENE_WIDTH / 1000;
@@ -399,7 +404,7 @@ export default function PlayPage() {
                         value={selectedRunId}
                         onChange={(e) => setSelectedRunId(e.target.value)}
                     >
-                        <option value="experiment-3">Default (Experiment 3)</option>
+                        {availableRuns.length === 0 && <option value="">Loading runs...</option>}
                         {availableRuns.map(run => (
                             <option key={run} value={run}>{run}</option>
                         ))}

@@ -5,7 +5,7 @@ import { runVisionAgent } from "../../../llm/agents/vision_agent";
 import * as dotenv from "dotenv";
 import fs from 'fs';
 import path from 'path';
-import { getTestRunDir } from '../../utils';
+import { getTestRunDir, DEFAULT_EXPERIMENT_ID } from '../../utils';
 import { drawBoundingBoxes } from '../../visualization';
 
 dotenv.config();
@@ -20,7 +20,7 @@ describe('REAL: Vision Agent', () => {
         let spritePath = path.join(runDir, "sprites.png");
 
         if (!fs.existsSync(spritePath)) {
-            spritePath = path.resolve(__dirname, "../../experiment-3/sprites.png");
+            spritePath = path.resolve(__dirname, `../../${DEFAULT_EXPERIMENT_ID}/sprites.png`);
         }
 
         if (!fs.existsSync(spritePath)) {
