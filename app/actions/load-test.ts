@@ -61,7 +61,7 @@ export async function loadTestGameAction() {
         // 4. Seeding Convex
         console.log("Seeding Convex DB with Experiment 3 data...");
         // Experiment 3 uses a generic ruleset
-        const rulesText = "Knights move in an L-shape. Wizards cast spells. Standard grid movement.";
+        const rulesText = "All unit can one shot to kill any other unit.";
 
         await fetchMutation(api.games.reset, {
             initialState: gameState,

@@ -77,3 +77,42 @@ export const updateState = mutation({
         });
     }
 });
+
+export const fastMove = mutation({
+    args: {
+        gameId: v.id("games"),
+        entityId: v.string(),
+        newPixelBox: v.array(v.number()), // [ymin, xmin, ymax, xmax]
+    },
+    handler: async (ctx, args) => {
+        const game = await ctx.db.get(args.gameId);
+        if (!game) throw new Error("Game not found");
+
+        const currentState = game.state;
+        if (!currentState || !currentState.entities) {
+            throw new Error("Invalid game state");
+        }
+
+        const entities = currentState.entities;
+        const entityIndex = entities.findIndex((e: any) => e.id === args.entityId);
+
+        if (entityIndex === -1) {
+            console.error(`Entity ${args.entityId} not found in state`);
+            return; // Or throw
+        }
+
+        // Update the specific entity
+        entities[entityIndex].pixel_box = args.newPixelBox;
+
+        // Save back
+        await ctx.db.patch(args.gameId, {
+            state: {
+                ...currentState,
+                entities: entities // This works because we mutated the array reference or created a new one if we were careful, but here we likely need to be careful about immutability if Convex cares, but usually assigning the modified object is fine. simpler to clone if needed.
+                // JS objects are references. `entities` is a reference to the array in `currentState`.
+                // Modifying `entities[index]` modifies `currentState`.
+                // So passing `currentState` back is fine.
+            }
+        });
+    }
+});
