@@ -1,9 +1,8 @@
-"use client";
-
 import React from 'react';
 import { AssetManifest } from '../types';
 import { DropZone } from '../../test/CollisionSystem';
 import { GameEntity } from '../../test/GameEntity';
+import { GameSprite } from '../GameSprite';
 
 interface ActorLayerProps {
     assets: AssetManifest[];
@@ -39,7 +38,7 @@ export const ActorLayer = ({ assets, onAction, displayMode = 'normal', debugZone
                     if (displayMode === 'mask') return null;
 
                     return (
-                        <GameEntity
+                        <GameSprite
                             key={`${asset.id}-${refreshTrigger}`}
                             id={asset.id}
                             name={asset.id} // Simple name for now

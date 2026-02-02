@@ -13,10 +13,19 @@ export interface ZoneData {
     resolveLocation?: (globalX: number, globalY: number) => string | null;
 }
 
+export interface EntityData {
+    id: string;
+    container: PIXI.Container;
+    role: 'SPRITE' | 'ZONE'; // Differentiate
+}
+
 interface CollisionContextType {
     registerZone: (id: string, zone: ZoneData) => void;
     unregisterZone: (id: string) => void;
     getZoneAt: (globalX: number, globalY: number) => ZoneData | null;
+    registerEntity: (id: string, entity: EntityData) => void;
+    unregisterEntity: (id: string) => void;
+    getEntityAt: (globalX: number, globalY: number, excludeId?: string) => EntityData | null;
 }
 
 // --- Context ---
@@ -35,6 +44,7 @@ export const useCollision = () => {
 
 export const CollisionProvider = ({ children }: { children: React.ReactNode }) => {
     const zones = useRef<Map<string, ZoneData>>(new Map());
+    const entities = useRef<Map<string, EntityData>>(new Map());
 
     const registerZone = (id: string, zone: ZoneData) => {
         zones.current.set(id, zone);
@@ -43,6 +53,13 @@ export const CollisionProvider = ({ children }: { children: React.ReactNode }) =
     const unregisterZone = (id: string) => {
         zones.current.delete(id);
     };
+
+    const registerEntity = (id: string, entity: EntityData) => {
+        entities.current.set(id, entity);
+    }
+    const unregisterEntity = (id: string) => {
+        entities.current.delete(id);
+    }
 
     const getZoneAt = (globalX: number, globalY: number) => {
         for (const zone of Array.from(zones.current.values()).reverse()) {
@@ -54,6 +71,21 @@ export const CollisionProvider = ({ children }: { children: React.ReactNode }) =
         return null;
     };
 
+    const getEntityAt = (globalX: number, globalY: number, excludeId?: string) => {
+        for (const entity of Array.from(entities.current.values()).reverse()) {
+            if (excludeId && entity.id === excludeId) continue;
+
+            // Check if bounds valid (container not destroyed)
+            if (entity.container.destroyed) continue;
+
+            const bounds = entity.container.getBounds();
+            if (GlobalBoundsContains(bounds, globalX, globalY)) {
+                return entity;
+            }
+        }
+        return null;
+    }
+
     // Helper for simple rect check
     const GlobalBoundsContains = (bounds: PIXI.Rectangle, x: number, y: number) => {
         return x >= bounds.x && x <= bounds.x + bounds.width &&
@@ -61,7 +93,7 @@ export const CollisionProvider = ({ children }: { children: React.ReactNode }) =
     }
 
     return (
-        <CollisionContext.Provider value={{ registerZone, unregisterZone, getZoneAt }}>
+        <CollisionContext.Provider value={{ registerZone, unregisterZone, getZoneAt, registerEntity, unregisterEntity, getEntityAt }}>
             {children}
         </CollisionContext.Provider>
     );
