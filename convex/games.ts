@@ -22,6 +22,13 @@ export const reset = mutation({
         runId: v.optional(v.string()), // <--- NEW
     },
     handler: async (ctx, args) => {
+        console.log(`[GAME RESET] Loading run: ${args.runId}`);
+        const entityCount = args.initialState?.entities
+            ? (Array.isArray(args.initialState.entities) ? args.initialState.entities.length : Object.keys(args.initialState.entities).length)
+            : 0;
+        console.log(`[GAME RESET] Content check: ${entityCount} entities loaded from state.`);
+
+
         // Deactivate all old games
         const oldGames = await ctx.db.query("games").filter(q => q.eq(q.field("isActive"), true)).collect();
         for (const game of oldGames) {
