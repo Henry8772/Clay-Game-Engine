@@ -13,6 +13,7 @@ import { api } from "../../convex/_generated/api";
 
 import { GameErrorBoundary } from "../components/GameErrorBoundary";
 import { Chat } from "../components/Chat";
+import { useMovementLogic } from "../hooks/useMovementLogic";
 
 // Temporary Initial State reflecting the structure we expect from the backend
 const FALLBACK_GAMESTATE = {
@@ -29,23 +30,67 @@ export default function PlayPage() {
     // Derived State
     const convexState = gameStateFromConvex?.state;
 
+    // Run Management
+    const [availableRuns, setAvailableRuns] = useState<string[]>([]);
+    const [selectedRunId, setSelectedRunId] = useState<string>("experiment-3"); // Default
+
     // Local state for fetched gamestate (Dev workflow)
     const [localGameState, setLocalGameState] = useState<any>(null);
+    const [blueprints, setBlueprints] = useState<Record<string, any>>({});
     const [navMesh, setNavMesh] = useState<any[]>([]);
 
+    // 1. Fetch Available Runs on Mount
     useEffect(() => {
-        // FETCH WORKFLOW:
-        // In this experiment, we generate gamestate.json in the backend.
-        // We fetch it via the proxy to iterate quickly without DB sync.
-        Promise.all([
-            fetch('/api/asset-proxy/experiment-3/gamestate.json').then(res => res.json()),
-            fetch('/api/asset-proxy/experiment-3/navmesh.json').then(res => res.json()).catch(() => [])
-        ]).then(([gameState, navData]) => {
-            console.log("Loaded content from proxy:", { gameState, navData });
-            setLocalGameState(gameState);
-            setNavMesh(navData);
-        }).catch(err => console.error("Failed to load local content:", err));
+        fetch('/api/runs')
+            .then(res => res.json())
+            .then(data => {
+                if (data.runs && Array.isArray(data.runs)) {
+                    setAvailableRuns(data.runs);
+                    // Optionally set default if not 'experiment-3'
+                    // if (data.runs.length > 0) setSelectedRunId(data.runs[0]);
+                }
+            })
+            .catch(err => console.error("Failed to fetch runs:", err));
     }, []);
+
+    // 2. Fetch Data when Selected Run Changes
+    useEffect(() => {
+        console.log("Fetching data for run:", selectedRunId);
+        // FETCH WORKFLOW:
+        // We fetch gamestate and navmesh via the proxy.
+        // The proxy path logic: /api/asset-proxy/runs/{runId}/{filename}
+
+        const basePath = selectedRunId === 'experiment-3'
+            ? '/api/asset-proxy/experiment-3' // Legacy path
+            : `/api/asset-proxy/runs/${selectedRunId}`;
+
+        Promise.all([
+            fetch(`${basePath}/gamestate.json`).then(res => {
+                if (!res.ok) throw new Error("Gamestate missing");
+                return res.json();
+            }),
+            fetch(`${basePath}/navmesh.json`).then(res => res.json()).catch(() => [])
+        ]).then(([data, navData]) => {
+            console.log("Loaded content:", { data, navData });
+
+            // Handle new ArchitectOutput structure
+            if (data.initialState) {
+                setLocalGameState(data.initialState);
+                if (data.blueprints) setBlueprints(data.blueprints);
+            } else {
+                setLocalGameState(data);
+                setBlueprints({}); // Reset if legacy format
+            }
+
+            setNavMesh(navData);
+        }).catch(err => {
+            console.error(`Failed to load content for ${selectedRunId}:`, err);
+            // Reset to avoid stale state
+            setLocalGameState(null);
+            setNavMesh([]);
+            setBlueprints({});
+        });
+    }, [selectedRunId]);
 
     // Fallback logic: Convex -> Local File -> Empty
     const currentGameState = (convexState && convexState.entities)
@@ -57,11 +102,20 @@ export default function PlayPage() {
     const rules = gameStateFromConvex?.rules || "Standard game rules";
     const gameId = gameStateFromConvex?._id;
 
+    // Movement Logic Hook
+    const { getReachableTiles } = useMovementLogic();
+    const [reachableTiles, setReachableTiles] = useState<Set<string>>(new Set());
+
     // Transform GameState to SceneManifest
     const manifest: SceneManifest = useMemo(() => {
         // SCENE DIMENSIONS (Matches background.png)
         const SCENE_WIDTH = 1408;
         const SCENE_HEIGHT = 736;
+
+        // Dynamic Source Base Path
+        const basePath = selectedRunId === 'experiment-3'
+            ? '/api/asset-proxy/experiment-3'
+            : `/api/asset-proxy/runs/${selectedRunId}`;
 
         // Scale factors (Input is 1000x1000 normalized)
         const scaleX = SCENE_WIDTH / 1000;
@@ -71,7 +125,7 @@ export default function PlayPage() {
         const ambience: AssetManifest = {
             id: 'background',
             role: 'BACKGROUND',
-            src: '/api/asset-proxy/experiment-3/background.png',
+            src: `${basePath}/background.png`,
             initialState: {
                 x: 0,
                 y: 0
@@ -87,15 +141,26 @@ export default function PlayPage() {
 
             // Ensure unique ID even if labels repeat (e.g. multiple 'sidebar_slot')
             const uniqueId = `${zone.label}_${index}`;
+            const label = zone.label;
+
+            // Highlight Logic
+            const isReachable = reachableTiles.has(label);
+            const baseColor = isReachable ? '#00FF00' : '#00FF00'; // Always green base, but we will use visibility?
+            // Actually, DropZone uses 'visible' prop for debugging.
+            // We want to repurpose DropZone or add a Highlight layer?
+            // Existing DropZone logic: debugColor={asset.color}. 
+            // If we want to show it, we need to pass a color.
 
             return {
                 id: uniqueId,
                 role: 'ZONE',
-                color: '#00FF00', // Debug Green
+                color: isReachable ? '#00FFFF' : '#00FF00', // Cyan if reachable
                 config: {
                     width: w * scaleX,
                     height: h * scaleY,
-                    label: zone.label
+                    label: zone.label,
+                    // Pass a custom prop to indicate highlighting?
+                    highlight: isReachable
                 },
                 initialState: {
                     x: xmin * scaleX, // CollisionSystem expects Top-Left
@@ -114,6 +179,8 @@ export default function PlayPage() {
         // 3. Actor Layer
         // Map gamestate entities to sprite props
         const actors = (currentGameState.entities || []).map((entity: any): AssetManifest => {
+            if (!entity) return null as any; // Safe guard
+
             const ymin = entity.pixel_box ? entity.pixel_box[0] : 0;
             const xmin = entity.pixel_box ? entity.pixel_box[1] : 0;
             const ymax = entity.pixel_box ? entity.pixel_box[2] : 100;
@@ -130,9 +197,11 @@ export default function PlayPage() {
             let finalX = xmin * scaleX + (boxWidth * scaleX / 2);
             let finalY = ymin * scaleY + (boxHeight * scaleY / 2);
 
+            let currentZoneLabel = null;
             if (navMesh && navMesh.length > 0) {
                 const matchingZone = navMesh.find((zone: any) => isInside({ x: cx, y: cy }, zone.box_2d));
                 if (matchingZone) {
+                    currentZoneLabel = matchingZone.label;
                     // Snap to Zone Center
                     const [zYmin, zXmin, zYmax, zXmax] = matchingZone.box_2d;
                     const zWidth = zXmax - zXmin;
@@ -156,9 +225,12 @@ export default function PlayPage() {
                     width: boxWidth * scaleX,
                     height: boxHeight * scaleY,
                     draggable: true,
+                    // Store logic data for pick-up event
+                    templateId: entity.t,
+                    currentZone: currentZoneLabel
                 }
             };
-        });
+        }).filter(Boolean);
 
         return {
             layers: {
@@ -172,7 +244,7 @@ export default function PlayPage() {
                 zones: []
             }
         };
-    }, [currentGameState, navMesh]);
+    }, [currentGameState, navMesh, reachableTiles, selectedRunId]);
 
     // Chat Coordination State
     const [chatOptimisticMessage, setChatOptimisticMessage] = useState<string | null>(null);
@@ -187,7 +259,30 @@ export default function PlayPage() {
             // Check if it's a JSON event from SmartScene
             if (commandOrEvent.startsWith('{')) {
                 const event = JSON.parse(commandOrEvent);
+
+                // PICK UP EVENT (Start Drag)
+                if (event.type === 'PICK_UP') {
+                    const { entityId, entityConfig } = event;
+                    const templateId = entityConfig?.templateId;
+                    const currentZone = entityConfig?.currentZone;
+
+                    if (templateId && currentZone && blueprints[templateId]) {
+                        const metadata = blueprints[templateId];
+                        if (metadata.movement) {
+                            const occupied = new Set<string>(); // TODO: Calculate occupied from currentState
+                            const allTiles = navMesh.map((z: any) => z.label);
+
+                            const reached = getReachableTiles(currentZone, metadata.movement, occupied, allTiles);
+                            setReachableTiles(reached);
+                        }
+                    }
+                    return;
+                }
+
+                // DROP EVENT (End Drag)
                 if (event.type === 'MOVE') {
+                    setReachableTiles(new Set()); // Clear highlights
+
                     const { entity, entityId, to } = event;
                     if (!to || to === event.from) {
                         console.log("Move cancelled or dropped on same tile.");
@@ -225,6 +320,7 @@ export default function PlayPage() {
             }
         } catch (e) {
             console.error("Failed to parse action:", e);
+            setReachableTiles(new Set());
             setRefreshTrigger(p => p + 1); // Safety revert
         }
     };
@@ -289,6 +385,19 @@ export default function PlayPage() {
                 </div>
 
                 <div className="flex items-center gap-3">
+
+                    {/* RUN SELECTOR */}
+                    <select
+                        className="px-2 py-1.5 text-xs bg-black text-neutral-400 border border-neutral-800 rounded hover:border-neutral-600 outline-none"
+                        value={selectedRunId}
+                        onChange={(e) => setSelectedRunId(e.target.value)}
+                    >
+                        <option value="experiment-3">Default (Experiment 3)</option>
+                        {availableRuns.map(run => (
+                            <option key={run} value={run}>{run}</option>
+                        ))}
+                    </select>
+
                     <button
                         className={`px-3 py-1.5 text-xs font-medium border rounded transition-colors ${showDebug
                             ? "bg-green-900/30 text-green-400 border-green-800 hover:bg-green-900/50"
@@ -298,32 +407,29 @@ export default function PlayPage() {
                         {showDebug ? "Hide NavMesh" : "Show NavMesh"}
                     </button>
 
-                    <button
-                        className="px-3 py-1.5 text-xs font-medium text-neutral-400 hover:text-white border border-neutral-800 hover:border-neutral-600 rounded transition-colors"
-                        onClick={async () => {
-                            const { loadTestGameAction } = await import("../actions/load-test");
-                            const res = await loadTestGameAction();
-                            if (res.success) {
-                                console.log("Loaded test game!");
+                    <div className="flex items-center gap-2">
+                        <button
+                            className="px-3 py-1.5 text-xs font-medium text-neutral-400 hover:text-white border border-neutral-800 hover:border-neutral-600 rounded transition-colors"
+                            onClick={async () => {
+                                // Reloads page, which re-triggers fetch for selectedRunId
                                 window.location.reload();
-                            }
-                            else alert("Failed: " + res.error);
-                        }}
-                        disabled={isGenerating}
-                    >
-                        Load Test
-                    </button>
-                    <button
-                        className="px-3 py-1.5 text-xs font-medium text-neutral-400 hover:text-white border border-neutral-800 hover:border-neutral-600 rounded transition-colors"
-                        onClick={async () => {
-                            const { resetGameAction } = await import("../actions/reset");
-                            await resetGameAction();
-                            window.location.reload();
-                        }}
-                        disabled={isGenerating}
-                    >
-                        Reset
-                    </button>
+                            }}
+                            disabled={isGenerating}
+                        >
+                            Refresh
+                        </button>
+                        <button
+                            className="px-3 py-1.5 text-xs font-medium text-neutral-400 hover:text-white border border-neutral-800 hover:border-neutral-600 rounded transition-colors"
+                            onClick={async () => {
+                                const { resetGameAction } = await import("../actions/reset");
+                                await resetGameAction();
+                                window.location.reload();
+                            }}
+                            disabled={isGenerating}
+                        >
+                            Reset
+                        </button>
+                    </div>
                 </div>
             </header>
 
@@ -339,6 +445,9 @@ export default function PlayPage() {
                             <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
                             <span className="text-[10px] font-mono text-neutral-500 uppercase tracking-wider">Live Sreaming</span>
                         </div>
+                        <div className="text-[10px] font-mono text-neutral-600">
+                            RUN: {selectedRunId}
+                        </div>
                     </div>
 
                     <div className="flex-1 relative overflow-hidden flex items-center justify-center p-8 bg-neutral-950">
@@ -349,7 +458,7 @@ export default function PlayPage() {
                                     onAction={handleAction}
                                     width={1408}
                                     height={736}
-                                    debugZones={showDebug}
+                                    debugZones={showDebug || reachableTiles.size > 0}
                                     refreshTrigger={refreshTrigger}
                                 />
                             </GameErrorBoundary>

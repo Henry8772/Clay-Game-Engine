@@ -21,18 +21,39 @@ describe('REAL: State Agent', () => {
             return;
         }
 
+
         const analysis = JSON.parse(fs.readFileSync(analysisPath, 'utf-8'));
         const navMesh = JSON.parse(fs.readFileSync(navMeshPath, 'utf-8'));
 
         const runId = path.basename(runDir);
-        const gameState = runStateAgent(analysis, navMesh, runId);
 
-        expect(gameState).toBeDefined();
-        expect(gameState.meta.runId).toBe(runId);
-        expect(gameState.entities.length).toBeGreaterThan(0);
-        expect(gameState.entities[0].src).toContain(runId);
+        // Mock Client
+        const mockClient = { isDebug: true, generateJson: async () => ({}) } as any;
+
+        const output = await runStateAgent(mockClient, analysis, navMesh, runId);
+
+        expect(output).toBeDefined();
+        expect(output.initialState).toBeDefined();
+        expect(output.blueprints).toBeDefined();
+
+        const state = output.initialState;
+        expect(state.meta.runId).toBe(runId);
+
+        // Check entities map
+        const entityKeys = Object.keys(state.entities);
+        expect(entityKeys.length).toBeGreaterThan(0);
+
+        // Verify blueprint linking
+        const firstEntity = state.entities[entityKeys[0]];
+        expect(firstEntity.t).toBeDefined();
+        expect(output.blueprints[firstEntity.t]).toBeDefined();
+
+        // Verify metadata generation
+        const bp = output.blueprints[firstEntity.t];
+        expect(bp.movement).toBeDefined();
+        expect(bp.capabilities).toBeDefined();
 
         const outPath = path.join(runDir, "gamestate.json");
-        fs.writeFileSync(outPath, JSON.stringify(gameState, null, 2));
+        fs.writeFileSync(outPath, JSON.stringify(output, null, 2));
     });
 });

@@ -14,9 +14,10 @@ interface GameEntityProps {
     src?: string;
     onAction: (command: string) => void;
     displayMode?: 'normal' | 'mask';
+    config?: any;
 }
 
-export const GameEntity = ({ id, name, initialX, initialY, color, src, onAction, displayMode = 'normal' }: GameEntityProps) => {
+export const GameEntity = ({ id, name, initialX, initialY, color, src, onAction, displayMode = 'normal', config }: GameEntityProps) => {
     const { app, stage } = usePixiApp();
     const { getZoneAt } = useCollision(); // Access Collision System
     const containerRef = useRef<PIXI.Container | null>(null);
@@ -139,7 +140,14 @@ export const GameEntity = ({ id, name, initialX, initialY, color, src, onAction,
             const startZone = getZoneAt(container.x, container.y);
             dragStartZone.current = startZone ? startZone.id : null;
 
-            // onAction(`User picked up ${name} from ${dragStartZone.current || 'Void'}`);
+            const pickupEvent = JSON.stringify({
+                type: 'PICK_UP',
+                entity: name,
+                entityId: id,
+                entityConfig: config,
+                from: dragStartZone.current
+            });
+            onAction(pickupEvent);
 
             // FIX: Bind move/up to STAGE to catch fast movements or outside releases
             if (stage) {
@@ -167,7 +175,7 @@ export const GameEntity = ({ id, name, initialX, initialY, color, src, onAction,
                 container.destroy({ children: true }); // Clean up texture memory if generated (graphics are auto-cleaned mostly)
             }
         };
-    }, [app, stage, initialX, initialY, color, name, onAction, src, displayMode]);
+    }, [app, stage, initialX, initialY, color, name, onAction, src, displayMode, config]);
 
     return null; // This component renders nothing in React DOM
 };

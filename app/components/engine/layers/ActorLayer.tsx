@@ -49,6 +49,7 @@ export const ActorLayer = ({ assets, onAction, displayMode = 'normal', debugZone
                             src={asset.src}
                             onAction={onAction}
                             displayMode={displayMode}
+                            config={asset.config}
                         />
                     );
                 }
