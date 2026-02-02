@@ -15,4 +15,16 @@ export default defineSchema({
         content: v.string(),
         timestamp: v.number(),
     }).index("by_gameId", ["gameId"]),
+    system_events: defineTable({
+        gameId: v.id("games"),
+        content: v.string(), // The log message
+        type: v.optional(v.string()), // e.g. "info", "warning", "error"
+        timestamp: v.number(),
+    }).index("by_gameId", ["gameId"]),
+    battle_events: defineTable({
+        gameId: v.id("games"),
+        content: v.string(),
+        relatedEntityId: v.optional(v.string()), // Optional: link to specific entity log
+        timestamp: v.number(),
+    }).index("by_gameId", ["gameId"]),
 });
