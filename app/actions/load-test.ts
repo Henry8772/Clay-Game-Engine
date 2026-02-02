@@ -4,10 +4,6 @@ import path from "path";
 import { fetchMutation } from "convex/nextjs";
 import { api } from "../../convex/_generated/api";
 
-const RUNS_DIR = path.join(process.cwd(), ".tmp", "runs");
-const DEST_FILE_PATH = path.join(process.cwd(), "app", "generated", "game-slot.tsx");
-const PUBLIC_ASSETS_DIR = path.join(process.cwd(), "public", "generated-assets");
-
 /**
  * Recursively copies a directory or file.
  */
@@ -38,14 +34,13 @@ function copyRecursiveSync(src: string, dest: string) {
     }
 }
 
-export async function loadTestGameAction() {
-    console.log("Starting loadTestGameAction (Experiment 3)...");
+export async function loadTestGameAction(runId: string = "experiment-3") {
+    console.log(`Starting loadTestGameAction for run: ${runId} ...`);
     try {
         // 1. Define Paths
-        // We load from the static experiment-3 folder which serves as our "Golden Master"
-        const EXPERIMENT_DIR = path.join(process.cwd(), "backend", "test", "real", "experiment-3");
+        // We load from the static folder which serves as our "Golden Master"
+        const EXPERIMENT_DIR = path.join(process.cwd(), "backend", "test", "real", runId);
         const GAMESTATE_PATH = path.join(EXPERIMENT_DIR, "gamestate.json");
-        const NAVMESH_PATH = path.join(EXPERIMENT_DIR, "navmesh.json"); // We might strictly not need to load this for DB unless we store it, but good to check existence.
         const ASSETS_SRC_DIR = path.join(EXPERIMENT_DIR, "extracted");
 
         const PUBLIC_ASSETS_DIR = path.join(process.cwd(), "public", "generated-assets");
@@ -59,8 +54,8 @@ export async function loadTestGameAction() {
         const gameState = JSON.parse(fs.readFileSync(GAMESTATE_PATH, "utf-8"));
 
         // 4. Seeding Convex
-        console.log("Seeding Convex DB with Experiment 3 data...");
-        // Experiment 3 uses a generic ruleset
+        console.log(`Seeding Convex DB with ${runId} data...`);
+        // Use a generic ruleset
         const rulesText = "All unit can one shot to kill any other unit.";
 
         await fetchMutation(api.games.reset, {
@@ -82,7 +77,7 @@ export async function loadTestGameAction() {
             console.warn(`No assets directory found at ${ASSETS_SRC_DIR}`);
         }
 
-        console.log("Success! Experiment 3 loaded.");
+        console.log(`Success! ${runId} loaded.`);
         return { success: true };
 
     } catch (e) {

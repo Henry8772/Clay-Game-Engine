@@ -5,7 +5,7 @@ import { runSpriteAgent } from "../../../llm/agents/sprite_agent";
 import * as dotenv from "dotenv";
 import fs from 'fs';
 import path from 'path';
-import { getTestRunDir } from '../../utils';
+import { getTestRunDir, DEFAULT_EXPERIMENT_ID } from '../../utils';
 
 dotenv.config();
 
@@ -19,7 +19,7 @@ describe('REAL: Sprite Agent', () => {
         let scenePath = path.join(runDir, "scene.png");
 
         if (!fs.existsSync(scenePath)) {
-            scenePath = path.resolve(__dirname, "../../experiment-3/scene.png");
+            scenePath = path.resolve(__dirname, `../../${DEFAULT_EXPERIMENT_ID}/scene.png`);
         }
 
         if (!fs.existsSync(scenePath)) {

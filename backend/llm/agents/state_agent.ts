@@ -141,7 +141,7 @@ export async function runStateAgent(
     const entities = items.map((item, index) => {
         const { type, team } = categorize(item.label);
         const safeLabel = item.label.replace(/[^a-z0-9]/gi, '_').toLowerCase();
-        const assetUrl = `/api/asset-proxy/runs/${runId}/extracted/${encodeURIComponent(safeLabel)}.png`;
+        const assetUrl = `extracted/${encodeURIComponent(safeLabel)}.png`;
 
         // Create or Link Blueprint
         const templateId = `tpl_${safeLabel}`;

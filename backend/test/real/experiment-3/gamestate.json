@@ -9,7 +9,7 @@
       "label": "lightning spell icon",
       "team": "neutral",
       "type": "ui",
-      "src": "/api/asset-proxy/experiment-3/extracted/lightning%20spell%20icon.png",
+      "src": "extracted/lightning%20spell%20icon.png",
       "pixel_box": [
         113,
         37,
@@ -22,7 +22,7 @@
       "label": "heal spell icon",
       "team": "neutral",
       "type": "ui",
-      "src": "/api/asset-proxy/experiment-3/extracted/heal%20spell%20icon.png",
+      "src": "extracted/heal%20spell%20icon.png",
       "pixel_box": [
         409,
         52,
@@ -35,7 +35,7 @@
       "label": "haste spell icon",
       "team": "neutral",
       "type": "ui",
-      "src": "/api/asset-proxy/experiment-3/extracted/haste%20spell%20icon.png",
+      "src": "extracted/haste%20spell%20icon.png",
       "pixel_box": [
         701,
         52,
@@ -48,7 +48,7 @@
       "label": "fire demon",
       "team": "red",
       "type": "unit",
-      "src": "/api/asset-proxy/experiment-3/extracted/fire%20demon.png",
+      "src": "extracted/fire%20demon.png",
       "pixel_box": [
         93,
         428,
@@ -61,7 +61,7 @@
       "label": "archer",
       "team": "blue",
       "type": "unit",
-      "src": "/api/asset-proxy/experiment-3/extracted/archer.png",
+      "src": "extracted/archer.png",
       "pixel_box": [
         131,
         747,
@@ -74,7 +74,7 @@
       "label": "skeleton warrior",
       "team": "red",
       "type": "unit",
-      "src": "/api/asset-proxy/experiment-3/extracted/skeleton%20warrior.png",
+      "src": "extracted/skeleton%20warrior.png",
       "pixel_box": [
         297,
         304,
@@ -87,7 +87,7 @@
       "label": "rock",
       "team": "neutral",
       "type": "obstacle",
-      "src": "/api/asset-proxy/experiment-3/extracted/rock.png",
+      "src": "extracted/rock.png",
       "pixel_box": [
         301,
         629,
@@ -100,7 +100,7 @@
       "label": "rocks",
       "team": "neutral",
       "type": "obstacle",
-      "src": "/api/asset-proxy/experiment-3/extracted/rocks.png",
+      "src": "extracted/rocks.png",
       "pixel_box": [
         519,
         372,
@@ -113,7 +113,7 @@
       "label": "knight",
       "team": "blue",
       "type": "unit",
-      "src": "/api/asset-proxy/experiment-3/extracted/knight.png",
+      "src": "extracted/knight.png",
       "pixel_box": [
         569,
         199,
@@ -126,7 +126,7 @@
       "label": "slime",
       "team": "red",
       "type": "unit",
-      "src": "/api/asset-proxy/experiment-3/extracted/slime.png",
+      "src": "extracted/slime.png",
       "pixel_box": [
         611,
         545,
@@ -139,7 +139,7 @@
       "label": "archer",
       "team": "blue",
       "type": "unit",
-      "src": "/api/asset-proxy/experiment-3/extracted/archer.png",
+      "src": "extracted/archer.png",
       "pixel_box": [
         741,
         740,
@@ -152,7 +152,7 @@
       "label": "knight",
       "team": "blue",
       "type": "unit",
-      "src": "/api/asset-proxy/experiment-3/extracted/knight.png",
+      "src": "extracted/knight.png",
       "pixel_box": [
         752,
         290,
@@ -165,7 +165,7 @@
       "label": "wizard",
       "team": "blue",
       "type": "unit",
-      "src": "/api/asset-proxy/experiment-3/extracted/wizard.png",
+      "src": "extracted/wizard.png",
       "pixel_box": [
         760,
         456,

@@ -3,7 +3,7 @@ import { describe, it, expect } from 'vitest';
 import { runStateAgent } from "../../../llm/agents/state_agent";
 import fs from 'fs';
 import path from 'path';
-import { getTestRunDir } from '../../utils';
+import { getTestRunDir, DEFAULT_EXPERIMENT_ID } from '../../utils';
 
 describe('REAL: State Agent', () => {
 
@@ -13,8 +13,8 @@ describe('REAL: State Agent', () => {
         let analysisPath = path.join(runDir, "analysis.json");
         let navMeshPath = path.join(runDir, "navmesh.json");
 
-        if (!fs.existsSync(analysisPath)) analysisPath = path.resolve(__dirname, "../../experiment-3/analysis.json");
-        if (!fs.existsSync(navMeshPath)) navMeshPath = path.resolve(__dirname, "../../experiment-3/navmesh.json");
+        if (!fs.existsSync(analysisPath)) analysisPath = path.resolve(__dirname, `../../${DEFAULT_EXPERIMENT_ID}/analysis.json`);
+        if (!fs.existsSync(navMeshPath)) navMeshPath = path.resolve(__dirname, `../../${DEFAULT_EXPERIMENT_ID}/navmesh.json`);
 
         if (!fs.existsSync(analysisPath) || !fs.existsSync(navMeshPath)) {
             console.warn("Skipping State Agent test because JSON inputs missing");
