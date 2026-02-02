@@ -3,6 +3,7 @@
 import { LLMClient } from "../../backend/llm/client";
 import { fetchMutation, fetchQuery } from "convex/nextjs";
 import { api } from "../../convex/_generated/api";
+import { GameEngine } from "../engine/game_engine";
 
 
 export async function processGameMoveAction(currentState: any, rules: string, command: string, navMesh?: any[]) {
@@ -14,7 +15,11 @@ export async function processGameMoveAction(currentState: any, rules: string, co
 
         // 2. Initialize Engine
         const client = new LLMClient();
-        const { GameEngine } = await import("../../backend/llm/game_controller/game_engine");
+
+        console.log("rules", rules);
+        console.log("currentState", currentState);
+        console.log("navMesh", navMesh);
+
 
         // Instantiate Engine with Current State
         const engine = new GameEngine(currentState, rules, client, navMesh);

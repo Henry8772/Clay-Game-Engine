@@ -1,6 +1,6 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { GameEngine } from '../llm/game_controller/game_engine';
+import { GameEngine } from '../../app/engine/game_engine';
 import { LLMClient } from '../llm/client';
 import { UniversalState, GameAction } from '../llm/agents/universal_state_types';
 

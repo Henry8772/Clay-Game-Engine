@@ -392,8 +392,6 @@ export default function PlayPage() {
                     if (isOccupied) {
                         // --- SLOW PATH (Interaction/Attack) ---
                         // Trigger LLM Logic
-                        // --- SLOW PATH (Interaction/Attack) ---
-                        // Trigger LLM Logic
                         const targetEntity = entitiesList.find((e: any) => e.label === targetUnitName);
                         const targetUnitType = targetEntity?.type;
                         const targetUnitId = targetEntity?.id;
@@ -406,20 +404,19 @@ export default function PlayPage() {
                             await sendAction(interactionCommand, navMesh);
                             setRefreshTrigger(p => p + 1);
 
-                        } else {
-                            // --- FAST PATH (Movement) ---
-                            // Direct DB mutation, bypass LLM
-
-                            console.log("Fast Move Triggered:", targetLabel);
-
-                            if (targetZone && gameId) {
-                                await fastMove({
-                                    gameId: gameId,
-                                    entityId: entityId,
-                                    newPixelBox: targetZone.box_2d
-                                });
-                            }
                         }
+                    } else {
+
+                        console.log("Fast Move Triggered:", targetLabel);
+
+                        if (targetZone && gameId) {
+                            await fastMove({
+                                gameId: gameId,
+                                entityId: entityId,
+                                newPixelBox: targetZone.box_2d
+                            });
+                        }
+
                     }
                 } else {
                     console.log("Unknown action format:", commandOrEvent);
