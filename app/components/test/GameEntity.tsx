@@ -21,12 +21,9 @@ export const GameEntity = ({ id, name, initialX, initialY, color, src, onAction,
     const { app, stage } = usePixiApp();
     const { getZoneAt } = useCollision(); // Access Collision System
     const containerRef = useRef<PIXI.Container | null>(null);
-    const isDragging = useRef(false);
+    const isHeld = useRef(false);
+    const pickupOffset = useRef({ x: 0, y: 0 });
     const dragStartZone = useRef<string | null>(null); // Track where drag started
-
-    // Helper: Convert Pixels to Chess Notation (Mock)
-    // REPLACED by CollisionSystem
-    // const getGridLocation = ...
 
     useEffect(() => {
         if (!app || !stage) return;
@@ -41,10 +38,6 @@ export const GameEntity = ({ id, name, initialX, initialY, color, src, onAction,
         container.eventMode = 'static';
         container.cursor = 'pointer';
 
-        // 2. Create Visuals (Sprite or Graphics)
-        // MASK MODE: Previously handled here, now filtered in ActorLayer.
-        // But keeping logic just in case useful later, or we can revert.
-        // Actually, let's keep it simple: if somehow called in mask mode, render solid.
         if (displayMode === 'mask') {
             const graphics = new PIXI.Graphics();
             graphics.beginFill(color);
@@ -82,24 +75,22 @@ export const GameEntity = ({ id, name, initialX, initialY, color, src, onAction,
         }
 
         // 4. Interaction Logic
-        let dragOffset = { x: 0, y: 0 };
+        // 4. Interaction Logic: Click-to-Pickup
 
-        const onDragMove = (e: PIXI.FederatedPointerEvent) => {
-            if (isDragging.current && container.parent) {
+        const onFollow = (e: PIXI.FederatedPointerEvent) => {
+            if (isHeld.current && container.parent) {
                 const newPosition = e.getLocalPosition(container.parent);
-                container.x = newPosition.x - dragOffset.x;
-                container.y = newPosition.y - dragOffset.y;
+                container.x = newPosition.x - pickupOffset.current.x;
+                container.y = newPosition.y - pickupOffset.current.y;
             }
         };
 
-        const onDragEnd = (e?: PIXI.FederatedPointerEvent) => {
-            if (isDragging.current) {
-                isDragging.current = false;
+        const onPlace = (e: PIXI.FederatedPointerEvent) => {
+            if (isHeld.current) {
+                isHeld.current = false;
                 container.alpha = 1;
 
                 // Resolve Drop Zone
-                // We use global/stage coordinates (which container.x/y are in this simple setup)
-                // Use the container center for drop detection
                 const dropZone = getZoneAt(container.x, container.y);
                 const toId = dropZone ? dropZone.id : null;
                 const fromId = dragStartZone.current;
@@ -117,23 +108,28 @@ export const GameEntity = ({ id, name, initialX, initialY, color, src, onAction,
 
                 // CLEANUP: Remove global listeners from stage
                 if (stage) {
-                    stage.off('pointermove', onDragMove);
-                    stage.off('pointerup', onDragEnd);
-                    stage.off('pointerupoutside', onDragEnd);
+                    stage.off('pointermove', onFollow);
+                    stage.off('pointerdown', onPlace);
                 }
             }
         };
 
-        const onDragStart = (e: PIXI.FederatedPointerEvent) => {
-            // Prevent bubbling if needed, but usually fine
-            // e.stopPropagation(); 
+        const onPickup = (e: PIXI.FederatedPointerEvent) => {
+            // If already held, treat click as drop (though normally onPlace catches this via stage)
+            if (isHeld.current) {
+                onPlace(e);
+                return;
+            }
 
-            isDragging.current = true;
+            isHeld.current = true;
+
+            // Calculate Offset
             const currentPosition = e.getLocalPosition(container.parent);
-            dragOffset = {
+            pickupOffset.current = {
                 x: currentPosition.x - container.x,
                 y: currentPosition.y - container.y
             };
+
             container.alpha = 0.5;
 
             // Resolve Start Zone
@@ -147,22 +143,22 @@ export const GameEntity = ({ id, name, initialX, initialY, color, src, onAction,
                 entityConfig: config,
                 from: dragStartZone.current
             });
+            console.log('Pickup Event:', pickupEvent);
             onAction(pickupEvent);
 
-            // FIX: Bind move/up to STAGE to catch fast movements or outside releases
+            // Bind follow/place to STAGE
             if (stage) {
-                stage.eventMode = 'static'; // Ensure stage can emit events
-                // app.screen might change, but usually fine. 
-                // Using 'static' allows stage to catch bubbling events from children, 
-                // AND if we want to catch events on background, we might need hitArea.
-                // For now, attaching to stage ensures we get the events as long as the mouse is over the canvas.
-                stage.on('pointermove', onDragMove);
-                stage.on('pointerup', onDragEnd);
-                stage.on('pointerupoutside', onDragEnd);
+                stage.eventMode = 'static';
+                stage.on('pointermove', onFollow);
+
+                // Add "Place" listener on next tick to avoid immediate trigger from current bubble
+                requestAnimationFrame(() => {
+                    stage.on('pointerdown', onPlace);
+                });
             }
         };
 
-        container.on('pointerdown', onDragStart);
+        container.on('pointerdown', onPickup);
 
         // Add to Stage
         stage.addChild(container);

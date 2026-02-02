@@ -45,9 +45,6 @@ export const CollisionProvider = ({ children }: { children: React.ReactNode }) =
     };
 
     const getZoneAt = (globalX: number, globalY: number) => {
-        // Check zones in reverse order (assuming later registered = higher z-index, or specific z-index logic)
-        // For now, simple iteration.
-        // We need to check if the point is within the zone's container bounds.
         for (const zone of Array.from(zones.current.values()).reverse()) {
             const bounds = zone.container.getBounds();
             if (GlobalBoundsContains(bounds, globalX, globalY)) {
