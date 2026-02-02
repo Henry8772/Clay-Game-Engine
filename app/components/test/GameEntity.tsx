@@ -78,14 +78,22 @@ export const GameEntity = ({ id, name, initialX, initialY, color, src, onAction,
         // 4. Interaction Logic: Click-to-Pickup
 
         const onFollow = (e: PIXI.FederatedPointerEvent) => {
-            if (isHeld.current && container.parent) {
+            if (isHeld.current) {
+                if (!container.parent) {
+                    console.warn("GameEntity: onFollow called but container has no parent. Stopping drag.");
+                    isHeld.current = false;
+                    return;
+                }
                 const newPosition = e.getLocalPosition(container.parent);
+                console.log(`GameEntity ${name}: Dragging to `, newPosition);
+
                 container.x = newPosition.x - pickupOffset.current.x;
                 container.y = newPosition.y - pickupOffset.current.y;
             }
         };
 
         const onPlace = (e: PIXI.FederatedPointerEvent) => {
+            console.log(`GameEntity ${name}: onPlace triggered. Held: ${isHeld.current}`);
             if (isHeld.current) {
                 isHeld.current = false;
                 container.alpha = 1;
@@ -94,6 +102,8 @@ export const GameEntity = ({ id, name, initialX, initialY, color, src, onAction,
                 const dropZone = getZoneAt(container.x, container.y);
                 const toId = dropZone ? dropZone.id : null;
                 const fromId = dragStartZone.current;
+
+                console.log(`GameEntity ${name}: Dropped at`, { x: container.x, y: container.y, zone: toId });
 
                 // Semantic Event
                 const event = JSON.stringify({
@@ -115,9 +125,16 @@ export const GameEntity = ({ id, name, initialX, initialY, color, src, onAction,
         };
 
         const onPickup = (e: PIXI.FederatedPointerEvent) => {
+            console.log(`GameEntity ${name}: onPickup triggered`);
             // If already held, treat click as drop (though normally onPlace catches this via stage)
             if (isHeld.current) {
+                console.log(`GameEntity ${name}: Already held, treating as drop`);
                 onPlace(e);
+                return;
+            }
+
+            if (!container.parent) {
+                console.error(`GameEntity ${name}: Pickup attempted but container has no parent`);
                 return;
             }
 
@@ -129,6 +146,7 @@ export const GameEntity = ({ id, name, initialX, initialY, color, src, onAction,
                 x: currentPosition.x - container.x,
                 y: currentPosition.y - container.y
             };
+            console.log(`GameEntity ${name}: Picked up. Offset:`, pickupOffset.current);
 
             container.alpha = 0.5;
 
@@ -152,9 +170,14 @@ export const GameEntity = ({ id, name, initialX, initialY, color, src, onAction,
                 stage.on('pointermove', onFollow);
 
                 // Add "Place" listener on next tick to avoid immediate trigger from current bubble
-                requestAnimationFrame(() => {
+                const rafId = requestAnimationFrame(() => {
+                    // Check if destroyed or unmounted during the frame
+                    if (container.destroyed) return;
                     stage.on('pointerdown', onPlace);
                 });
+
+                // Track RAF for cleanup
+                (container as any)._pickupRaf = rafId;
             }
         };
 
@@ -166,12 +189,20 @@ export const GameEntity = ({ id, name, initialX, initialY, color, src, onAction,
 
         // Cleanup
         return () => {
-            if (stage && container) {
-                stage.removeChild(container);
-                container.destroy({ children: true }); // Clean up texture memory if generated (graphics are auto-cleaned mostly)
+            if ((container as any)._pickupRaf) {
+                cancelAnimationFrame((container as any)._pickupRaf);
+            }
+
+            if (stage) {
+                stage.off('pointermove', onFollow);
+                stage.off('pointerdown', onPlace);
+            }
+            if (container) {
+                if (stage) stage.removeChild(container);
+                if (!container.destroyed) container.destroy({ children: true });
             }
         };
-    }, [app, stage, initialX, initialY, color, name, onAction, src, displayMode, config]);
+    }, [app, stage, initialX, initialY, color, name, onAction, src, displayMode, JSON.stringify(config)]);
 
     return null; // This component renders nothing in React DOM
 };

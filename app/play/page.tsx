@@ -5,15 +5,13 @@ import React, { useState, useMemo, useEffect } from "react";
 import { BASE_GAME_RULES, SPRITE_RULES } from "../game-rules";
 import { SmartScene } from "../components/engine/SmartScene";
 import { SceneManifest, AssetManifest } from "../components/engine/types";
-import { generateGameAction } from "../actions/generate";
-// import { processGameMoveAction } from "../actions/game-move";
 import { useGameEngine } from "../hooks/useGameEngine";
-import { useQuery } from "convex/react";
+import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 
 import { GameErrorBoundary } from "../components/GameErrorBoundary";
 import { Chat } from "../components/Chat";
-import { useMovementLogic } from "../hooks/useMovementLogic";
+
 
 // Temporary Initial State reflecting the structure we expect from the backend
 const FALLBACK_GAMESTATE = {
@@ -102,9 +100,10 @@ export default function PlayPage() {
     const rules = gameStateFromConvex?.rules || "Standard game rules";
     const gameId = gameStateFromConvex?._id;
 
-    // Movement Logic Hook
-    const { getReachableTiles } = useMovementLogic();
+    // Movement Logic: GOD MODE (Trust User)
+    // We simply track reachable tiles for highlighting, but we allow moving anywhere.
     const [reachableTiles, setReachableTiles] = useState<Set<string>>(new Set());
+    const fastMove = useMutation(api.games.fastMove);
 
     // Transform GameState to SceneManifest
     const manifest: SceneManifest = useMemo(() => {
@@ -145,11 +144,6 @@ export default function PlayPage() {
 
             // Highlight Logic
             const isReachable = reachableTiles.has(label);
-            const baseColor = isReachable ? '#00FF00' : '#00FF00'; // Always green base, but we will use visibility?
-            // Actually, DropZone uses 'visible' prop for debugging.
-            // We want to repurpose DropZone or add a Highlight layer?
-            // Existing DropZone logic: debugColor={asset.color}. 
-            // If we want to show it, we need to pass a color.
 
             return {
                 id: uniqueId,
@@ -262,20 +256,6 @@ export default function PlayPage() {
 
                 // PICK UP EVENT (Start Drag)
                 if (event.type === 'PICK_UP') {
-                    const { entityId, entityConfig } = event;
-                    const templateId = entityConfig?.templateId;
-                    const currentZone = entityConfig?.currentZone;
-
-                    if (templateId && currentZone && blueprints[templateId]) {
-                        const metadata = blueprints[templateId];
-                        if (metadata.movement) {
-                            const occupied = new Set<string>(); // TODO: Calculate occupied from currentState
-                            const allTiles = navMesh.map((z: any) => z.label);
-
-                            const reached = getReachableTiles(currentZone, metadata.movement, occupied, allTiles);
-                            setReachableTiles(reached);
-                        }
-                    }
                     return;
                 }
 
@@ -291,32 +271,72 @@ export default function PlayPage() {
                     }
 
                     // Strip unique suffix from DropZone ID (e.g. "tile_r0_c0_0" -> "tile_r0_c0")
-                    // We need unique IDs for React keys, but the game logic expects the raw label.
                     const targetLabel = to.replace(/_\d+$/, '');
 
-                    // Construct Natural Language Command
-                    // We include ID to be precise
-                    const moveCommand = `Move ${entity} (id: ${entityId}) to ${targetLabel}`;
-                    console.log("Generated Command from Drag:", moveCommand);
+                    // COLLISION DETECTION / INTERACTION CHECK
+                    // Check if any OTHER entity is currently in this target zone
+                    const targetZone = navMesh.find((z: any) => z.label === targetLabel);
+                    let isOccupied = false;
+                    let targetUnitName = null;
 
-                    const actionPayload = {
-                        type: "MOVE" as const,
-                        playerId: "local_player",
-                        payload: {
-                            entityId: entityId,
-                            targetLocation: targetLabel,
-                            entityName: entity
-                        },
-                        timestamp: Date.now()
-                    };
+                    if (targetZone && currentGameState.entities) {
+                        // Helper to check intersection (duplicated from manifest, simplified)
+                        const isInside = (point: { x: number, y: number }, box: number[]) => {
+                            const [ymin, xmin, ymax, xmax] = box;
+                            return point.x >= xmin && point.x <= xmax && point.y >= ymin && point.y <= ymax;
+                        };
 
-                    await sendAction(actionPayload, navMesh);
+                        isOccupied = currentGameState.entities.some((e: any) => {
+                            if (e.id === entityId) return false; // Don't check self
+                            if (!e.pixel_box) return false;
 
-                    // Force refresh - if invalid, this snaps back. If valid, this remounts at new position.
-                    setRefreshTrigger(p => p + 1);
+                            const [ymin, xmin, ymax, xmax] = e.pixel_box;
+                            const cx = xmin + (xmax - xmin) / 2;
+                            const cy = ymin + (ymax - ymin) / 2;
+
+                            if (isInside({ x: cx, y: cy }, targetZone.box_2d)) {
+                                targetUnitName = e.label || e.id;
+                                return true;
+                            }
+                            return false;
+                        });
+                    }
+
+                    console.log("targetUnitName:", targetUnitName);
+                    // Get the type of  targetUnitName here,  to know if it is a player or an enemy
+
+                    if (isOccupied) {
+                        // --- SLOW PATH (Interaction/Attack) ---
+                        // Trigger LLM Logic
+                        const targetUnitType = currentGameState.entities.find((e: any) => e.label === targetUnitName)?.type;
+                        const targetUnitId = currentGameState.entities.find((e: any) => e.label === targetUnitName)?.id;
+
+                        if (targetUnitType == "unit") {
+                            const interactionCommand = `${entity} (id: ${entityId}) attack ${targetUnitName} (id: ${targetUnitId})`;
+                            console.log("Interaction Triggered:", interactionCommand);
+
+                            // Send to LLM
+                            await sendAction(interactionCommand, navMesh);
+                            setRefreshTrigger(p => p + 1);
+
+                        } else {
+                            // --- FAST PATH (Movement) ---
+                            // Direct DB mutation, bypass LLM
+
+                            console.log("Fast Move Triggered:", targetLabel);
+
+                            if (targetZone && gameId) {
+                                await fastMove({
+                                    gameId: gameId,
+                                    entityId: entityId,
+                                    newPixelBox: targetZone.box_2d
+                                });
+                            }
+                        }
+                    }
+                } else {
+                    console.log("Unknown action format:", commandOrEvent);
                 }
-            } else {
-                console.log("Unknown action format:", commandOrEvent);
             }
         } catch (e) {
             console.error("Failed to parse action:", e);
@@ -326,20 +346,7 @@ export default function PlayPage() {
     };
 
     const handleGenerate = async () => {
-        if (!prompt) return;
-        setIsGenerating(true);
-        try {
-            const result = await generateGameAction(prompt);
-            if (result.success) {
-                console.log("Game generated successfully!");
-            } else {
-                console.error("Failed to generate game");
-            }
-        } catch (e) {
-            console.error("Error generating game:", e);
-        } finally {
-            setIsGenerating(false);
-        }
+        console.log("Not implemented");
     };
 
     const [showDebug, setShowDebug] = useState(false);
