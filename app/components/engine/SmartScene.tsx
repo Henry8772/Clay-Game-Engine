@@ -48,8 +48,6 @@ export const SmartScene = ({ manifest, onAction, width = 800, height = 600, disp
                 {/* Layer 1: Stage (The Board) */}
                 {/* <StageLayer assets={manifest.layers.stage} width={width} height={height} /> */}
 
-                {/* Layer 3: Juice (VFX) - TODO */}
-
                 {/* Helper for Snapshots */}
                 {onSnapshot && (
                     <SnapshotHelper
