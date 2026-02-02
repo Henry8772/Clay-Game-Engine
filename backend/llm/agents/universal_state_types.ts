@@ -34,14 +34,39 @@ export interface UniversalState {
 }
 
 // BLUEPRINTS (Manifest)
+// BLUEPRINTS (Manifest)
 // Static data that doesn't belong in the State, but is needed for the Frontend/Hydration
+export type MovementType = "walk" | "fly" | "teleport" | "swim";
+export type TargetType = "enemy" | "ally" | "self" | "area" | "empty_tile";
+
+export interface MovementLogic {
+    type: MovementType;
+    range: number;        // e.g. 3 tiles
+    blocking_terrain?: string[]; // e.g. ["wall", "water"]
+}
+
+export interface ActionCapability {
+    name: string;         // e.g. "Attack", "Heal"
+    target_type: TargetType;
+    range: number;
+    area_of_effect?: number; // 0 or 1 = single tile, >1 = burst
+    damage?: number;
+    heal?: number;
+    description?: string;
+}
+
 export interface Blueprint {
     id: string;             // Matches entities[x].t
     name: string;           // Display name
     renderType: "ASSET" | "COMPONENT";
     visualPrompt?: string;  // For image generation (if ASSET)
     description?: string;   // Functional description
-    baseStats?: Record<string, any>; // Static rules/stats (e.g., max_hp, move_pattern)
+
+    // Smart Client Metadata
+    movement?: MovementLogic;
+    capabilities?: ActionCapability[];
+
+    baseStats?: Record<string, any>; // Static rules/stats (e.g., max_hp)
 }
 
 

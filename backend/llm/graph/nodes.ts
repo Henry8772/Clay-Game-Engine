@@ -111,11 +111,13 @@ export const nodeNavMeshGenerator = async (state: GraphState, config?: { configu
 
 // 7. State Generator
 export const nodeStateGenerator = async (state: GraphState, config?: { configurable?: GenerationGraphConfig }) => {
+    const { client } = config?.configurable || {};
+    if (!client) throw new Error("Client not found");
     if (!state.analysisJson) throw new Error("Analysis JSON missing");
     if (!state.navMesh) throw new Error("NavMesh missing");
     if (!state.runId) throw new Error("Run ID missing");
 
-    const finalGameState = runStateAgent(state.analysisJson, state.navMesh, state.runId);
+    const finalGameState = await runStateAgent(client, state.analysisJson, state.navMesh, state.runId);
     await saveRunArtifact(state.runId, "gamestate.json", JSON.stringify(finalGameState, null, 2));
 
     return { finalGameState };
