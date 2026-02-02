@@ -45,11 +45,23 @@ export const GameEntity = ({ id, name, initialX, initialY, color, src, onAction,
             graphics.endFill();
             container.addChild(graphics);
         } else if (src) {
-            const sprite = PIXI.Sprite.from(src);
-            sprite.anchor.set(0.5);
-            // Optional: Scale sprite if needed, or assume src is sized correctly for now
-            // But let's limit size just in case it's huge
-            container.addChild(sprite);
+            // ROBUST ASSET LOADING
+            PIXI.Assets.load(src).then(texture => {
+                if (container.destroyed) return;
+                const sprite = new PIXI.Sprite(texture);
+                sprite.anchor.set(0.5);
+                container.addChild(sprite);
+            }).catch(err => {
+                console.warn(`Failed to load asset: ${src}`, err);
+                if (container.destroyed) return;
+                // Fallback: Red Box
+                const graphics = new PIXI.Graphics();
+                graphics.lineStyle(2, 0xFF0000);
+                graphics.beginFill(0x330000);
+                graphics.drawRect(-30, -30, 60, 60);
+                graphics.endFill();
+                container.addChild(graphics);
+            });
         } else {
             const graphics = new PIXI.Graphics();
             graphics.beginFill(color);
@@ -58,21 +70,10 @@ export const GameEntity = ({ id, name, initialX, initialY, color, src, onAction,
             container.addChild(graphics);
         }
 
-        // 3. Create Text Label (Only in normal mode)
-        if (displayMode === 'normal') {
-            const textStyle = new PIXI.TextStyle({
-                fill: 'white',
-                fontSize: 14,
-                fontFamily: 'Arial',
-                align: 'center',
-                stroke: 'black',
-                strokeThickness: 2
-            });
-            const text = new PIXI.Text(name, textStyle);
-            text.anchor.set(0.5);
-            text.y = src ? 100 : 40; // Adjust label position below image
-            container.addChild(text);
-        }
+        // 3. Removed Text Label (As per user request)
+
+
+
 
         // 4. Interaction Logic
         // 4. Interaction Logic: Click-to-Pickup
@@ -85,7 +86,6 @@ export const GameEntity = ({ id, name, initialX, initialY, color, src, onAction,
                     return;
                 }
                 const newPosition = e.getLocalPosition(container.parent);
-                console.log(`GameEntity ${name}: Dragging to `, newPosition);
 
                 container.x = newPosition.x - pickupOffset.current.x;
                 container.y = newPosition.y - pickupOffset.current.y;

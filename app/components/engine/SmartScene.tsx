@@ -43,7 +43,7 @@ export const SmartScene = ({ manifest, onAction, width = 800, height = 600, disp
                 <ActorLayer assets={manifest.layers.actors} onAction={onAction} displayMode={displayMode} debugZones={debugZones} refreshTrigger={refreshTrigger} />
 
                 {/* Layer 0: Ambience (Background) */}
-                <AmbienceLayer assets={manifest.layers.ambience} width={width} height={height} displayMode={displayMode} />
+                <AmbienceLayer assets={manifest.layers.ambience} width={width} height={height} />
 
                 {/* Layer 1: Stage (The Board) */}
                 {/* <StageLayer assets={manifest.layers.stage} width={width} height={height} /> */}

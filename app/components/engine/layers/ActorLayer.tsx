@@ -31,7 +31,7 @@ export const ActorLayer = ({ assets, onAction, displayMode = 'normal', debugZone
                             label={asset.id}
                             debugColor={asset.color ? parseInt(asset.color.replace('#', '0x')) : 0x333333}
                             displayMode={displayMode}
-                            visible={debugZones}
+                            visible={debugZones || !!asset.config?.highlight}
                         />
                     );
                 } else if (asset.role === 'SPRITE') {

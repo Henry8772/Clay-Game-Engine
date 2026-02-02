@@ -1,8 +1,6 @@
 "use client";
 
 import React, { useState, useMemo, useEffect } from "react";
-// import { Game, INITIAL_STATE, GAME_RULES } from "../generated/game-slot";
-import { BASE_GAME_RULES, SPRITE_RULES } from "../game-rules";
 import { SmartScene } from "../components/engine/SmartScene";
 import { SceneManifest, AssetManifest } from "../components/engine/types";
 import { useGameEngine } from "../hooks/useGameEngine";
@@ -30,7 +28,8 @@ export default function PlayPage() {
 
     // Run Management
     const [availableRuns, setAvailableRuns] = useState<string[]>([]);
-    const [selectedRunId, setSelectedRunId] = useState<string>(""); // Default to empty, will be set by effect
+    const [isLoadingRuns, setIsLoadingRuns] = useState(true);
+    const [selectedRunId, setSelectedRunId] = useState<string>("run_test_real_agents"); // Default to empty, will be set by effect
 
     // Local state for fetched gamestate (Dev workflow)
     const [localGameState, setLocalGameState] = useState<any>(null);
@@ -39,26 +38,54 @@ export default function PlayPage() {
 
     // 1. Fetch Available Runs on Mount
     useEffect(() => {
+        setIsLoadingRuns(true);
         fetch('/api/runs')
             .then(res => res.json())
             .then(data => {
                 if (data.runs && Array.isArray(data.runs)) {
                     setAvailableRuns(data.runs);
-                    // Select the first run if available and none selected
-                    if (data.runs.length > 0 && !selectedRunId) {
-                        // Prefer experiment-3 if it exists for consistency, otherwise first
-                        if (data.runs.includes('experiment-3')) {
-                            setSelectedRunId('experiment-3');
+
+                    // Priority Logic:
+                    // 1. LocalStorage (User preference)
+                    // 2. Hardcoded specific runs (Dev preference)
+                    // 3. First available alpha-sorted
+
+                    let targetRun = "";
+                    const savedRun = localStorage.getItem('gemini_selected_run');
+
+                    if (savedRun && data.runs.includes(savedRun)) {
+                        targetRun = savedRun;
+                    } else {
+                        // Priority: run_test_real_agents -> run_test_real_workflow -> experiment-3 -> First available
+                        if (data.runs.includes('run_test_real_agents')) {
+                            targetRun = 'run_test_real_agents';
+                        } else if (data.runs.includes('run_test_real_workflow')) {
+                            targetRun = 'run_test_real_workflow';
+                        } else if (data.runs.includes('experiment-3')) {
+                            targetRun = 'experiment-3';
                         } else {
-                            setSelectedRunId(data.runs[0]);
+                            targetRun = data.runs[0];
                         }
+                    }
+
+                    // Only update if differnt/empty to avoid unnecessary re-renders or overrides if state was already set (though on mount it shouldn't be)
+                    // We check !selectedRunId to allow for default state if needed, but here we want to enforce the determined logic
+                    if (targetRun) {
+                        setSelectedRunId(targetRun);
                     }
                 }
             })
-            .catch(err => console.error("Failed to fetch runs:", err));
+            .catch(err => console.error("Failed to fetch runs:", err))
+            .finally(() => setIsLoadingRuns(false));
     }, []);
 
-    // 2. Fetch Data when Selected Run Changes
+    // Persist selection
+    useEffect(() => {
+        if (selectedRunId) {
+            localStorage.setItem('gemini_selected_run', selectedRunId);
+        }
+    }, [selectedRunId]);
+
     useEffect(() => {
         console.log("Fetching data for run:", selectedRunId);
         // FETCH WORKFLOW:
@@ -102,15 +129,56 @@ export default function PlayPage() {
         ? convexState
         : (localGameState || FALLBACK_GAMESTATE);
 
+    // Normalize entities to array for rendering and logic
+    const entitiesList = useMemo(() => {
+        if (!currentGameState?.entities) return [];
+        return Array.isArray(currentGameState.entities)
+            ? currentGameState.entities
+            : Object.values(currentGameState.entities);
+    }, [currentGameState]);
+
     console.log("Current Game State:", currentGameState);
 
     const rules = gameStateFromConvex?.rules || "Standard game rules";
     const gameId = gameStateFromConvex?._id;
 
-    // Movement Logic: GOD MODE (Trust User)
-    // We simply track reachable tiles for highlighting, but we allow moving anywhere.
     const [reachableTiles, setReachableTiles] = useState<Set<string>>(new Set());
     const fastMove = useMutation(api.games.fastMove);
+    const resetGame = useMutation(api.games.reset);
+
+    const load_test = async () => {
+        if (!selectedRunId) return;
+        setIsGenerating(true);
+        try {
+            const basePath = `/api/asset-proxy/runs/${selectedRunId}`;
+            const res = await fetch(`${basePath}/gamestate.json`);
+            if (!res.ok) throw new Error("Gamestate missing");
+            const data = await res.json();
+
+            // Handle new ArchitectOutput structure
+            let initialState = data;
+            if (data.initialState) {
+                initialState = data.initialState;
+            }
+
+            // Call Convex Mutation to Reset/Load Game
+            await resetGame({
+                initialState: initialState,
+                rules: "Standard game rules", // Could be loaded from validation.json or similar
+                runId: selectedRunId
+            });
+
+            // Reload page to ensure fresh state? 
+            // Better to let subscriptions handle it, but for now we might want a refresh to clear local React state leftovers if any
+            window.location.reload();
+
+        } catch (e) {
+            console.error("Failed to load test run:", e);
+            alert("Failed to load run: " + selectedRunId);
+        } finally {
+            setIsGenerating(false);
+        }
+    };
 
     // Transform GameState to SceneManifest
     const manifest: SceneManifest = useMemo(() => {
@@ -177,7 +245,7 @@ export default function PlayPage() {
 
         // 3. Actor Layer
         // Map gamestate entities to sprite props
-        const actors = (currentGameState.entities || []).map((entity: any): AssetManifest => {
+        const actors = entitiesList.map((entity: any): AssetManifest => {
             if (!entity) return null as any; // Safe guard
 
             const ymin = entity.pixel_box ? entity.pixel_box[0] : 0;
@@ -211,10 +279,17 @@ export default function PlayPage() {
                 }
             }
 
+            // Construct src with proxy path if needed
+            let finalSrc = entity.src || '/placeholder.png';
+            if (finalSrc && !finalSrc.startsWith('http') && !finalSrc.startsWith('/')) {
+                // If relative path (e.g. "extracted/archer.png"), prepend proxy base
+                finalSrc = `${basePath}/${finalSrc}`;
+            }
+
             return {
                 id: entity.id,
                 role: 'SPRITE',
-                src: entity.src || '/placeholder.png',
+                src: finalSrc,
                 initialState: {
                     x: finalX,
                     y: finalY,
@@ -253,7 +328,6 @@ export default function PlayPage() {
     const { sendAction } = useGameEngine();
 
     const handleAction = async (commandOrEvent: string) => {
-        // console.log("Scene Action:", commandOrEvent);
         try {
             // Check if it's a JSON event from SmartScene
             if (commandOrEvent.startsWith('{')) {
@@ -284,14 +358,14 @@ export default function PlayPage() {
                     let isOccupied = false;
                     let targetUnitName = null;
 
-                    if (targetZone && currentGameState.entities) {
+                    if (targetZone && entitiesList.length > 0) {
                         // Helper to check intersection (duplicated from manifest, simplified)
                         const isInside = (point: { x: number, y: number }, box: number[]) => {
                             const [ymin, xmin, ymax, xmax] = box;
                             return point.x >= xmin && point.x <= xmax && point.y >= ymin && point.y <= ymax;
                         };
 
-                        isOccupied = currentGameState.entities.some((e: any) => {
+                        isOccupied = entitiesList.some((e: any) => {
                             if (e.id === entityId) return false; // Don't check self
                             if (!e.pixel_box) return false;
 
@@ -313,8 +387,11 @@ export default function PlayPage() {
                     if (isOccupied) {
                         // --- SLOW PATH (Interaction/Attack) ---
                         // Trigger LLM Logic
-                        const targetUnitType = currentGameState.entities.find((e: any) => e.label === targetUnitName)?.type;
-                        const targetUnitId = currentGameState.entities.find((e: any) => e.label === targetUnitName)?.id;
+                        // --- SLOW PATH (Interaction/Attack) ---
+                        // Trigger LLM Logic
+                        const targetEntity = entitiesList.find((e: any) => e.label === targetUnitName);
+                        const targetUnitType = targetEntity?.type;
+                        const targetUnitId = targetEntity?.id;
 
                         if (targetUnitType == "unit") {
                             const interactionCommand = `${entity} (id: ${entityId}) attack ${targetUnitName} (id: ${targetUnitId})`;
@@ -404,7 +481,8 @@ export default function PlayPage() {
                         value={selectedRunId}
                         onChange={(e) => setSelectedRunId(e.target.value)}
                     >
-                        {availableRuns.length === 0 && <option value="">Loading runs...</option>}
+                        {isLoadingRuns && <option value="">Loading runs...</option>}
+                        {!isLoadingRuns && availableRuns.length === 0 && <option value="">No runs found</option>}
                         {availableRuns.map(run => (
                             <option key={run} value={run}>{run}</option>
                         ))}
@@ -422,13 +500,10 @@ export default function PlayPage() {
                     <div className="flex items-center gap-2">
                         <button
                             className="px-3 py-1.5 text-xs font-medium text-neutral-400 hover:text-white border border-neutral-800 hover:border-neutral-600 rounded transition-colors"
-                            onClick={async () => {
-                                // Reloads page, which re-triggers fetch for selectedRunId
-                                window.location.reload();
-                            }}
+                            onClick={load_test}
                             disabled={isGenerating}
                         >
-                            Refresh
+                            Load
                         </button>
                         <button
                             className="px-3 py-1.5 text-xs font-medium text-neutral-400 hover:text-white border border-neutral-800 hover:border-neutral-600 rounded transition-colors"
@@ -470,7 +545,7 @@ export default function PlayPage() {
                                     onAction={handleAction}
                                     width={1408}
                                     height={736}
-                                    debugZones={showDebug || reachableTiles.size > 0}
+                                    debugZones={showDebug}
                                     refreshTrigger={refreshTrigger}
                                 />
                             </GameErrorBoundary>
