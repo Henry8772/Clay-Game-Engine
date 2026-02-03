@@ -20,3 +20,16 @@ export const DATA_RUNS_DIR = path.join(BACKEND_ROOT, 'data/runs');
 
 console.log(`[Paths] Backend Root resolved to: ${BACKEND_ROOT}`);
 console.log(`[Paths] Data Runs Dir resolved to: ${DATA_RUNS_DIR}`);
+
+export const getRunDir = (runId: string) => path.join(DATA_RUNS_DIR, runId);
+
+export const saveAsset = async (runId: string, buffer: Buffer, filename: string) => {
+    const runDir = getRunDir(runId);
+    if (!fs.existsSync(runDir)) {
+        await fs.promises.mkdir(runDir, { recursive: true });
+    }
+    const assetPath = path.join(runDir, filename);
+    await fs.promises.writeFile(assetPath, buffer);
+    return filename; // Return relative filename for asset proxy
+};
+

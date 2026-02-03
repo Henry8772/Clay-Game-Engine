@@ -10,7 +10,7 @@ export async function processGameMoveAction(currentState: any, rules: string, co
     console.log("Processing game move:", command);
     try {
         // 1. Get current active game ID if not passed (optional, for safety)
-        const activeGame = await fetchQuery(api.games.get);
+        const activeGame = await fetchQuery(api.games.get, {});
         if (!activeGame) throw new Error("No active game found in DB");
 
         // 1. Validate Turn (Security check)

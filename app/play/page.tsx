@@ -23,7 +23,7 @@ export default function PlayPage() {
     const [isGenerating, setIsGenerating] = useState(false);
 
     // Convex State Management
-    const gameStateFromConvex = useQuery(api.games.get);
+    const gameStateFromConvex = useQuery(api.games.get, {});
 
     // Derived State
     const convexState = gameStateFromConvex?.state;
@@ -87,7 +87,7 @@ export default function PlayPage() {
 
     // Fallback logic: Convex -> Empty
     const currentGameState = convexState || FALLBACK_GAMESTATE;
-    const assets = currentGameState?.meta?.assets || {};
+    const assets = currentGameState?.meta?.vars || {};
 
     useEffect(() => {
         const basePath = `/api/asset-proxy/runs/${selectedRunId}`;
