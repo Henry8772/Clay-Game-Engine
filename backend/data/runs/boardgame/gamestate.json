@@ -8,6 +8,182 @@
       "version": "2.0",
       "vars": {}
     },
+    "blueprints": {
+      "tpl_goblin_archer_card": {
+        "label": "Goblin Archer Card",
+        "type": "item",
+        "team": "blue",
+        "src": "extracted/goblin_archer_card.png",
+        "spawns": "tpl_goblin_archer_miniature"
+      },
+      "tpl_goblin_archer_miniature": {
+        "label": "Goblin Archer",
+        "type": "unit",
+        "src": "extracted/goblin_archer_miniature.png"
+      },
+      "tpl_orc_grunt_card": {
+        "label": "Orc Grunt Card",
+        "type": "item",
+        "team": "neutral",
+        "src": "extracted/orc_grunt_card.png",
+        "spawns": "tpl_orc_grunt_miniature"
+      },
+      "tpl_orc_grunt_miniature": {
+        "label": "Orc Grunt",
+        "type": "unit",
+        "src": "extracted/orc_grunt_miniature.png"
+      },
+      "tpl_necromancer_card": {
+        "label": "Necromancer Card",
+        "type": "item",
+        "team": "neutral",
+        "src": "extracted/necromancer_card.png",
+        "spawns": "tpl_necromancer_miniature"
+      },
+      "tpl_necromancer_miniature": {
+        "label": "Necromancer",
+        "type": "unit",
+        "src": "extracted/necromancer_miniature.png"
+      },
+      "tpl_stone_golem_card": {
+        "label": "Stone Golem Card",
+        "type": "item",
+        "team": "neutral",
+        "src": "extracted/stone_golem_card.png",
+        "spawns": "tpl_stone_golem_miniature"
+      },
+      "tpl_stone_golem_miniature": {
+        "label": "Stone Golem",
+        "type": "unit",
+        "src": "extracted/stone_golem_miniature.png"
+      },
+      "tpl_spirit_card": {
+        "label": "Spirit Card",
+        "type": "item",
+        "team": "neutral",
+        "src": "extracted/spirit_card.png",
+        "spawns": "tpl_spirit_miniature"
+      },
+      "tpl_spirit_miniature": {
+        "label": "Spirit",
+        "type": "unit",
+        "src": "extracted/spirit_miniature.png"
+      },
+      "tpl_goblin_miniature": {
+        "label": "Goblin",
+        "type": "unit",
+        "team": "neutral",
+        "src": "extracted/goblin_miniature.png"
+      },
+      "tpl_orc_warrior_miniature": {
+        "label": "Orc Warrior",
+        "type": "unit",
+        "team": "neutral",
+        "src": "extracted/orc_warrior_miniature.png"
+      },
+      "tpl_skeleton_miniature": {
+        "label": "Skeleton",
+        "type": "unit",
+        "team": "red",
+        "src": "extracted/skeleton_miniature.png"
+      },
+      "tpl_ghost_miniature": {
+        "label": "Ghost",
+        "type": "unit",
+        "team": "neutral",
+        "src": "extracted/ghost_miniature.png"
+      },
+      "tpl_black_guard_card": {
+        "label": "Black Guard Card",
+        "type": "item",
+        "team": "neutral",
+        "src": "extracted/black_guard_card.png",
+        "spawns": "tpl_black_guard_miniature"
+      },
+      "tpl_black_guard_miniature": {
+        "label": "Black Guard",
+        "type": "unit",
+        "src": "extracted/black_guard_miniature.png"
+      },
+      "tpl_dwarf_fighter_card": {
+        "label": "Dwarf Fighter Card",
+        "type": "item",
+        "team": "neutral",
+        "src": "extracted/dwarf_fighter_card.png",
+        "spawns": "tpl_dwarf_fighter_miniature"
+      },
+      "tpl_dwarf_fighter_miniature": {
+        "label": "Dwarf Fighter",
+        "type": "unit",
+        "src": "extracted/dwarf_fighter_miniature.png"
+      },
+      "tpl_blue_wizard_card": {
+        "label": "Blue Wizard Card",
+        "type": "item",
+        "team": "blue",
+        "src": "extracted/blue_wizard_card.png",
+        "spawns": "tpl_blue_wizard_miniature"
+      },
+      "tpl_blue_wizard_miniature": {
+        "label": "Blue Wizard",
+        "type": "unit",
+        "src": "extracted/blue_wizard_miniature.png"
+      },
+      "tpl_ranger_card": {
+        "label": "Ranger Card",
+        "type": "item",
+        "team": "neutral",
+        "src": "extracted/ranger_card.png",
+        "spawns": "tpl_ranger_miniature"
+      },
+      "tpl_ranger_miniature": {
+        "label": "Ranger",
+        "type": "unit",
+        "src": "extracted/ranger_miniature.png"
+      },
+      "tpl_militia_card": {
+        "label": "Militia Card",
+        "type": "item",
+        "team": "neutral",
+        "src": "extracted/militia_card.png",
+        "spawns": "tpl_militia_miniature"
+      },
+      "tpl_militia_miniature": {
+        "label": "Militia",
+        "type": "unit",
+        "src": "extracted/militia_miniature.png"
+      },
+      "tpl_dark_knight_miniature": {
+        "label": "Dark Knight",
+        "type": "unit",
+        "team": "blue",
+        "src": "extracted/dark_knight_miniature.png"
+      },
+      "tpl_dwarf_miniature": {
+        "label": "Dwarf",
+        "type": "unit",
+        "team": "neutral",
+        "src": "extracted/dwarf_miniature.png"
+      },
+      "tpl_human_warrior_miniature": {
+        "label": "Human Warrior",
+        "type": "unit",
+        "team": "neutral",
+        "src": "extracted/human_warrior_miniature.png"
+      },
+      "tpl_elf_ranger_miniature": {
+        "label": "Elf Ranger",
+        "type": "unit",
+        "team": "neutral",
+        "src": "extracted/elf_ranger_miniature.png"
+      },
+      "tpl_soldier_miniature": {
+        "label": "Soldier",
+        "type": "unit",
+        "team": "neutral",
+        "src": "extracted/soldier_miniature.png"
+      }
+    },
     "entities": {
       "entity_0": {
         "id": "entity_0",
@@ -522,5 +698,13 @@
       }
     ]
   },
-  "rules": "Standard Skirmish Rules"
+  "rules": "Standard Skirmish Rules",
+  "engine_tools": [
+    "1. MOVE(entityId, toZoneId) -> Teleport a unit.",
+    "2. SPAWN(templateId, toZoneId, owner) -> Create a new unit from a card/template.",
+    "3. ATTACK(attackerId, targetId, damage) -> Deal damage and play animation.",
+    "4. DESTROY(entityId) -> Remove an entity (e.g. card used, unit dead).",
+    "5. NARRATE(message) -> Show text to the user."
+  ],
+  "engine_logic": "1. **Card Play:** If user draws a CARD to the BOARD -> DESTROY the card, then SPAWN the corresponding unit at that location.\n2. **Movement:** If user drags a UNIT to a TILE -> MOVE the unit.\n3. **Attack:** If user drags a UNIT to an ENEMY -> ATTACK the enemy (and usually don't move the attacker)."
 }

@@ -20,6 +20,8 @@ export const reset = mutation({
         initialState: v.any(),
         rules: v.string(),
         runId: v.optional(v.string()), // <--- NEW
+        engine_tools: v.optional(v.any()), // <--- NEW
+        engine_logic: v.optional(v.string()), // <--- NEW
         status: v.optional(v.string()), // <--- NEW
         progress: v.optional(v.string()) // <--- NEW
     },
@@ -43,6 +45,8 @@ export const reset = mutation({
             rules: args.rules,
             isActive: true,
             runId: args.runId, // <--- NEW
+            engine_tools: args.engine_tools,
+            engine_logic: args.engine_logic,
             status: args.status || "playing", // Default to playing if not specified (legacy resets)
             progress: args.progress,
         });

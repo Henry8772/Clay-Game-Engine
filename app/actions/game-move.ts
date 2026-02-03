@@ -22,7 +22,15 @@ export async function processGameMoveAction(currentState: any, rules: string, co
 
 
         // Instantiate Engine with Current State
-        const engine = new GameEngine(currentState, rules, client, navMesh);
+        const engine = new GameEngine(
+            currentState,
+            rules,
+            client,
+            navMesh,
+            false,
+            activeGame.engine_tools,
+            activeGame.engine_logic // <--- NEW
+        );
 
         // 3. Process Move
         const result = await engine.processCommand(command);
@@ -39,32 +47,32 @@ export async function processGameMoveAction(currentState: any, rules: string, co
         }
 
         // 4. Enemy AI Turn (Only if user move was valid AND navMesh exists)
-        if (result.isValid && result.newState && navMesh) {
-            console.log("Triggering Enemy AI turn...");
-            const { generateEnemyMove } = await import("../../backend/llm/agents/enemy_ai");
+        // if (result.isValid && result.newState && navMesh) {
+        //     console.log("Triggering Enemy AI turn...");
+        //     const { generateEnemyMove } = await import("../../backend/llm/agents/enemy_ai");
 
-            // AI THINKS
-            // We use the NEW state from the user's move
-            const aiDecision = await generateEnemyMove(client, result.newState, rules, navMesh);
-            console.log("Enemy AI Decision:", aiDecision);
+        //     // AI THINKS
+        //     // We use the NEW state from the user's move
+        //     const aiDecision = await generateEnemyMove(client, result.newState, rules, navMesh);
+        //     console.log("Enemy AI Decision:", aiDecision);
 
-            // AI MOVES (Via Engine)
-            // We need to update the engine's state first (it already is updated internally, but new instance needed?)
-            // Actually `engine` instance has the updated state in `engine.getState()`. It is persistent in memory for this function scope.
+        //     // AI MOVES (Via Engine)
+        //     // We need to update the engine's state first (it already is updated internally, but new instance needed?)
+        //     // Actually `engine` instance has the updated state in `engine.getState()`. It is persistent in memory for this function scope.
 
-            const aiMoveResult = await engine.processCommand(aiDecision.command);
+        //     const aiMoveResult = await engine.processCommand(aiDecision.command);
 
-            if (aiMoveResult.newState) {
-                // Persist Enemy Move
-                await fetchMutation(api.games.updateState, {
-                    gameId: activeGame._id,
-                    newState: aiMoveResult.newState,
-                    summary: `[RED TURN] ${aiDecision.reasoning}\nRef: ${aiMoveResult.summary}`,
-                    role: "agent",
-                    command: `(AI) ${aiDecision.command}`
-                });
-            }
-        }
+        //     if (aiMoveResult.newState) {
+        //         // Persist Enemy Move
+        //         await fetchMutation(api.games.updateState, {
+        //             gameId: activeGame._id,
+        //             newState: aiMoveResult.newState,
+        //             summary: `[RED TURN] ${aiDecision.reasoning}\nRef: ${aiMoveResult.summary}`,
+        //             role: "agent",
+        //             command: `(AI) ${aiDecision.command}`
+        //         });
+        //     }
+        // }
 
         return {
             success: true,

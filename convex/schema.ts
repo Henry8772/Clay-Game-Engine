@@ -5,6 +5,8 @@ export default defineSchema({
     games: defineTable({
         state: v.any(), // The JSON game state object
         rules: v.string(), // Natural language rules
+        engine_tools: v.optional(v.any()), // Dynamic tool definitions
+        engine_logic: v.optional(v.string()), // Dynamic logic guide
         history: v.optional(v.array(v.object({ role: v.string(), content: v.string() }))), // Deprecated
         isActive: v.boolean(),
         runId: v.optional(v.string()), // <--- NEW: Link to backend/data/runs/{runId}
