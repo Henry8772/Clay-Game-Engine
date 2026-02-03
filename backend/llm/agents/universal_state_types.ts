@@ -31,6 +31,7 @@ export interface UniversalState {
     };
     zones: Record<string, Zone>;
     entities: Record<string, Entity>;
+    blueprints?: Record<string, Blueprint>;
 }
 
 // BLUEPRINTS (Manifest)

@@ -9,15 +9,22 @@ export class GameEngine {
     private llmClient: LLMClient;
     private navMesh: any[]; // Optional, for hybrid logic
     private useMock: boolean;
+    private blueprints: Record<string, any>; // Add field
 
     constructor(
         initialState: UniversalState,
         rules: string,
         llmClient: LLMClient,
         navMesh: any[] = [],
-        useMock: boolean = false
+        useMock: boolean = false,
+        private engineTools: string[] = [],
+        private engineLogic: string = ""
     ) {
         this.state = JSON.parse(JSON.stringify(initialState)); // Deep copy to own state
+        // Extract blueprints from state
+        // @ts-ignore
+        this.blueprints = this.state.blueprints || {};
+
         this.rules = rules;
         this.llmClient = llmClient;
         this.navMesh = navMesh;
@@ -38,7 +45,9 @@ export class GameEngine {
             this.llmClient,
             this.state,
             this.rules,
-            command
+            command,
+            this.engineTools,
+            this.engineLogic
         );
 
         // 3. Apply Tools
@@ -75,7 +84,9 @@ export class GameEngine {
             this.llmClient,
             this.state,
             this.rules,
-            command
+            command,
+            this.engineTools,
+            this.engineLogic
         );
 
         const { newState, logs } = this.applyTools(tools);
@@ -124,17 +135,35 @@ export class GameEngine {
                     const { templateId, toZoneId, owner } = tool.args as any;
                     const newId = `spawn_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
 
+                    // 1. BLUEPRINT LOOKUP
+                    const bp = this.blueprints[templateId];
+
+                    if (!bp) {
+                        console.warn(`[Engine] Missing blueprint for ${templateId}. Falling back to defaults.`);
+                    }
+
+                    // 2. CONSTRUCT INSTANCE
+                    // We only store dynamic data. Static data stays in blueprints.
+                    // However, for the frontend to render 'src' and 'label', 
+                    // we currently copy it (easiest for now) OR the frontend must also have blueprints.
+                    // Let's copy it to keep frontend simple for this MVP.
+
                     // @ts-ignore
                     this.state.entities[newId] = {
                         id: newId,
                         t: templateId,
-                        label: templateId.replace('tpl_', ''),
-                        type: 'unit',
+                        // Hydrate from BP or Fallback
+                        label: bp?.label || templateId,
+                        type: bp?.type || 'unit',
                         team: owner === 'player' ? 'blue' : 'red',
-                        src: 'extracted/figure.png', // Placeholder
-                        pixel_box: this.getZoneCoords(toZoneId)
+                        // Hydrate Source
+                        src: bp?.src || `extracted/${templateId.replace('tpl_', '')}.png`,
+                        // Calculate Position
+                        pixel_box: this.getZoneCoords(toZoneId),
+                        location: toZoneId
                     };
-                    logs.push(`Spawned ${templateId} at ${toZoneId}`);
+
+                    logs.push(`Spawned ${bp?.label || templateId} at ${toZoneId}`);
                     break;
                 }
 

@@ -110,12 +110,26 @@ export default function PlayPage() {
     // Fallback logic: Convex -> Empty
     const currentGameState = convexState || FALLBACK_GAMESTATE;
 
-    // Normalize entities to array for rendering and logic
+    // Normalize entities AND Hydrate from Blueprints
     const entitiesList = useMemo(() => {
         if (!currentGameState?.entities) return [];
-        return Array.isArray(currentGameState.entities)
+
+        const rawEntities = Array.isArray(currentGameState.entities)
             ? currentGameState.entities
             : Object.values(currentGameState.entities);
+
+        const blueprints = currentGameState.blueprints || {};
+
+        return rawEntities.map((e: any) => {
+            // If the entity is missing data, try to fill it from blueprint
+            const bp = blueprints[e.t];
+            return {
+                ...e,
+                label: e.label || bp?.label || e.id,
+                src: e.src || bp?.src || '/placeholder.png', // Fallback
+                type: e.type || bp?.type
+            };
+        });
     }, [currentGameState]);
 
     const rules = gameStateFromConvex?.rules || "Standard game rules";
@@ -157,8 +171,10 @@ export default function PlayPage() {
             console.log(`[CLIENT LOAD] Sending content to Convex for run ${selectedRunId}:`, initialState);
             await resetGame({
                 initialState: initialState,
-                rules: "Standard game rules", // Could be loaded from validation.json or similar
-                runId: selectedRunId
+                rules: data.rules || "Standard game rules",
+                runId: selectedRunId,
+                engine_tools: data.engine_tools,
+                engine_logic: data.engine_logic
             });
 
             // Reset local UI state
@@ -208,14 +224,13 @@ export default function PlayPage() {
             const h = ymax - ymin;
 
             // Ensure unique ID even if labels repeat (e.g. multiple 'sidebar_slot')
-            const uniqueId = `${zone.label}_${index}`;
             const label = zone.label;
 
             // Highlight Logic
             const isReachable = reachableTiles.has(label);
 
             return {
-                id: uniqueId,
+                id: zone.label,
                 role: 'ZONE',
                 color: isReachable ? '#00FFFF' : '#00FF00', // Cyan if reachable
                 config: {
@@ -338,28 +353,26 @@ export default function PlayPage() {
                 if (event.type === 'MOVE') {
                     setReachableTiles(new Set()); // Clear highlights
 
-                    const { entity, entityId, to } = event;
-                    if (!to || to === event.from) {
-                        console.log("Move cancelled or dropped on same tile.");
-                        setRefreshTrigger(p => p + 1); // Ensure revert if dragged but dropped on same
-                        return;
-                    }
+                    const { entityId, to } = event;
 
-                    // 1. Construct Natural Language Command
-                    // We need to fetch the entity label/type to make a good sentence
-                    const currentEntity = entitiesList.find((e: any) => e.id === entityId);
-                    const entityLabel = currentEntity?.label || entityId;
+                    // Find the entity locally to check its type (Card vs Unit)
+                    const entity = entitiesList.find((e: any) => e.id === entityId);
 
-                    let command = "";
-                    if (currentEntity?.type === 'card') {
-                        command = `Play card ${entityLabel} on ${to}`;
-                    } else {
-                        command = `Move ${entityLabel} to ${to}`;
-                    }
+                    if (!entity || !to) return;
+
+                    // VERB SELECTION
+                    // Be explicit so the LLM doesn't have to guess the intent
+                    const verb = entity.type === 'prop' || entity.label.toLowerCase().includes('card')
+                        ? "PLAY_CARD"
+                        : "MOVE_UNIT";
+
+                    // ROBUST COMMAND FORMAT
+                    // "ACTION: PLAY_CARD entity entity_14 (Militia Card) TARGETING tile_r4_c3_23"
+                    const command = `ACTION: ${verb} entity ${entityId} (${entity.label}) TARGETING ${to}`;
 
                     // 2. Call Server Action (The Brain)
                     const { processGameMoveAction } = await import("../actions/game-move"); // Dynamic import to avoid server-client issues if any
-                    const result = await processGameMoveAction(currentGameState, rules as string, command, navMesh); // Pass navMesh if needed by server for resolving coordinates? Actually server usually just needs graph.
+                    const result = await processGameMoveAction(currentGameState, rules as string, command, navMesh);
 
                     if (result.success) {
                         result.logs?.forEach(log => console.log("GAME LOG:", log));
