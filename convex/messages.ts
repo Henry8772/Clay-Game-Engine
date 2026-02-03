@@ -19,12 +19,14 @@ export const send = mutation({
         gameId: v.id("games"),
         role: v.string(),
         content: v.string(),
+        type: v.optional(v.string()),
     },
     handler: async (ctx, args) => {
         await ctx.db.insert("messages", {
             gameId: args.gameId,
             role: args.role,
             content: args.content,
+            type: args.type || "chat",
             timestamp: Date.now(),
         });
     },
