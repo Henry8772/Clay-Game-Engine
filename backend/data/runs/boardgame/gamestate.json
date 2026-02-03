@@ -19,7 +19,7 @@
       "tpl_goblin_archer_miniature": {
         "label": "Goblin Archer",
         "type": "unit",
-        "src": "extracted/goblin_archer_miniature.png"
+        "src": "extracted/goblin_miniature.png"
       },
       "tpl_orc_grunt_card": {
         "label": "Orc Grunt Card",
@@ -31,7 +31,7 @@
       "tpl_orc_grunt_miniature": {
         "label": "Orc Grunt",
         "type": "unit",
-        "src": "extracted/orc_grunt_miniature.png"
+        "src": "extracted/orc_warrior_miniature.png"
       },
       "tpl_necromancer_card": {
         "label": "Necromancer Card",
@@ -43,7 +43,7 @@
       "tpl_necromancer_miniature": {
         "label": "Necromancer",
         "type": "unit",
-        "src": "extracted/necromancer_miniature.png"
+        "src": "extracted/skeleton_miniature.png"
       },
       "tpl_stone_golem_card": {
         "label": "Stone Golem Card",
@@ -67,7 +67,7 @@
       "tpl_spirit_miniature": {
         "label": "Spirit",
         "type": "unit",
-        "src": "extracted/spirit_miniature.png"
+        "src": "extracted/ghost_miniature.png"
       },
       "tpl_goblin_miniature": {
         "label": "Goblin",
@@ -103,7 +103,7 @@
       "tpl_black_guard_miniature": {
         "label": "Black Guard",
         "type": "unit",
-        "src": "extracted/black_guard_miniature.png"
+        "src": "extracted/dark_knight_miniature.png"
       },
       "tpl_dwarf_fighter_card": {
         "label": "Dwarf Fighter Card",
@@ -115,7 +115,7 @@
       "tpl_dwarf_fighter_miniature": {
         "label": "Dwarf Fighter",
         "type": "unit",
-        "src": "extracted/dwarf_fighter_miniature.png"
+        "src": "extracted/dwarf_miniature.png"
       },
       "tpl_blue_wizard_card": {
         "label": "Blue Wizard Card",
@@ -127,7 +127,7 @@
       "tpl_blue_wizard_miniature": {
         "label": "Blue Wizard",
         "type": "unit",
-        "src": "extracted/blue_wizard_miniature.png"
+        "src": "extracted/dwarf_miniature.png"
       },
       "tpl_ranger_card": {
         "label": "Ranger Card",
@@ -139,7 +139,7 @@
       "tpl_ranger_miniature": {
         "label": "Ranger",
         "type": "unit",
-        "src": "extracted/ranger_miniature.png"
+        "src": "extracted/elf_ranger_miniature.png"
       },
       "tpl_militia_card": {
         "label": "Militia Card",
@@ -151,7 +151,7 @@
       "tpl_militia_miniature": {
         "label": "Militia",
         "type": "unit",
-        "src": "extracted/militia_miniature.png"
+        "src": "extracted/soldier_miniature.png"
       },
       "tpl_dark_knight_miniature": {
         "label": "Dark Knight",
