@@ -8,8 +8,9 @@ export const listSystem = query({
     handler: async (ctx, args) => {
         if (!args.gameId) return [];
         return await ctx.db
-            .query("system_events")
+            .query("messages")
             .withIndex("by_gameId", (q) => q.eq("gameId", args.gameId!))
+            .filter(q => q.eq(q.field("type"), "system"))
             .order("desc") // Newest first for logs usually
             .take(100);
     },
@@ -19,13 +20,16 @@ export const logSystem = mutation({
     args: {
         gameId: v.id("games"),
         content: v.string(),
-        type: v.optional(v.string()),
+        type: v.optional(v.string()), // "info", "warning", "error" kept as subtype or just part of content? 
+        // Schema update: "data" field could store the subtype.
     },
     handler: async (ctx, args) => {
-        await ctx.db.insert("system_events", {
+        await ctx.db.insert("messages", {
             gameId: args.gameId,
+            role: "system",
+            type: "system",
             content: args.content,
-            type: args.type,
+            data: { subType: args.type },
             timestamp: Date.now(),
         });
     },
@@ -38,8 +42,9 @@ export const listBattle = query({
     handler: async (ctx, args) => {
         if (!args.gameId) return [];
         return await ctx.db
-            .query("battle_events")
+            .query("messages")
             .withIndex("by_gameId", (q) => q.eq("gameId", args.gameId!))
+            .filter(q => q.eq(q.field("type"), "battle"))
             .order("desc")
             .take(100);
     },
@@ -52,10 +57,12 @@ export const logBattle = mutation({
         relatedEntityId: v.optional(v.string()),
     },
     handler: async (ctx, args) => {
-        await ctx.db.insert("battle_events", {
+        await ctx.db.insert("messages", {
             gameId: args.gameId,
+            role: "system",
+            type: "battle",
             content: args.content,
-            relatedEntityId: args.relatedEntityId,
+            data: { relatedEntityId: args.relatedEntityId },
             timestamp: Date.now(),
         });
     },
@@ -64,10 +71,7 @@ export const logBattle = mutation({
 export const clearAll = mutation({
     args: { gameId: v.id("games") },
     handler: async (ctx, args) => {
-        const sys = await ctx.db.query("system_events").withIndex("by_gameId", q => q.eq("gameId", args.gameId)).collect();
-        for (const s of sys) await ctx.db.delete(s._id);
-
-        const bat = await ctx.db.query("battle_events").withIndex("by_gameId", q => q.eq("gameId", args.gameId)).collect();
-        for (const b of bat) await ctx.db.delete(b._id);
+        const msgs = await ctx.db.query("messages").withIndex("by_gameId", q => q.eq("gameId", args.gameId)).collect();
+        for (const m of msgs) await ctx.db.delete(m._id);
     }
 });

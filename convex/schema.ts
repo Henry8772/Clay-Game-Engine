@@ -16,19 +16,9 @@ export default defineSchema({
     messages: defineTable({
         gameId: v.id("games"),
         role: v.string(), // "user", "agent", "system"
+        type: v.optional(v.string()), // "chat", "system", "battle" - defaults to "chat" if undefined
         content: v.string(),
         timestamp: v.number(),
-    }).index("by_gameId", ["gameId"]),
-    system_events: defineTable({
-        gameId: v.id("games"),
-        content: v.string(), // The log message
-        type: v.optional(v.string()), // e.g. "info", "warning", "error"
-        timestamp: v.number(),
-    }).index("by_gameId", ["gameId"]),
-    battle_events: defineTable({
-        gameId: v.id("games"),
-        content: v.string(),
-        relatedEntityId: v.optional(v.string()), // Optional: link to specific entity log
-        timestamp: v.number(),
+        data: v.optional(v.any()), // Extra data for specialized logs (e.g. relatedEntityId)
     }).index("by_gameId", ["gameId"]),
 });

@@ -75,6 +75,7 @@ export const updateState = mutation({
                 gameId: args.gameId,
                 role: "user",
                 content: args.command,
+                type: "chat",
                 timestamp: Date.now() - 1 // ensure slightly before agent
             });
         }
@@ -84,6 +85,7 @@ export const updateState = mutation({
             gameId: args.gameId,
             role: "agent",
             content: args.summary,
+            type: "chat",
             timestamp: Date.now()
         });
 
