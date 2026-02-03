@@ -148,3 +148,15 @@ export const updateStatus = mutation({
         });
     }
 });
+
+export const debugUpdateState = mutation({
+    args: {
+        gameId: v.id("games"),
+        newState: v.any(),
+    },
+    handler: async (ctx, args) => {
+        await ctx.db.patch(args.gameId, {
+            state: args.newState,
+        });
+    }
+});
