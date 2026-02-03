@@ -1,16 +1,17 @@
 "use client";
 
 import * as PIXI from 'pixi.js';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { usePixiApp } from '../test/PixiStage';
 import { useCollision } from '../test/CollisionSystem';
 import { lerp, clamp } from '../../hooks/useGamePhysics';
 import { useFX } from './FXSystem';
+
 interface GameSpriteProps {
     id: string;
     name: string;
-    initialX: number; // Logical/Grid X
-    initialY: number; // Logical/Grid Y
+    initialX: number;
+    initialY: number;
     color: string | number;
     src?: string;
     onAction: (command: string) => void;
@@ -20,11 +21,11 @@ interface GameSpriteProps {
 }
 
 // Visual Constants
-const LERP_FACTOR = 0.25; // 25% catchup per frame (Quick but weighty)
-const MAX_TILT = 0.15; // Radians
-const VELOCITY_TILT_MODIFIER = 0.005; // Strength of tilt
+const LERP_FACTOR = 0.25;
+const MAX_TILT = 0.15;
+const VELOCITY_TILT_MODIFIER = 0.005;
 const HOVER_SCALE = 1.15;
-const HOVER_Y_OFFSET = -10; // "Lift" up visually
+const HOVER_Y_OFFSET = -10;
 const SHADOW_OFFSET_X = 0;
 const SHADOW_OFFSET_Y = 20;
 
@@ -34,12 +35,8 @@ export const GameSprite = ({ id, name, initialX, initialY, color, src, onAction,
     const { shake } = useFX();
 
     // -- Physics State Refs --
-    // We use refs for physics loop to avoid React re-renders on every frame (60fps)
     const renderPos = useRef({ x: initialX, y: initialY });
-    const targetPos = useRef({ x: initialX, y: initialY }); // Where we WANT to be
-    const velocity = useRef({ x: 0, y: 0 });
-
-    // -- Interaction State --
+    const targetPos = useRef({ x: initialX, y: initialY });
     const isHeld = useRef(false);
     const pickupOffset = useRef({ x: 0, y: 0 });
     const dragStartZone = useRef<string | null>(null);
@@ -48,9 +45,8 @@ export const GameSprite = ({ id, name, initialX, initialY, color, src, onAction,
     const containerRef = useRef<PIXI.Container | null>(null);
     const spriteRef = useRef<PIXI.Sprite | null>(null);
     const shadowRef = useRef<PIXI.Graphics | null>(null);
-    const contentRef = useRef<PIXI.Container | null>(null); // Holds the sprite/shape for scaling/tilting independent of shadow
+    const contentRef = useRef<PIXI.Container | null>(null);
 
-    // -- Setup & Heartbeat --
     useEffect(() => {
         if (!app || !stage) return;
 
@@ -61,24 +57,24 @@ export const GameSprite = ({ id, name, initialX, initialY, color, src, onAction,
         container.zIndex = 2;
         container.sortableChildren = true;
 
-        // Shadow (Rendered FIRST so it's behind)
+        // Shadow
         const shadow = new PIXI.Graphics();
-        shadow.beginFill(0x000000, 0.3); // Black, 30% opacity
+        shadow.beginFill(0x000000, 0.3);
         shadow.drawEllipse(0, 0, 25, 10);
         shadow.endFill();
         shadow.filters = [new PIXI.BlurFilter(5)];
-        shadow.y = 0; // Starts at base
-        shadow.alpha = 0; // Hidden by default (Idle)
+        shadow.y = 0;
+        shadow.alpha = 0;
         container.addChild(shadow);
         shadowRef.current = shadow;
 
-        // Content Container (The thing that moves/tilts)
+        // Content Container
         const content = new PIXI.Container();
         content.zIndex = 1;
         container.addChild(content);
         contentRef.current = content;
 
-        // Visuals (Sprite or Fallback)
+        // Visuals
         if (displayMode === 'mask') {
             const graphics = new PIXI.Graphics();
             graphics.beginFill(color);
@@ -89,12 +85,28 @@ export const GameSprite = ({ id, name, initialX, initialY, color, src, onAction,
             PIXI.Assets.load(src).then(texture => {
                 if (content.destroyed) return;
                 const sprite = new PIXI.Sprite(texture);
-                sprite.anchor.set(0.5, 0.5); // Center anchor for rotation
-                sprite.height = 100; // Constrain for safety if needed, or rely on texture
-                sprite.width = 100 * (texture.width / texture.height);
-                // Alternatively, just trust the texture size or use config
-                if (config?.width) sprite.width = config.width;
-                if (config?.height) sprite.height = config.height;
+                sprite.anchor.set(0.5, 0.5);
+
+                // --- FIX STARTS HERE ---
+
+                // 1. Check for Explicit Scale in Config (This is what you are sending from PlayPage)
+                if (config?.scale) {
+                    if (typeof config.scale === 'object') {
+                        // Handle {x: 0.25, y: 0.25}
+                        sprite.scale.set(config.scale.x, config.scale.y);
+                    } else if (typeof config.scale === 'number') {
+                        // Handle single number 0.25
+                        sprite.scale.set(config.scale);
+                    }
+                }
+                // 2. Fallback to explicit Width/Height if provided
+                else if (config?.width && config?.height) {
+                    sprite.width = config.width;
+                    sprite.height = config.height;
+                }
+                // 3. Otherwise, do nothing. Leave it at native texture size (1:1)
+
+                // --- FIX ENDS HERE ---
 
                 content.addChild(sprite);
                 spriteRef.current = sprite;
@@ -108,7 +120,6 @@ export const GameSprite = ({ id, name, initialX, initialY, color, src, onAction,
                 content.addChild(graphics);
             });
         } else {
-            // Fallback Circle
             const graphics = new PIXI.Graphics();
             graphics.beginFill(color);
             graphics.drawCircle(0, 0, 30);
@@ -120,18 +131,11 @@ export const GameSprite = ({ id, name, initialX, initialY, color, src, onAction,
         container.eventMode = 'static';
         container.cursor = 'pointer';
 
-        // Register Entity for Collision
         registerEntity(id, { id, container, role: 'SPRITE' });
 
         // 2. The Physics Loop (Ticker)
         const updateTicker = (delta: number) => {
             if (container.destroyed) return;
-
-            // A. Calculate Position (Lerp)
-            // We lerp the CONTAINER's coordinates to the TARGET coordinates
-            // Actually, usually in drag-n-drop, the mouse sets the position 1:1 for responsiveness,
-            // but for "weight", we can lerp.
-            // Let's Lerp the renderPos towards targetPos
 
             const lastX = renderPos.current.x;
             const newX = lerp(renderPos.current.x, targetPos.current.x, LERP_FACTOR);
@@ -141,77 +145,53 @@ export const GameSprite = ({ id, name, initialX, initialY, color, src, onAction,
             container.x = newX;
             container.y = newY;
 
-            // B. Calculate Velocity
             const velX = newX - lastX;
-            // velocity.current = { x: velX, y: newY - lastY };
 
-            // C. Apply Tilt (Based on X velocity)
+            // Apply Tilt
             if (content) {
                 const targetRotation = clamp(velX * VELOCITY_TILT_MODIFIER, -MAX_TILT, MAX_TILT);
-                // Smoothly lerp rotation too for extra juice
                 content.rotation = lerp(content.rotation, targetRotation, 0.2);
             }
 
-            // D. Visual State Logic
+            // Visual State Logic
             if (isHeld.current) {
                 // HOVER STATE
-                // Scale up smoothly
+                // Note: We modify content.scale here for the "Pop" effect.
+                // This Multiplies with the base sprite scale set above.
                 content.scale.x = lerp(content.scale.x, HOVER_SCALE, 0.2);
                 content.scale.y = lerp(content.scale.y, HOVER_SCALE, 0.2);
-
-                // Lift content up
                 content.y = lerp(content.y, HOVER_Y_OFFSET, 0.2);
 
-                // Show Shadow and move it down (to ground level relative to lifted content)
                 shadow.alpha = lerp(shadow.alpha, 0.6, 0.1);
-                shadow.scale.x = lerp(shadow.scale.x, 0.8, 0.1); // Shadow gets smaller as object goes up
+                shadow.scale.x = lerp(shadow.scale.x, 0.8, 0.1);
                 shadow.scale.y = lerp(shadow.scale.y, 0.8, 0.1);
-                shadow.y = SHADOW_OFFSET_Y; // Keep shadow on "ground"
-                container.zIndex = 100; // Float above all
+                shadow.y = SHADOW_OFFSET_Y;
+                container.zIndex = 100;
             } else {
                 // IDLE STATE
-                // Reset Scale
                 content.scale.x = lerp(content.scale.x, 1.0, 0.2);
                 content.scale.y = lerp(content.scale.y, 1.0, 0.2);
-
-                // Content settles back to 0
                 content.y = lerp(content.y, 0, 0.2);
 
-                // Hide shadow
                 shadow.alpha = lerp(shadow.alpha, 0, 0.2);
                 shadow.y = 0;
-                container.zIndex = 2; // Back to normal layer
+                container.zIndex = 2;
             }
         };
 
         app.ticker.add(updateTicker);
 
         // -- Event Handlers --
-
         const onPickup = (e: PIXI.FederatedPointerEvent) => {
-            // 1. Logic
             isHeld.current = true;
-
-            // 2. Setup Drag Anchor
-            // Store where we clicked relative to the object's center to maintain that offset
-            // NOTE: Since we are lerping container.x, we need to be careful.
-            // The "Target" is what tracks the mouse. 
-            // The "Render" (container) follows the target.
-
             const globalPos = e.global;
-            // The target is currently at the container's pos (roughly)
-            // We want Target = Mouse - Offset
-            // So Offset = Mouse - Target
             pickupOffset.current = {
                 x: globalPos.x - targetPos.current.x,
                 y: globalPos.y - targetPos.current.y
             };
-
-            // 3. Track Start Zone
             const startZone = getZoneAt(container.x, container.y);
             dragStartZone.current = startZone ? startZone.id : null;
 
-            // 4. Notify Parent
             const pickupEvent = JSON.stringify({
                 type: 'PICK_UP',
                 entity: name,
@@ -221,7 +201,6 @@ export const GameSprite = ({ id, name, initialX, initialY, color, src, onAction,
             });
             onAction(pickupEvent);
 
-            // 5. Global Listeners
             if (stage) {
                 stage.eventMode = 'static';
                 stage.on('pointermove', onDragMove);
@@ -233,8 +212,6 @@ export const GameSprite = ({ id, name, initialX, initialY, color, src, onAction,
         const onDragMove = (e: PIXI.FederatedPointerEvent) => {
             if (!isHeld.current) return;
             const globalPos = e.global;
-
-            // Update TARGET, not container directly. The ticker handles container.
             targetPos.current = {
                 x: globalPos.x - pickupOffset.current.x,
                 y: globalPos.y - pickupOffset.current.y
@@ -245,60 +222,38 @@ export const GameSprite = ({ id, name, initialX, initialY, color, src, onAction,
             if (!isHeld.current) return;
             isHeld.current = false;
 
-            // 1. Drop Logic
             const dropZone = getZoneAt(container.x, container.y);
             const toId = dropZone ? dropZone.id : null;
             const fromId = dragStartZone.current;
-
-            // Check for Entity Collision (Attack?)
-            const targetEntity = getEntityAt(container.x, container.y, id); // Exclude self
+            const targetEntity = getEntityAt(container.x, container.y, id);
             const isAttack = !!targetEntity;
 
-            console.log(`GameSprite ${name}: Dropped at`, { x: container.x, y: container.y, zone: toId, attackTarget: targetEntity?.id });
+            console.log(`GameSprite ${name}: Dropped at`, { x: container.x, y: container.y, zone: toId });
 
-            // 2. Optimistic Snap or Rejection
             if (toId && dropZone) {
                 if (isAttack && targetEntity) {
-                    // ATTACK LUNGE!
-                    shake(5); // Juice: Camera Shake on impact!
-
-                    // Lunge PAST the target slightly (Juice)
+                    shake(5);
                     const dirX = targetEntity.container.x - container.x;
                     const dirY = targetEntity.container.y - container.y;
-                    // Normalize? Nah, just overshoot the target pos
                     targetPos.current = {
                         x: targetEntity.container.x + (dirX * 0.2),
                         y: targetEntity.container.y + (dirY * 0.2)
                     };
-
-                    // After a brief delay, snap back to origin (or let next state update handle it)
-                    // We assume attack doesn't move us to that tile usually? Or it does?
-                    // Depends on game rules. Assuming "Melee Attack" often stays put or moves adjacent.
-                    // For now, bounce back to start after lunge
                     setTimeout(() => {
                         if (!container.destroyed) {
                             targetPos.current = { x: initialX, y: initialY };
                         }
-                    }, 150); // 150ms lunge
-
+                    }, 150);
                 } else {
-                    // Normal Move - Snap to Zone Center?
-                    // We don't have zone center easily, so just let it slide to target or stay at drop?
-                    // targetPos.current = { x: dropZone.container.x, y: dropZone.container.y }; // If zone anchor is center?
-                    // Zones are Top-Left usually?
-                    // If we want to center:
                     targetPos.current = {
                         x: dropZone.container.x + dropZone.container.width / 2,
                         y: dropZone.container.y + dropZone.container.height / 2
                     };
                 }
             } else {
-                // Invalid Drop - Bounce Back!
-                console.log("Invalid Drop - Reverting");
                 targetPos.current = { x: initialX, y: initialY };
             }
 
-            // 3. Notify Parent
             const event = JSON.stringify({
                 type: isAttack ? 'ATTACK' : 'MOVE',
                 entity: name,
@@ -309,7 +264,6 @@ export const GameSprite = ({ id, name, initialX, initialY, color, src, onAction,
             });
             onAction(event);
 
-            // 4. Cleanup Listeners
             if (stage) {
                 stage.off('pointermove', onDragMove);
                 stage.off('pointerup', onRelease);
@@ -319,10 +273,8 @@ export const GameSprite = ({ id, name, initialX, initialY, color, src, onAction,
 
         container.on('pointerdown', onPickup);
 
-        // Add to Stage
         stage.addChild(container);
         containerRef.current = container;
-
 
         return () => {
             unregisterEntity(id);
@@ -336,19 +288,13 @@ export const GameSprite = ({ id, name, initialX, initialY, color, src, onAction,
             container.destroy({ children: true });
         };
 
-    }, [app, stage, id, name, onAction, src, displayMode, JSON.stringify(config)]); // Re-run if key props change
+    }, [app, stage, id, name, onAction, src, displayMode, JSON.stringify(config)]);
 
-    // Allow Prop Updates to move the sprite (e.g. valid move confirmed by server)
     useEffect(() => {
         if (!isHeld.current) {
-            // New position from server/props? Update Target!
             targetPos.current = { x: initialX, y: initialY };
-            // Note: We don't snap renderPos, we let it lerp to the new home for "slide" effect
-            // OR if it's a huge jump (teleport), maybe snap?
-            // For now, slide is nice.
         }
     }, [initialX, initialY]);
-
 
     return null;
 };

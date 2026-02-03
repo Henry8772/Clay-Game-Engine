@@ -257,6 +257,7 @@ export default function PlayPage() {
         // 3. Actor Layer
         // Map gamestate entities to sprite props
         const actors = entitiesList.map((entity: any): AssetManifest => {
+            const SPRITE_SCALE = 1;
             if (!entity) return null as any; // Safe guard
 
             const ymin = entity.pixel_box ? entity.pixel_box[0] : 0;
@@ -307,8 +308,10 @@ export default function PlayPage() {
                 },
                 config: {
                     label: entity.label,
-                    width: boxWidth * scaleX,
-                    height: boxHeight * scaleY,
+                    width: undefined,
+                    anchor: 0.5,
+                    height: undefined,
+                    scale: { x: SPRITE_SCALE, y: SPRITE_SCALE },
                     draggable: true,
                     // Store logic data for pick-up event
                     templateId: entity.t,
