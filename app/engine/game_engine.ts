@@ -167,6 +167,22 @@ export class GameEngine {
                         console.warn(`[Engine] Missing blueprint for ${templateId}. Falling back to defaults.`);
                     }
 
+                    const zone = this.navMesh?.find(z => z.label === toZoneId);
+                    let box = [0, 0, 0, 0];
+
+                    if (zone) {
+                        const [ymin, xmin, ymax, xmax] = zone.box_2d;
+
+                        // Calculate Center
+                        const cy = ymin + (ymax - ymin) / 2;
+                        const cx = xmin + (xmax - xmin) / 2;
+
+                        // 2. CREATE A "POINT" BOX (Zero width/height)
+                        // We set min and max to the same value. 
+                        // This tells the system: "The entity is exactly here, but has 0 logical size"
+                        box = [cy, cx, cy, cx];
+                    }
+
                     // 2. CONSTRUCT INSTANCE
                     // We only store dynamic data. Static data stays in blueprints.
                     // However, for the frontend to render 'src' and 'label', 
@@ -184,7 +200,7 @@ export class GameEngine {
                         // Hydrate Source
                         src: bp?.src || `extracted/${templateId.replace('tpl_', '')}.png`,
                         // Calculate Position
-                        pixel_box: this.getZoneCoords(toZoneId),
+                        pixel_box: box,
                         location: toZoneId
                     };
 
