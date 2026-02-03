@@ -12,7 +12,8 @@ export async function createGameAction(prompt: string, gameId: string) {
     console.log(`[createGameAction] Starting generation for game: ${gameId} with prompt: ${prompt}`);
 
     // 1. Setup Client
-    const client = new LLMClient("gemini");
+    // Pass false as 3rd arg to disable debug/mock mode
+    const client = new LLMClient("gemini", undefined, false);
     const runId = `run_${Date.now()}_${crypto.randomUUID().slice(0, 8)}`;
 
     // 2. Setup Callback to report progress to Convex
@@ -61,20 +62,6 @@ export async function createGameAction(prompt: string, gameId: string) {
             initialState: result.finalGameState,
             rules: "Standard game rules", // Or result.rules if available
             runId: runId,
-            // We need to update reset mutation to accept status or do it in separate call?
-            // The user plan said:
-            /*
-            await fetchMutation(api.games.reset, {
-                initialState: result.finalGameState,
-                rules: result.rules,
-                runId: result.runId,
-                status: "playing" // This flips the UI to "Game Mode"
-            });
-            */
-            // I need to check if api.games.reset accepts status. 
-            // If not, I'll need to update it or call updateStatus separately.
-            // For now, I'll assume I need to update the mutation or make two calls.
-            // Let's check api.games.reset first.
         });
 
         // Explicitly set status to playing after reset, if reset doesn't handle it

@@ -69,7 +69,15 @@ export const nodeSpriteIsolator = async (state: GraphState, config?: { configura
 
     if (onProgress) await onProgress("Isolating Sprites...");
 
-    const spriteImage = await runSpriteAgent(client, state.sceneImage);
+    // Resolve run directory
+    let runDir = undefined;
+    if (state.runId) {
+        const path = await import("path");
+        const { DATA_RUNS_DIR } = await import("../utils/paths");
+        runDir = path.resolve(DATA_RUNS_DIR, state.runId);
+    }
+
+    const spriteImage = await runSpriteAgent(client, state.sceneImage, runDir);
     await saveRunArtifact(state.runId, "sprites.png", spriteImage);
 
     return { spriteImage };
