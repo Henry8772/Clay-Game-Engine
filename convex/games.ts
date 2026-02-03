@@ -20,6 +20,8 @@ export const reset = mutation({
         initialState: v.any(),
         rules: v.string(),
         runId: v.optional(v.string()), // <--- NEW
+        status: v.optional(v.string()), // <--- NEW
+        progress: v.optional(v.string()) // <--- NEW
     },
     handler: async (ctx, args) => {
         console.log(`[GAME RESET] Loading run: ${args.runId}`);
@@ -41,6 +43,8 @@ export const reset = mutation({
             rules: args.rules,
             isActive: true,
             runId: args.runId, // <--- NEW
+            status: args.status || "playing", // Default to playing if not specified (legacy resets)
+            progress: args.progress,
         });
 
         // No initial history needed for now, or could insert a system message
@@ -120,6 +124,20 @@ export const fastMove = mutation({
                 // Modifying `entities[index]` modifies `currentState`.
                 // So passing `currentState` back is fine.
             }
+        });
+    }
+});
+
+export const updateStatus = mutation({
+    args: {
+        gameId: v.id("games"),
+        status: v.string(),
+        progress: v.optional(v.string())
+    },
+    handler: async (ctx, args) => {
+        await ctx.db.patch(args.gameId, {
+            status: args.status,
+            progress: args.progress
         });
     }
 });
