@@ -1,0 +1,526 @@
+{
+  "initialState": {
+    "meta": {
+      "turnCount": 1,
+      "activePlayerId": "player",
+      "phase": "main",
+      "runId": "boardgame",
+      "version": "2.0",
+      "vars": {}
+    },
+    "entities": {
+      "entity_0": {
+        "id": "entity_0",
+        "t": "tpl_goblin_archer_card",
+        "label": "Goblin Archer Card",
+        "team": "blue",
+        "type": "unit",
+        "src": "extracted/goblin_archer_card.png",
+        "pixel_box": [
+          14,
+          375,
+          140,
+          421
+        ]
+      },
+      "entity_1": {
+        "id": "entity_1",
+        "t": "tpl_orc_grunt_card",
+        "label": "Orc Grunt Card",
+        "team": "neutral",
+        "type": "prop",
+        "src": "extracted/orc_grunt_card.png",
+        "pixel_box": [
+          14,
+          428,
+          140,
+          474
+        ]
+      },
+      "entity_2": {
+        "id": "entity_2",
+        "t": "tpl_necromancer_card",
+        "label": "Necromancer Card",
+        "team": "neutral",
+        "type": "prop",
+        "src": "extracted/necromancer_card.png",
+        "pixel_box": [
+          14,
+          481,
+          140,
+          527
+        ]
+      },
+      "entity_3": {
+        "id": "entity_3",
+        "t": "tpl_stone_golem_card",
+        "label": "Stone Golem Card",
+        "team": "neutral",
+        "type": "prop",
+        "src": "extracted/stone_golem_card.png",
+        "pixel_box": [
+          14,
+          533,
+          140,
+          580
+        ]
+      },
+      "entity_4": {
+        "id": "entity_4",
+        "t": "tpl_spirit_card",
+        "label": "Spirit Card",
+        "team": "neutral",
+        "type": "prop",
+        "src": "extracted/spirit_card.png",
+        "pixel_box": [
+          14,
+          586,
+          140,
+          633
+        ]
+      },
+      "entity_5": {
+        "id": "entity_5",
+        "t": "tpl_goblin_miniature",
+        "label": "Goblin Miniature",
+        "team": "neutral",
+        "type": "prop",
+        "src": "extracted/goblin_miniature.png",
+        "pixel_box": [
+          313,
+          344,
+          396,
+          389
+        ]
+      },
+      "entity_6": {
+        "id": "entity_6",
+        "t": "tpl_orc_warrior_miniature",
+        "label": "Orc Warrior Miniature",
+        "team": "neutral",
+        "type": "prop",
+        "src": "extracted/orc_warrior_miniature.png",
+        "pixel_box": [
+          353,
+          406,
+          458,
+          455
+        ]
+      },
+      "entity_7": {
+        "id": "entity_7",
+        "t": "tpl_skeleton_miniature",
+        "label": "Skeleton Miniature",
+        "team": "red",
+        "type": "unit",
+        "src": "extracted/skeleton_miniature.png",
+        "pixel_box": [
+          359,
+          471,
+          457,
+          521
+        ]
+      },
+      "entity_8": {
+        "id": "entity_8",
+        "t": "tpl_stone_golem_miniature",
+        "label": "Stone Golem Miniature",
+        "team": "neutral",
+        "type": "prop",
+        "src": "extracted/stone_golem_miniature.png",
+        "pixel_box": [
+          299,
+          604,
+          399,
+          664
+        ]
+      },
+      "entity_9": {
+        "id": "entity_9",
+        "t": "tpl_ghost_miniature",
+        "label": "Ghost Miniature",
+        "team": "neutral",
+        "type": "prop",
+        "src": "extracted/ghost_miniature.png",
+        "pixel_box": [
+          379,
+          662,
+          485,
+          715
+        ]
+      },
+      "entity_10": {
+        "id": "entity_10",
+        "t": "tpl_black_guard_card",
+        "label": "Black Guard Card",
+        "team": "neutral",
+        "type": "prop",
+        "src": "extracted/black_guard_card.png",
+        "pixel_box": [
+          851,
+          374,
+          977,
+          421
+        ]
+      },
+      "entity_11": {
+        "id": "entity_11",
+        "t": "tpl_dwarf_fighter_card",
+        "label": "Dwarf Fighter Card",
+        "team": "neutral",
+        "type": "prop",
+        "src": "extracted/dwarf_fighter_card.png",
+        "pixel_box": [
+          851,
+          427,
+          977,
+          473
+        ]
+      },
+      "entity_12": {
+        "id": "entity_12",
+        "t": "tpl_blue_wizard_card",
+        "label": "Blue Wizard Card",
+        "team": "blue",
+        "type": "unit",
+        "src": "extracted/blue_wizard_card.png",
+        "pixel_box": [
+          851,
+          480,
+          977,
+          526
+        ]
+      },
+      "entity_13": {
+        "id": "entity_13",
+        "t": "tpl_ranger_card",
+        "label": "Ranger Card",
+        "team": "neutral",
+        "type": "prop",
+        "src": "extracted/ranger_card.png",
+        "pixel_box": [
+          851,
+          533,
+          977,
+          579
+        ]
+      },
+      "entity_14": {
+        "id": "entity_14",
+        "t": "tpl_militia_card",
+        "label": "Militia Card",
+        "team": "neutral",
+        "type": "prop",
+        "src": "extracted/militia_card.png",
+        "pixel_box": [
+          851,
+          586,
+          977,
+          632
+        ]
+      },
+      "entity_15": {
+        "id": "entity_15",
+        "t": "tpl_dark_knight_miniature",
+        "label": "Dark Knight Miniature",
+        "team": "blue",
+        "type": "unit",
+        "src": "extracted/dark_knight_miniature.png",
+        "pixel_box": [
+          562,
+          471,
+          646,
+          520
+        ]
+      },
+      "entity_16": {
+        "id": "entity_16",
+        "t": "tpl_dwarf_miniature",
+        "label": "Dwarf Miniature",
+        "team": "neutral",
+        "type": "prop",
+        "src": "extracted/dwarf_miniature.png",
+        "pixel_box": [
+          547,
+          335,
+          644,
+          385
+        ]
+      },
+      "entity_17": {
+        "id": "entity_17",
+        "t": "tpl_human_warrior_miniature",
+        "label": "Human Warrior Miniature",
+        "team": "neutral",
+        "type": "prop",
+        "src": "extracted/human_warrior_miniature.png",
+        "pixel_box": [
+          425,
+          298,
+          532,
+          347
+        ]
+      },
+      "entity_18": {
+        "id": "entity_18",
+        "t": "tpl_elf_ranger_miniature",
+        "label": "Elf Ranger Miniature",
+        "team": "neutral",
+        "type": "prop",
+        "src": "extracted/elf_ranger_miniature.png",
+        "pixel_box": [
+          492,
+          617,
+          584,
+          672
+        ]
+      },
+      "entity_19": {
+        "id": "entity_19",
+        "t": "tpl_soldier_miniature",
+        "label": "Soldier Miniature",
+        "team": "neutral",
+        "type": "prop",
+        "src": "extracted/soldier_miniature.png",
+        "pixel_box": [
+          519,
+          411,
+          606,
+          461
+        ]
+      }
+    },
+    "grid": {
+      "rows": 6,
+      "cols": 6
+    },
+    "navMesh": [
+      {
+        "box_2d": [
+          224,
+          187,
+          330,
+          312
+        ],
+        "label": "tile_r0_c0"
+      },
+      {
+        "box_2d": [
+          224,
+          312,
+          330,
+          437
+        ],
+        "label": "tile_r0_c1"
+      },
+      {
+        "box_2d": [
+          224,
+          437,
+          330,
+          562
+        ],
+        "label": "tile_r0_c2"
+      },
+      {
+        "box_2d": [
+          224,
+          562,
+          330,
+          687
+        ],
+        "label": "tile_r0_c3"
+      },
+      {
+        "box_2d": [
+          224,
+          687,
+          330,
+          813
+        ],
+        "label": "tile_r0_c4"
+      },
+      {
+        "box_2d": [
+          330,
+          187,
+          436,
+          312
+        ],
+        "label": "tile_r1_c0"
+      },
+      {
+        "box_2d": [
+          330,
+          312,
+          436,
+          437
+        ],
+        "label": "tile_r1_c1"
+      },
+      {
+        "box_2d": [
+          330,
+          437,
+          436,
+          562
+        ],
+        "label": "tile_r1_c2"
+      },
+      {
+        "box_2d": [
+          330,
+          562,
+          436,
+          687
+        ],
+        "label": "tile_r1_c3"
+      },
+      {
+        "box_2d": [
+          330,
+          687,
+          436,
+          813
+        ],
+        "label": "tile_r1_c4"
+      },
+      {
+        "box_2d": [
+          436,
+          187,
+          542,
+          312
+        ],
+        "label": "tile_r2_c0"
+      },
+      {
+        "box_2d": [
+          436,
+          312,
+          542,
+          437
+        ],
+        "label": "tile_r2_c1"
+      },
+      {
+        "box_2d": [
+          436,
+          437,
+          542,
+          562
+        ],
+        "label": "tile_r2_c2"
+      },
+      {
+        "box_2d": [
+          436,
+          562,
+          542,
+          687
+        ],
+        "label": "tile_r2_c3"
+      },
+      {
+        "box_2d": [
+          436,
+          687,
+          542,
+          813
+        ],
+        "label": "tile_r2_c4"
+      },
+      {
+        "box_2d": [
+          542,
+          187,
+          648,
+          312
+        ],
+        "label": "tile_r3_c0"
+      },
+      {
+        "box_2d": [
+          542,
+          312,
+          648,
+          437
+        ],
+        "label": "tile_r3_c1"
+      },
+      {
+        "box_2d": [
+          542,
+          437,
+          648,
+          562
+        ],
+        "label": "tile_r3_c2"
+      },
+      {
+        "box_2d": [
+          542,
+          562,
+          648,
+          687
+        ],
+        "label": "tile_r3_c3"
+      },
+      {
+        "box_2d": [
+          542,
+          687,
+          648,
+          813
+        ],
+        "label": "tile_r3_c4"
+      },
+      {
+        "box_2d": [
+          648,
+          187,
+          755,
+          312
+        ],
+        "label": "tile_r4_c0"
+      },
+      {
+        "box_2d": [
+          648,
+          312,
+          755,
+          437
+        ],
+        "label": "tile_r4_c1"
+      },
+      {
+        "box_2d": [
+          648,
+          437,
+          755,
+          562
+        ],
+        "label": "tile_r4_c2"
+      },
+      {
+        "box_2d": [
+          648,
+          562,
+          755,
+          687
+        ],
+        "label": "tile_r4_c3"
+      },
+      {
+        "box_2d": [
+          648,
+          687,
+          755,
+          813
+        ],
+        "label": "tile_r4_c4"
+      }
+    ]
+  },
+  "rules": "Standard Skirmish Rules"
+}

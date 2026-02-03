@@ -78,8 +78,15 @@ export class GameEngine {
             command
         );
 
-        this.applyTools(tools);
-        return tools;
+        const { newState, logs } = this.applyTools(tools);
+
+        // RETURN EVERYTHING
+        return {
+            tools,
+            newState,
+            logs,
+            isValid: true
+        };
     }
 
     public applyTools(tools: GameTool[]) {
@@ -92,7 +99,7 @@ export class GameEngine {
                 case "MOVE": {
                     const { entityId, toZoneId } = tool.args as any;
                     // @ts-ignore
-                    const entity = this.state.entities.find(e => e.id === entityId);
+                    const entity = this.state.entities[entityId];
                     if (entity) {
                         entity.location = toZoneId; // Logical update
                         entity.pixel_box = this.getZoneCoords(toZoneId); // Visual update
@@ -104,7 +111,11 @@ export class GameEngine {
                 case "DESTROY": {
                     const { entityId } = tool.args as any;
                     // @ts-ignore
-                    this.state.entities = this.state.entities.filter(e => e.id !== entityId);
+                    // @ts-ignore
+                    if (this.state.entities[entityId]) {
+                        // @ts-ignore
+                        delete this.state.entities[entityId];
+                    }
                     logs.push(`Destroyed ${entityId}`);
                     break;
                 }
@@ -114,7 +125,7 @@ export class GameEngine {
                     const newId = `spawn_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
 
                     // @ts-ignore
-                    this.state.entities.push({
+                    this.state.entities[newId] = {
                         id: newId,
                         t: templateId,
                         label: templateId.replace('tpl_', ''),
@@ -122,7 +133,7 @@ export class GameEngine {
                         team: owner === 'player' ? 'blue' : 'red',
                         src: 'extracted/figure.png', // Placeholder
                         pixel_box: this.getZoneCoords(toZoneId)
-                    });
+                    };
                     logs.push(`Spawned ${templateId} at ${toZoneId}`);
                     break;
                 }
