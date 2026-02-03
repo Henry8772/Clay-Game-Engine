@@ -6,7 +6,11 @@
       "phase": "main",
       "runId": "boardgame",
       "version": "2.0",
-      "vars": {}
+      "vars": {},
+      "assets": {
+        "background": "background.png",
+        "navmesh": "navmesh.json"
+      }
     },
     "blueprints": {
       "tpl_goblin_archer_card": {

@@ -31,7 +31,7 @@ export default function PlayPage() {
     // Run Management
     const [availableRuns, setAvailableRuns] = useState<string[]>([]);
     const [isLoadingRuns, setIsLoadingRuns] = useState(true);
-    const [selectedRunId, setSelectedRunId] = useState<string>("run_test_real_agents"); // Default to empty, will be set by effect
+    const [selectedRunId, setSelectedRunId] = useState<string>("boardgame"); // Default to empty, will be set by effect
 
     const [navMesh, setNavMesh] = useState<any[]>([]);
 
@@ -85,30 +85,38 @@ export default function PlayPage() {
         }
     }, [selectedRunId]);
 
-    useEffect(() => {
-        console.log("Fetching navmesh for run:", selectedRunId);
-        // FETCH WORKFLOW:
-        // We only fetch navmesh via the proxy for visualization.
-        // Game state is now fully managed by Convex.
-
-        if (!selectedRunId) return;
-
-        const basePath = `/api/asset-proxy/runs/${selectedRunId}`;
-
-        fetch(`${basePath}/navmesh.json`)
-            .then(res => res.json())
-            .then(navData => {
-                console.log("Loaded navmesh:", navData);
-                setNavMesh(navData);
-            })
-            .catch(err => {
-                console.error(`Failed to load navmesh for ${selectedRunId}:`, err);
-                setNavMesh([]);
-            });
-    }, [selectedRunId]);
-
     // Fallback logic: Convex -> Empty
     const currentGameState = convexState || FALLBACK_GAMESTATE;
+    const assets = currentGameState?.meta?.assets || {};
+
+    useEffect(() => {
+        const basePath = `/api/asset-proxy/runs/${selectedRunId}`;
+        // 1. Check if we have a navmesh URL in the state
+        const navMeshUrl = basePath + '/' + assets.navmesh;
+
+        if (navMeshUrl) {
+            console.log("Loading NavMesh from State:", navMeshUrl);
+
+            // 2. Fetch directly from the URL provided by Convex
+            fetch(navMeshUrl)
+                .then(res => res.json())
+                .then(data => setNavMesh(data))
+                .catch(err => console.error("Failed to load navmesh:", err));
+        } else {
+            // Fallback or clear
+            setNavMesh([]);
+        }
+    }, [assets.navmesh]); // Only re-run if the URL changes
+
+    // 1. Derive Turn Status
+    const activePlayer = currentGameState?.meta?.activePlayerId || 'player';
+    const isPlayerTurn = activePlayer === 'player';
+
+    // 2. Logic to block interaction
+    // We block if it's not our turn, OR if we are currently sending a command
+    // We need a local processing state for the command action specifically
+    const [isProcessingAction, setIsProcessingAction] = useState(false);
+    const isInteractionLocked = !isPlayerTurn || isProcessingAction || isGenerating;
 
     // Normalize entities AND Hydrate from Blueprints
     const entitiesList = useMemo(() => {
@@ -205,11 +213,15 @@ export default function PlayPage() {
         const scaleX = SCENE_WIDTH / 1000;
         const scaleY = SCENE_HEIGHT / 1000;
 
+        const background_url = basePath + '/' + assets.background;
+
         // 1. Ambience Layer
         const ambience: AssetManifest = {
             id: 'background',
             role: 'BACKGROUND',
-            src: `${basePath}/background.png`,
+            // Use the state URL directly. 
+            // Fallback only if the state is brand new/empty.
+            src: background_url,
             initialState: {
                 x: 0,
                 y: 0
@@ -332,7 +344,7 @@ export default function PlayPage() {
                 zones: []
             }
         };
-    }, [currentGameState, navMesh, reachableTiles, selectedRunId]);
+    }, [currentGameState, navMesh, reachableTiles, selectedRunId, assets.background]);
 
     // Chat Coordination State
     const [chatOptimisticMessage, setChatOptimisticMessage] = useState<string | null>(null);
@@ -364,33 +376,44 @@ export default function PlayPage() {
                     if (!entity || !to) return;
 
                     // VERB SELECTION
-                    // Be explicit so the LLM doesn't have to guess the intent
                     const verb = entity.type === 'prop' || entity.label.toLowerCase().includes('card')
                         ? "PLAY_CARD"
                         : "MOVE_UNIT";
 
-                    // ROBUST COMMAND FORMAT
-                    // "ACTION: PLAY_CARD entity entity_14 (Militia Card) TARGETING tile_r4_c3_23"
                     const command = `ACTION: ${verb} entity ${entityId} (${entity.label}) TARGETING ${to}`;
 
-                    // 2. Call Server Action (The Brain)
-                    const { processGameMoveAction } = await import("../actions/game-move"); // Dynamic import to avoid server-client issues if any
-                    const result = await processGameMoveAction(currentGameState, rules as string, command, navMesh);
-
-                    if (result.success) {
-                        result.logs?.forEach(log => console.log("GAME LOG:", log));
-                    } else {
-                        console.error("Move failed:", result.error);
-                        setRefreshTrigger(p => p + 1); // Revert
-                    }
+                    // Recursive call with string command
+                    handleAction(command);
+                    return;
                 } else {
                     console.log("Unknown action format:", commandOrEvent);
+                }
+            } else {
+                // Command string directly (e.g. "ACTION: END_TURN")
+                if (isInteractionLocked) return;
+
+                setIsProcessingAction(true);
+                try {
+                    // 2. Call Server Action (The Brain)
+                    const { processGameMoveAction } = await import("../actions/game-move");
+                    const result = await processGameMoveAction(currentGameState, rules as string, commandOrEvent, navMesh);
+
+                    if (result.success) {
+                        result.logs?.forEach((log: any) => console.log("GAME LOG:", log));
+                    } else {
+                        console.error("Move failed:", result.error);
+                        setRefreshTrigger(p => p + 1);
+                        if (result.error) alert(result.error);
+                    }
+                } finally {
+                    setIsProcessingAction(false);
                 }
             }
         } catch (e) {
             console.error("Failed to parse action:", e);
             setReachableTiles(new Set());
             setRefreshTrigger(p => p + 1); // Safety revert
+            setIsProcessingAction(false);
         }
     };
 
@@ -536,11 +559,30 @@ export default function PlayPage() {
                 {/* Game Area */}
                 <section className="flex-1 flex flex-col min-w-0 bg-neutral-950 relative">
 
+
+
                     {/* Toolbar for Game Panel */}
                     <div className="h-10 border-b border-neutral-800 bg-black flex items-center px-4 justify-between">
-                        <div className="flex items-center gap-2">
-                            <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                            <span className="text-[10px] font-mono text-neutral-500 uppercase tracking-wider">Live Sreaming</span>
+                        <div className="flex items-center gap-4">
+                            {/* Turn Indicator */}
+                            <div className="flex items-center gap-2">
+                                <div className={`w-1.5 h-1.5 rounded-full animate-pulse ${isPlayerTurn ? "bg-green-500" : "bg-red-500"}`} />
+                                <span className="text-[10px] font-mono text-white font-bold uppercase tracking-wider">
+                                    {isPlayerTurn ? "YOUR TURN" : "ENEMY TURN"}
+                                </span>
+                            </div>
+
+                            {/* End Turn Button */}
+                            <button
+                                onClick={() => handleAction("ACTION: END_TURN")}
+                                disabled={isInteractionLocked || !isPlayerTurn}
+                                className={`px-3 py-1 text-xs font-bold rounded border transition-all ${isInteractionLocked || !isPlayerTurn
+                                    ? "bg-neutral-900 text-neutral-600 border-neutral-800 cursor-not-allowed"
+                                    : "bg-neutral-100 text-black border-white hover:bg-neutral-200 active:scale-95"
+                                    }`}
+                            >
+                                {isProcessingAction ? "..." : "End Turn"}
+                            </button>
                         </div>
                         <div className="text-[10px] font-mono text-neutral-600">
                             RUN: {selectedRunId}
@@ -570,6 +612,7 @@ export default function PlayPage() {
                                         height={736}
                                         debugZones={showDebug}
                                         refreshTrigger={refreshTrigger}
+                                        readOnly={isInteractionLocked} // Pass readOnly prop
                                     />
                                 </GameErrorBoundary>
                             )}

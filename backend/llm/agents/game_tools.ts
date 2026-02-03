@@ -3,7 +3,8 @@ export type GameTool =
     | { name: "SPAWN", args: { templateId: string, toZoneId: string, owner: string } }
     | { name: "ATTACK", args: { attackerId: string, targetId: string, damage: number } }
     | { name: "DESTROY", args: { entityId: string } }
-    | { name: "NARRATE", args: { message: string } };
+    | { name: "NARRATE", args: { message: string } }
+    | { name: "END_TURN", args: {} };
 
 export const AVAILABLE_TOOLS = `
 1. MOVE(entityId, toZoneId) -> Teleport a unit.
@@ -11,4 +12,5 @@ export const AVAILABLE_TOOLS = `
 3. ATTACK(attackerId, targetId, damage) -> Deal damage and play animation.
 4. DESTROY(entityId) -> Remove an entity (e.g. card used, unit dead).
 5. NARRATE(message) -> Show text to the user.
+6. END_TURN() -> Pass play to the opponent.
 `;
