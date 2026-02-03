@@ -20,6 +20,7 @@ export const send = mutation({
         role: v.string(),
         content: v.string(),
         type: v.optional(v.string()),
+        data: v.optional(v.any()),
     },
     handler: async (ctx, args) => {
         await ctx.db.insert("messages", {
@@ -28,6 +29,7 @@ export const send = mutation({
             content: args.content,
             type: args.type || "chat",
             timestamp: Date.now(),
+            data: args.data,
         });
     },
 });

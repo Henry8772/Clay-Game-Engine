@@ -2,9 +2,13 @@ import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 
 // Get the current active game (single singleton game for now)
+// Get the current active game (single singleton game for now)
 export const get = query({
-    args: {},
-    handler: async (ctx) => {
+    args: { id: v.optional(v.id("games")) },
+    handler: async (ctx, args) => {
+        if (args.id) {
+            return await ctx.db.get(args.id);
+        }
         // Return the most recently updated active game, or null
         const game = await ctx.db.query("games")
             .filter(q => q.eq(q.field("isActive"), true))
@@ -165,4 +169,33 @@ export const debugUpdateState = mutation({
             state: args.newState,
         });
     }
+});
+
+export const applyModification = mutation({
+    args: {
+        gameId: v.id("games"),
+        newState: v.any(),        // The complete new JSON state
+        logMessage: v.string(),   // The message to show in chat (e.g. "Spawned 3 Orcs")
+        command: v.string(),      // The original user prompt
+    },
+    handler: async (ctx, args) => {
+        const { gameId, newState, logMessage, command } = args;
+
+        // 1. Overwrite the Game State
+        await ctx.db.patch(gameId, {
+            state: newState,
+        });
+
+        // 2. Insert the System Log for the Chat UI
+        await ctx.db.insert("messages", {
+            gameId,
+            role: "system", // 'system' renders differently in UI (usually centered/gray)
+            content: `[GOD MODE] ${logMessage}`,
+            data: {
+                command: command,
+                subType: "modification_log"
+            },
+            timestamp: Date.now()
+        });
+    },
 });

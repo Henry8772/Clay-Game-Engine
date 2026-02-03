@@ -6,8 +6,7 @@
       "phase": "main",
       "runId": "boardgame",
       "version": "2.0",
-      "vars": {},
-      "assets": {
+      "vars": {
         "background": "background.png",
         "navmesh": "navmesh.json"
       }

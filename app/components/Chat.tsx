@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { processGameMoveAction } from "../actions/game-move";
+import { modifyGameAction } from "../actions/modify-game";
 import { formatDistanceToNow } from "date-fns";
 
 interface ChatProps {
@@ -52,9 +53,18 @@ export const Chat = ({ gameId, currentGameState, gameRules, className, navMesh, 
         setLocalIsProcessing(true);
 
         try {
-            const result = await processGameMoveAction(currentGameState, gameRules, command, navMesh);
+            let result;
+            if (isEditMode) {
+                // GOD MODE ACTION
+                if (!gameId) throw new Error("Game ID unknown");
+                result = await modifyGameAction(gameId, input);
+            } else {
+                // STANDARD GAME MOVE
+                result = await processGameMoveAction(currentGameState, gameRules, command, navMesh);
+            }
+
             if (!result.success) {
-                console.error("Move failed:", result.error);
+                console.error("Action failed:", result.error);
             }
         } catch (e) {
             console.error(e);
