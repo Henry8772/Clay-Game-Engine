@@ -112,8 +112,33 @@ export class GameEngine {
                     // @ts-ignore
                     const entity = this.state.entities[entityId];
                     if (entity) {
-                        entity.location = toZoneId; // Logical update
-                        entity.pixel_box = this.getZoneCoords(toZoneId); // Visual update
+                        entity.location = toZoneId;
+
+                        // 1. Get the destination zone
+                        const zone = this.navMesh?.find(z => z.label === toZoneId);
+
+                        if (zone && entity.pixel_box) {
+                            // 2. Calculate current dimensions (Preserve Aspect Ratio)
+                            const currentHeight = entity.pixel_box[2] - entity.pixel_box[0]; // ymax - ymin
+                            const currentWidth = entity.pixel_box[3] - entity.pixel_box[1];  // xmax - xmin
+
+                            // 3. Get center of destination zone
+                            const [zYmin, zXmin, zYmax, zXmax] = zone.box_2d;
+                            const zCy = zYmin + (zYmax - zYmin) / 2;
+                            const zCx = zXmin + (zXmax - zXmin) / 2;
+
+                            // 4. Create new box: Center +/- Half of ORIGINAL Size
+                            entity.pixel_box = [
+                                zCy - currentHeight / 2, // New Ymin
+                                zCx - currentWidth / 2,  // New Xmin
+                                zCy + currentHeight / 2, // New Ymax
+                                zCx + currentWidth / 2   // New Xmax
+                            ];
+                        } else {
+                            // Fallback if no current box exists (e.g. glitch)
+                            entity.pixel_box = this.getZoneCoords(toZoneId);
+                        }
+
                         logs.push(`Moved ${entity.label || entityId} to ${toZoneId}`);
                     }
                     break;
