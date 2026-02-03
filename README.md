@@ -52,47 +52,37 @@ The system operates in two main phases: **Generation** and **Run**.
 
 ---
 
-## 🚀 Quick Start
+## Setup & Installation
 
-### Prerequisites
--   Node.js 18+
--   A Gemini API Key (set in `backend/.env` and `.env.local`)
+### 1. Install Dependencies
+Install dependencies for both the frontend (root) and the backend.
 
-### Installation
+**Root (Frontend & Convex):**
+```bash
+npm install
+```
 
-1.  **Install dependencies**:
-    ```bash
-    # Frontend & Convex
-    npm install
+**Backend (LLM Engine):**
+```bash
+cd backend
+npm install
+```
 
-    # Backend (AI Engine)
-    cd backend
-    npm install
-    ```
+## Running the Application
+```bash
 
-2.  **Start the Development Environment**:
-    This command runs the Next.js frontend, Convex backend, and the AI Agent runner simultaneously.
-    ```bash
-    npm run dev:all
-    ```
-    Open `http://localhost:3000/play` to see the game.
+npm run dev:all
+```
 
-### Running the Agent Runner (Backend Only)
-If you want to isolate the AI generation workflow or run the "God Mode" backend listener:
+### Generation Workflow 
+To run the detailed generation workflow using Vitest (Real Mode):
 ```bash
 cd backend
 npm run test
 ```
-*Note: We use Vitest as a task runner for our agents because of its excellent watch mode and immediate feedback loop.*
 
-## 🧪 Testing & Generation Workflows
+run test/real/test_workflow_real test in Vitet UI
 
-To trigger a new game generation effectively, we currently use our **Real Mode** test suite.
+Open url at `http://localhost:3000/play`, click `Load Test Run`
 
-1.  Navigate to `backend/test/real`.
-2.  Run the workflow test:
-    ```bash
-    # In backend directory
-    npx vitest test/real/test_workflow_real
-    ```
-3.  This will trigger the full pipeline: Planning -> Architecture -> Asset Generation -> State Creation.
+
