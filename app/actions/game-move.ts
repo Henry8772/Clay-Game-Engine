@@ -13,7 +13,14 @@ export async function processGameMoveAction(currentState: any, rules: string, co
         const activeGame = await fetchQuery(api.games.get);
         if (!activeGame) throw new Error("No active game found in DB");
 
-        // 2. Initialize Engine
+        // 1. Validate Turn (Security check)
+        // @ts-ignore
+        const activePlayer = currentState.meta?.activePlayerId || 'player';
+        // if (activePlayer !== 'player') {
+        //      return { success: false, error: "It is not your turn." };
+        // }
+
+        // 2. Setup Engine
         const client = new LLMClient();
 
         // console.log("rules", rules);
@@ -28,8 +35,8 @@ export async function processGameMoveAction(currentState: any, rules: string, co
             client,
             navMesh,
             false,
-            activeGame.engine_tools,
-            activeGame.engine_logic // <--- NEW
+            [...activeGame.engine_tools, "6. END_TURN() -> Pass play to the opponent."], // Inject End Turn tool
+            activeGame.engine_logic
         );
 
         // 3. Process Move
@@ -74,6 +81,41 @@ export async function processGameMoveAction(currentState: any, rules: string, co
         //     }
         // }
 
+        // ======================================================
+        // THE "FROZEN" & AI UPDATE LOOP
+        // If the tool execution resulted in a turn change (to AI), 
+        // we process the AI move immediately in this request.
+        // ======================================================
+
+        // @ts-ignore
+        if (result.turnChanged && result.newState.meta.activePlayerId === 'ai') {
+
+            // 5. Run AI Logic (Simplified for example)
+            console.log("--> Triggering AI Turn...");
+
+            // Artificial delay to let the frontend "Feel" the thinking (optional)
+            // await new Promise(r => setTimeout(r, 1000));
+
+            const aiCommand = await generateEnemyMove(client, result.newState, rules);
+
+            const aiResult = await engine.processCommand(aiCommand);
+
+            // Update final state to return to client
+            // @ts-ignore
+            result.newState = aiResult.newState;
+            // @ts-ignore
+            result.logs = [...result.logs, ...aiResult.logs];
+
+            // 6. Save AI State to DB
+            await fetchMutation(api.games.updateState, {
+                gameId: activeGame._id,
+                newState: aiResult.newState,
+                summary: aiResult.logs.join('\n'),
+                role: "assistant", // Mark as AI
+                command: aiCommand
+            });
+        }
+
         return {
             success: true,
             toolCalls: result.tools, // Map tools -> toolCalls for frontend compatibility
@@ -84,4 +126,24 @@ export async function processGameMoveAction(currentState: any, rules: string, co
         console.error("Error processing game move:", error);
         return { success: false, error: String(error) };
     }
+}
+// Simple Helper for AI decision
+async function generateEnemyMove(client: LLMClient, state: any, rules: string) {
+    // Artificial delay to simulate thinking
+    await new Promise(resolve => setTimeout(resolve, 1500));
+
+    // 1. Check if AI has any units
+    const aiUnits = state.entities?.filter((e: any) => e.owner === 'ai') || [];
+
+    if (aiUnits.length === 0) {
+        // AI spawns a unit if it has none
+        /* 
+           Ideally we would spawn here, but we need a valid tile.
+           For now, we just pass the turn back. 
+           Future: return `ACTION: SPAWN entity minion AT tile_...`;
+        */
+        console.log("AI has no units, ending turn.");
+    }
+
+    return "ACTION: END_TURN";
 }

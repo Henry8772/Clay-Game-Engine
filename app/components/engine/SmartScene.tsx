@@ -20,6 +20,7 @@ interface SmartSceneProps {
     onSnapshot?: (dataUrl: string) => void;
     debugZones?: boolean;
     refreshTrigger?: number; // Version/Tick to force re-renders
+    readOnly?: boolean;
 }
 
 // Helper to configure global stage properties
@@ -33,32 +34,34 @@ const StageSetup = () => {
     return null;
 };
 
-export const SmartScene = ({ manifest, onAction, width = 800, height = 600, displayMode = 'normal', onSnapshot, debugZones = false, refreshTrigger = 0 }: SmartSceneProps) => {
+export const SmartScene = ({ manifest, onAction, width = 800, height = 600, displayMode = 'normal', onSnapshot, debugZones = false, refreshTrigger = 0, readOnly = false }: SmartSceneProps) => {
 
     // PixiStage wraps everything, but we can't easily hook into 'stage' here unless we render children INSIDE PixiStage context.
     // The components below are children of PixiStage.
 
     return (
-        <PixiStage width={width} height={height}>
-            <StageSetup />
-            <CollisionProvider>
-                <FXProvider> {/* New Provider */}
+        <div className={readOnly ? "pointer-events-none grayscale-[0.5] transition-all duration-500" : "transition-all duration-500"}>
+            <PixiStage width={width} height={height}>
+                <StageSetup />
+                <CollisionProvider>
+                    <FXProvider> {/* New Provider */}
 
-                    {/* Layer 2: Actors (Zones + Entities) */}
-                    <ActorLayer assets={manifest.layers.actors} onAction={onAction} displayMode={displayMode} debugZones={debugZones} refreshTrigger={refreshTrigger} />
+                        {/* Layer 2: Actors (Zones + Entities) */}
+                        <ActorLayer assets={manifest.layers.actors} onAction={onAction} displayMode={displayMode} debugZones={debugZones} refreshTrigger={refreshTrigger} />
 
-                    {/* Layer 0: Ambience (Background) */}
-                    <AmbienceLayer assets={manifest.layers.ambience} width={width} height={height} />
+                        {/* Layer 0: Ambience (Background) */}
+                        <AmbienceLayer assets={manifest.layers.ambience} width={width} height={height} />
 
-                    {/* Helper for Snapshots */}
-                    {onSnapshot && (
-                        <SnapshotHelper
-                            shouldCapture={displayMode === 'mask'}
-                            onCaptured={onSnapshot}
-                        />
-                    )}
-                </FXProvider>
-            </CollisionProvider>
-        </PixiStage>
+                        {/* Helper for Snapshots */}
+                        {onSnapshot && (
+                            <SnapshotHelper
+                                shouldCapture={displayMode === 'mask'}
+                                onCaptured={onSnapshot}
+                            />
+                        )}
+                    </FXProvider>
+                </CollisionProvider>
+            </PixiStage>
+        </div>
     );
 };

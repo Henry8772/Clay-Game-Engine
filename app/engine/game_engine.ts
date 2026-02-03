@@ -10,6 +10,7 @@ export class GameEngine {
     private navMesh: any[]; // Optional, for hybrid logic
     private useMock: boolean;
     private blueprints: Record<string, any>; // Add field
+    public turnChanged: boolean = false; // Track locally for access after processing
 
     constructor(
         initialState: UniversalState,
@@ -78,7 +79,7 @@ export class GameEngine {
         this.state = newState;
     }
 
-    public async processCommand(command: string): Promise<GameTool[]> {
+    public async processCommand(command: string): Promise<any> {
         console.log(`[GameEngine] Processing Raw Command: "${command}"`);
         const tools = await resolveGameAction(
             this.llmClient,
@@ -213,10 +214,26 @@ export class GameEngine {
                     logs.push(`Narrator: ${message}`);
                     break;
                 }
+
+                case "END_TURN": {
+                    const current = this.state.meta.activePlayerId;
+                    // Simple toggle logic (extendable later)
+                    const nextPlayer = current === 'player' ? 'ai' : 'player';
+
+                    this.state.meta.activePlayerId = nextPlayer;
+                    this.state.meta.turnCount = (this.state.meta.turnCount || 0) + 1;
+
+                    logs.push(`Turn ended. It is now ${nextPlayer}'s turn.`);
+
+                    // Mark flag
+                    this.turnChanged = true;
+                    break;
+                }
             }
         });
 
-        return { newState: this.state, logs };
+        // Return updated state, logs, and explicit turnChanged flag
+        return { newState: this.state, logs, turnChanged: this.turnChanged };
     }
 
     private getZoneCoords(zoneId: string): number[] {
