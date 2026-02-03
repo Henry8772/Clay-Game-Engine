@@ -33,9 +33,6 @@ export default function PlayPage() {
     const [isLoadingRuns, setIsLoadingRuns] = useState(true);
     const [selectedRunId, setSelectedRunId] = useState<string>("run_test_real_agents"); // Default to empty, will be set by effect
 
-    // Local state for fetched gamestate (Dev workflow)
-    const [localGameState, setLocalGameState] = useState<any>(null);
-    const [blueprints, setBlueprints] = useState<Record<string, any>>({});
     const [navMesh, setNavMesh] = useState<any[]>([]);
 
     // 1. Fetch Available Runs on Mount
@@ -89,47 +86,29 @@ export default function PlayPage() {
     }, [selectedRunId]);
 
     useEffect(() => {
-        console.log("Fetching data for run:", selectedRunId);
+        console.log("Fetching navmesh for run:", selectedRunId);
         // FETCH WORKFLOW:
-        // We fetch gamestate and navmesh via the proxy.
-        // The proxy path logic: /api/asset-proxy/runs/{runId}/{filename}
+        // We only fetch navmesh via the proxy for visualization.
+        // Game state is now fully managed by Convex.
 
         if (!selectedRunId) return;
 
         const basePath = `/api/asset-proxy/runs/${selectedRunId}`;
 
-        Promise.all([
-            fetch(`${basePath}/gamestate.json`).then(res => {
-                if (!res.ok) throw new Error("Gamestate missing");
-                return res.json();
-            }),
-            fetch(`${basePath}/navmesh.json`).then(res => res.json()).catch(() => [])
-        ]).then(([data, navData]) => {
-            console.log("Loaded content:", { data, navData });
-
-            // Handle new ArchitectOutput structure
-            if (data.initialState) {
-                setLocalGameState(data.initialState);
-                if (data.blueprints) setBlueprints(data.blueprints);
-            } else {
-                setLocalGameState(data);
-                setBlueprints({}); // Reset if legacy format
-            }
-
-            setNavMesh(navData);
-        }).catch(err => {
-            console.error(`Failed to load content for ${selectedRunId}:`, err);
-            // Reset to avoid stale state
-            setLocalGameState(null);
-            setNavMesh([]);
-            setBlueprints({});
-        });
+        fetch(`${basePath}/navmesh.json`)
+            .then(res => res.json())
+            .then(navData => {
+                console.log("Loaded navmesh:", navData);
+                setNavMesh(navData);
+            })
+            .catch(err => {
+                console.error(`Failed to load navmesh for ${selectedRunId}:`, err);
+                setNavMesh([]);
+            });
     }, [selectedRunId]);
 
-    // Fallback logic: Convex -> Local File -> Empty
-    const currentGameState = (convexState && convexState.entities)
-        ? convexState
-        : (localGameState || FALLBACK_GAMESTATE);
+    // Fallback logic: Convex -> Empty
+    const currentGameState = convexState || FALLBACK_GAMESTATE;
 
     // Normalize entities to array for rendering and logic
     const entitiesList = useMemo(() => {
@@ -138,8 +117,6 @@ export default function PlayPage() {
             ? currentGameState.entities
             : Object.values(currentGameState.entities);
     }, [currentGameState]);
-
-    console.log("Current Game State:", currentGameState);
 
     const rules = gameStateFromConvex?.rules || "Standard game rules";
     const gameId = gameStateFromConvex?._id;
@@ -384,22 +361,8 @@ export default function PlayPage() {
                     const { processGameMoveAction } = await import("../actions/game-move"); // Dynamic import to avoid server-client issues if any
                     const result = await processGameMoveAction(currentGameState, rules as string, command, navMesh); // Pass navMesh if needed by server for resolving coordinates? Actually server usually just needs graph.
 
-                    if (result.success && result.toolCalls) {
-                        // 3. Execute Tools locally (The Body)
-                        const { GameEngine } = await import("../engine/game_engine");
-                        const engine = new GameEngine(currentGameState, rules as string, null as any, navMesh);
-
-                        const { newState, logs } = engine.applyTools(result.toolCalls);
-
-                        // 4. Update UI
-                        setLocalGameState(newState); // Force React re-render
-
-                        // 5. Show Logs (Narrative)
-                        logs.forEach(log => console.log("GAME LOG:", log));
-
-                        // Optional: Sync to Convex if you want multiplayer
-                        // await updateGameState({ gameId, state: newState });
-
+                    if (result.success) {
+                        result.logs?.forEach(log => console.log("GAME LOG:", log));
                     } else {
                         console.error("Move failed:", result.error);
                         setRefreshTrigger(p => p + 1); // Revert

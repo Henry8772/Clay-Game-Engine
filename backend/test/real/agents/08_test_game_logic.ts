@@ -18,11 +18,11 @@ describe("Agent: Game Logic (LLM as API)", () => {
     `;
 
     const STATE = {
-        entities: [
-            { id: "unit_1", type: "unit", location: "tile_A1" },
-            { id: "enemy_1", type: "unit", location: "tile_A2" },
-            { id: "card_goblin", type: "card", location: "hand" }
-        ]
+        entities: {
+            "unit_1": { id: "unit_1", type: "unit", location: "tile_A1" },
+            "enemy_1": { id: "enemy_1", type: "unit", location: "tile_A2" },
+            "card_goblin": { id: "card_goblin", type: "card", location: "hand" }
+        }
     };
 
     it("should resolve MOVE action", async () => {

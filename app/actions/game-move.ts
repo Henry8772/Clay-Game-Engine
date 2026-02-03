@@ -16,9 +16,9 @@ export async function processGameMoveAction(currentState: any, rules: string, co
         // 2. Initialize Engine
         const client = new LLMClient();
 
-        console.log("rules", rules);
-        console.log("currentState", currentState);
-        console.log("navMesh", navMesh);
+        // console.log("rules", rules);
+        // console.log("currentState", currentState);
+        // console.log("navMesh", navMesh);
 
 
         // Instantiate Engine with Current State
@@ -32,7 +32,7 @@ export async function processGameMoveAction(currentState: any, rules: string, co
             await fetchMutation(api.games.updateState, {
                 gameId: activeGame._id,
                 newState: result.newState,
-                summary: result.summary,
+                summary: result.logs.join('\n'), // Save the logs as the summary
                 role: "agent",
                 command: command
             });
@@ -66,7 +66,12 @@ export async function processGameMoveAction(currentState: any, rules: string, co
             }
         }
 
-        return { success: true, ...result };
+        return {
+            success: true,
+            toolCalls: result.tools, // Map tools -> toolCalls for frontend compatibility
+            newState: result.newState,
+            logs: result.logs
+        };
     } catch (error) {
         console.error("Error processing game move:", error);
         return { success: false, error: String(error) };

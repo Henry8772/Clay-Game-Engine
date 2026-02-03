@@ -1,0 +1,182 @@
+[
+  {
+    "box_2d": [
+      14,
+      375,
+      140,
+      421
+    ],
+    "label": "Goblin Archer Card"
+  },
+  {
+    "box_2d": [
+      14,
+      428,
+      140,
+      474
+    ],
+    "label": "Orc Grunt Card"
+  },
+  {
+    "box_2d": [
+      14,
+      481,
+      140,
+      527
+    ],
+    "label": "Necromancer Card"
+  },
+  {
+    "box_2d": [
+      14,
+      533,
+      140,
+      580
+    ],
+    "label": "Stone Golem Card"
+  },
+  {
+    "box_2d": [
+      14,
+      586,
+      140,
+      633
+    ],
+    "label": "Spirit Card"
+  },
+  {
+    "box_2d": [
+      313,
+      344,
+      396,
+      389
+    ],
+    "label": "Goblin Miniature"
+  },
+  {
+    "box_2d": [
+      353,
+      406,
+      458,
+      455
+    ],
+    "label": "Orc Warrior Miniature"
+  },
+  {
+    "box_2d": [
+      359,
+      471,
+      457,
+      521
+    ],
+    "label": "Skeleton Miniature"
+  },
+  {
+    "box_2d": [
+      299,
+      604,
+      399,
+      664
+    ],
+    "label": "Stone Golem Miniature"
+  },
+  {
+    "box_2d": [
+      379,
+      662,
+      485,
+      715
+    ],
+    "label": "Ghost Miniature"
+  },
+  {
+    "box_2d": [
+      851,
+      374,
+      977,
+      421
+    ],
+    "label": "Black Guard Card"
+  },
+  {
+    "box_2d": [
+      851,
+      427,
+      977,
+      473
+    ],
+    "label": "Dwarf Fighter Card"
+  },
+  {
+    "box_2d": [
+      851,
+      480,
+      977,
+      526
+    ],
+    "label": "Blue Wizard Card"
+  },
+  {
+    "box_2d": [
+      851,
+      533,
+      977,
+      579
+    ],
+    "label": "Ranger Card"
+  },
+  {
+    "box_2d": [
+      851,
+      586,
+      977,
+      632
+    ],
+    "label": "Militia Card"
+  },
+  {
+    "box_2d": [
+      562,
+      471,
+      646,
+      520
+    ],
+    "label": "Dark Knight Miniature"
+  },
+  {
+    "box_2d": [
+      547,
+      335,
+      644,
+      385
+    ],
+    "label": "Dwarf Miniature"
+  },
+  {
+    "box_2d": [
+      425,
+      298,
+      532,
+      347
+    ],
+    "label": "Human Warrior Miniature"
+  },
+  {
+    "box_2d": [
+      492,
+      617,
+      584,
+      672
+    ],
+    "label": "Elf Ranger Miniature"
+  },
+  {
+    "box_2d": [
+      519,
+      411,
+      606,
+      461
+    ],
+    "label": "Soldier Miniature"
+  }
+]
