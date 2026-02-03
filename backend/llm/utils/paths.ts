@@ -1,9 +1,20 @@
 import path from 'path';
+import fs from 'fs';
 
 // Resolve the root of the backend directory
-// This file is in backend/llm/utils/paths.ts
-// So we go up 2 levels: utils -> llm -> backend
-export const BACKEND_ROOT = path.resolve(__dirname, '../..');
+// We need to handle both local development (backend/ts-node) and Next.js (root)
+let backendRoot = path.resolve(__dirname, '../..'); // Default fallback
+
+const cwd = process.cwd();
+// Heuristic: If we are running from project root (standard next dev), we expect a 'backend' folder
+if (fs.existsSync(path.join(cwd, 'backend'))) {
+    backendRoot = path.join(cwd, 'backend');
+} else if (cwd.endsWith('backend')) {
+    // If running from backend directory directly
+    backendRoot = cwd;
+}
+
+export const BACKEND_ROOT = backendRoot;
 
 export const DATA_RUNS_DIR = path.join(BACKEND_ROOT, 'data/runs');
 

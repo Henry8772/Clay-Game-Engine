@@ -9,6 +9,7 @@ import { api } from "../../convex/_generated/api";
 
 import { GameErrorBoundary } from "../components/GameErrorBoundary";
 import { Chat } from "../components/Chat";
+import { createGameAction } from "../actions/create-game";
 
 
 // Temporary Initial State reflecting the structure we expect from the backend
@@ -430,8 +431,37 @@ export default function PlayPage() {
     };
 
     const handleGenerate = async () => {
-        console.log("Not implemented");
+        if (!prompt.trim()) return;
+
+        setIsGenerating(true);
+        try {
+            // 1. Create a placeholder game entry in Convex (using reset to clear old games)
+            // We use a temporary ID or just let reset generate one.
+            // But createGameAction needs a gameId.
+            // reset returns the new gameId.
+            const newGameId = await resetGame({
+                initialState: { entities: [] },
+                rules: "Generating...",
+                status: "generating",
+                progress: "Starting..."
+            });
+
+            if (!newGameId) throw new Error("Failed to create game");
+
+            // 2. Fire the Server Action
+            await createGameAction(prompt, newGameId);
+
+            setPrompt("");
+
+        } catch (e) {
+            console.error("Generation failed:", e);
+            alert("Generation failed. See console.");
+        } finally {
+            setIsGenerating(false);
+        }
     };
+
+
 
     const [showDebug, setShowDebug] = useState(false);
 
@@ -448,6 +478,8 @@ export default function PlayPage() {
                         <span className="text-xs text-neutral-500 font-mono">VISUAL MODE</span>
                     </div>
                 </div>
+
+
 
                 <div className="flex-1 max-w-2xl mx-8">
                     <div className="flex items-center group relative">
@@ -542,21 +574,35 @@ export default function PlayPage() {
                         </div>
                     </div>
 
+
+
                     <div className="flex-1 relative overflow-hidden flex items-center justify-center p-8 bg-neutral-950">
                         <div className="relative z-10 w-full h-full border border-neutral-800 rounded bg-black shadow-2xl overflow-hidden flex items-center justify-center">
-                            <GameErrorBoundary>
-                                <SmartScene
-                                    manifest={manifest}
-                                    onAction={handleAction}
-                                    width={1408}
-                                    height={736}
-                                    debugZones={showDebug}
-                                    refreshTrigger={refreshTrigger}
-                                />
-                            </GameErrorBoundary>
+                            {gameStateFromConvex?.status === 'generating' ? (
+                                <div className="flex flex-col items-center justify-center gap-4 animate-in fade-in duration-500">
+                                    <div className="w-12 h-12 border-4 border-neutral-800 border-t-white rounded-full animate-spin" />
+                                    <div className="space-y-1 text-center">
+                                        <h3 className="text-lg font-medium text-white">Generating Game</h3>
+                                        <p className="text-sm text-neutral-500 font-mono">
+                                            {gameStateFromConvex.progress || "Initializing..."}
+                                        </p>
+                                    </div>
+                                </div>
+                            ) : (
+                                <GameErrorBoundary>
+                                    <SmartScene
+                                        manifest={manifest}
+                                        onAction={handleAction}
+                                        width={1408}
+                                        height={736}
+                                        debugZones={showDebug}
+                                        refreshTrigger={refreshTrigger}
+                                    />
+                                </GameErrorBoundary>
+                            )}
                         </div>
                     </div>
-                </section>
+                </section >
 
                 <Chat
                     gameId={gameId}
@@ -567,7 +613,7 @@ export default function PlayPage() {
                     externalOptimisticMessage={chatOptimisticMessage}
                     externalIsProcessing={chatIsProcessing}
                 />
-            </main>
-        </div>
+            </main >
+        </div >
     );
 }

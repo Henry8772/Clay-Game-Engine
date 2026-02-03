@@ -31,12 +31,15 @@ const saveRunArtifact = async (runId: string | undefined, filename: string, cont
 export interface GenerationGraphConfig {
     client: LLMClient;
     useMock?: boolean;
+    onProgress?: (msg: string) => Promise<void>;
 }
 
 // 1. Scene Generator
 export const nodeSceneGenerator = async (state: GraphState, config?: { configurable?: GenerationGraphConfig }) => {
-    const { client } = config?.configurable || {};
+    const { client, onProgress } = config?.configurable || {};
     if (!client) throw new Error("Client not found");
+
+    if (onProgress) await onProgress("Generating Scene...");
 
     const sceneImage = await runSceneAgent(client, state.userInput);
     await saveRunArtifact(state.runId, "scene.png", sceneImage);
@@ -46,9 +49,11 @@ export const nodeSceneGenerator = async (state: GraphState, config?: { configura
 
 // 2. Background Extractor
 export const nodeBackgroundExtractor = async (state: GraphState, config?: { configurable?: GenerationGraphConfig }) => {
-    const { client } = config?.configurable || {};
+    const { client, onProgress } = config?.configurable || {};
     if (!client) throw new Error("Client not found");
     if (!state.sceneImage) throw new Error("Scene image missing");
+
+    if (onProgress) await onProgress("Extracting Background...");
 
     const backgroundImage = await runBackgroundAgent(client, state.sceneImage);
     await saveRunArtifact(state.runId, "background.png", backgroundImage);
@@ -58,9 +63,11 @@ export const nodeBackgroundExtractor = async (state: GraphState, config?: { conf
 
 // 3. Sprite Isolator
 export const nodeSpriteIsolator = async (state: GraphState, config?: { configurable?: GenerationGraphConfig }) => {
-    const { client } = config?.configurable || {};
+    const { client, onProgress } = config?.configurable || {};
     if (!client) throw new Error("Client not found");
     if (!state.sceneImage) throw new Error("Scene image missing");
+
+    if (onProgress) await onProgress("Isolating Sprites...");
 
     const spriteImage = await runSpriteAgent(client, state.sceneImage);
     await saveRunArtifact(state.runId, "sprites.png", spriteImage);
@@ -70,9 +77,11 @@ export const nodeSpriteIsolator = async (state: GraphState, config?: { configura
 
 // 4. Vision Analyzer
 export const nodeVisionAnalyzer = async (state: GraphState, config?: { configurable?: GenerationGraphConfig }) => {
-    const { client } = config?.configurable || {};
+    const { client, onProgress } = config?.configurable || {};
     if (!client) throw new Error("Client not found");
     if (!state.spriteImage) throw new Error("Sprite image missing");
+
+    if (onProgress) await onProgress("Analyzing Sprites...");
 
     const analysisJson = await runVisionAgent(client, state.spriteImage);
     await saveRunArtifact(state.runId, "analysis.json", JSON.stringify(analysisJson, null, 2));
@@ -82,8 +91,11 @@ export const nodeVisionAnalyzer = async (state: GraphState, config?: { configura
 
 // 5. Asset Extractor
 export const nodeAssetExtractor = async (state: GraphState, config?: { configurable?: GenerationGraphConfig }) => {
+    const { onProgress } = config?.configurable || {};
     if (!state.spriteImage) throw new Error("Sprite image missing");
     if (!state.analysisJson) throw new Error("Analysis JSON missing");
+
+    if (onProgress) await onProgress("Extracting Assets...");
 
     // Determine output directory based on runId
     const runId = state.runId || "debug_run";
@@ -99,9 +111,11 @@ export const nodeAssetExtractor = async (state: GraphState, config?: { configura
 
 // 6. NavMesh Generator
 export const nodeNavMeshGenerator = async (state: GraphState, config?: { configurable?: GenerationGraphConfig }) => {
-    const { client } = config?.configurable || {};
+    const { client, onProgress } = config?.configurable || {};
     if (!client) throw new Error("Client not found");
     if (!state.backgroundImage) throw new Error("Background image missing");
+
+    if (onProgress) await onProgress("Generating NavMesh...");
 
     const navMesh = await runNavMeshAgent(client, state.backgroundImage);
     await saveRunArtifact(state.runId, "navmesh.json", JSON.stringify(navMesh, null, 2));
@@ -111,11 +125,13 @@ export const nodeNavMeshGenerator = async (state: GraphState, config?: { configu
 
 // 7. State Generator
 export const nodeStateGenerator = async (state: GraphState, config?: { configurable?: GenerationGraphConfig }) => {
-    const { client } = config?.configurable || {};
+    const { client, onProgress } = config?.configurable || {};
     if (!client) throw new Error("Client not found");
     if (!state.analysisJson) throw new Error("Analysis JSON missing");
     if (!state.navMesh) throw new Error("NavMesh missing");
     if (!state.runId) throw new Error("Run ID missing");
+
+    if (onProgress) await onProgress("Generating Game State...");
 
     const finalGameState = await runStateAgent(client, state.analysisJson, state.navMesh, state.runId);
     await saveRunArtifact(state.runId, "gamestate.json", JSON.stringify(finalGameState, null, 2));
