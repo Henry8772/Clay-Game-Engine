@@ -29,7 +29,7 @@ describe('REAL: Sprite Agent', () => {
 
         const sceneBuffer = fs.readFileSync(scenePath);
 
-        const buffer = await runSpriteAgent(client, sceneBuffer);
+        const buffer = await runSpriteAgent(client, sceneBuffer, runDir);
 
         expect(buffer).toBeDefined();
         expect(Buffer.isBuffer(buffer)).toBe(true);

@@ -23,12 +23,13 @@ export async function runStateAgent(
     // Generate Blueprints (Metadata)
     const blueprints: Record<string, any> = {};
 
+    console.log("[StateAgent] items: ", items);
+
     // Identify unique roles to generate stats for
     const uniqueRoles = Array.from(new Set(items.map(i => i.label)));
 
-    // LLM Prompt for Capabilities
-    const prompt = `
-    You are a Game Balancing AI.
+    const systemInstruction = `You are a Game Balancing AI.`;
+    const userPrompt = `
     For each of the following Unit Roles, generate a "Blueprint" defining their movement and combat capabilities.
     
     Roles: ${JSON.stringify(uniqueRoles)}
@@ -110,10 +111,8 @@ export async function runStateAgent(
         });
     } else {
         try {
-            const result = await client.generateJson(prompt, schema);
-            // Check if result is what we expect. It should be { blueprints: [...] }
-            // generateJson returns `any` but typed as T. 
-            // We need to cast or check safely. 
+            const result = await client.generateJSON(systemInstruction, userPrompt, schema);
+
             const data = result as any;
             if (data && Array.isArray(data.blueprints)) {
                 generatedBlueprints = data.blueprints;

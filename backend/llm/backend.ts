@@ -21,6 +21,14 @@ export interface LLMBackend {
         }
     ): Promise<string>;
 
+    generateJSON<T>(
+        system: string,
+        inputData: string | any[],
+        model: string,
+        schema?: any,
+        config?: any
+    ): Promise<T>;
+
     generateImage(
         prompt: string,
         model: string,
@@ -100,6 +108,57 @@ export class GeminiBackend implements LLMBackend {
                     yield partial as T;
                 }
             }
+        }
+    }
+
+    async generateJSON<T>(
+        system: string,
+        inputData: string | any[],
+        modelName: string,
+        schema?: any,
+        config?: any
+    ): Promise<T> {
+        const generationConfig: any = {
+            responseMimeType: "application/json",
+            responseSchema: schema
+        };
+
+        if (config) {
+            Object.assign(generationConfig, config);
+        }
+
+        const model = this.client.getGenerativeModel({
+            model: modelName,
+            systemInstruction: system,
+            generationConfig: generationConfig,
+        });
+
+        let contents: any[] = [];
+
+        if (typeof inputData === "string") {
+            contents.push({ role: "user", parts: [{ text: inputData }] });
+        } else {
+            // Convert OpenAI style [{role, content}] to Gemini style [{role, parts:[{text}]}]
+            contents = inputData.map((msg: any) => {
+                let role = msg.role;
+                if (role === 'assistant') role = 'model';
+                if (role === 'system') return null; // System handled in config
+                return {
+                    role: role,
+                    parts: [{ text: msg.content }]
+                };
+            }).filter(x => x !== null);
+        }
+
+        const result = await model.generateContent({ contents });
+        const response = result.response;
+        const text = response.text();
+
+        try {
+            return JSON.parse(text) as T;
+        } catch (e) {
+            console.error("Failed to parse JSON from backend:", text);
+            throw new Error("Backend response was not valid JSON");
         }
     }
 

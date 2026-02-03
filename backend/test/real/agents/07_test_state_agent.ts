@@ -4,10 +4,11 @@ import { runStateAgent } from "../../../llm/agents/state_agent";
 import fs from 'fs';
 import path from 'path';
 import { getTestRunDir, DEFAULT_EXPERIMENT_ID } from '../../utils';
+import { LLMClient } from "../../../llm/client";
 
 describe('REAL: State Agent', () => {
-
-    it('should combine artifacts into game state', async () => {
+    const shouldRun = process.env.GEMINI_API_KEY && !process.env.GEMINI_API_KEY.includes("dummy");
+    it.skipIf(!shouldRun)('should combine artifacts into game state', async () => {
         // No LLM needed, pure logic
         const runDir = getTestRunDir('run_test_real_agents');
         let analysisPath = path.join(runDir, "analysis.json");
@@ -28,9 +29,9 @@ describe('REAL: State Agent', () => {
         const runId = path.basename(runDir);
 
         // Mock Client
-        const mockClient = { isDebug: true, generateJson: async () => ({}) } as any;
+        const client = new LLMClient("gemini", "gemini-2.5-flash", false);
 
-        const output = await runStateAgent(mockClient, analysis, navMesh, runId);
+        const output = await runStateAgent(client, analysis, navMesh, runId);
 
         expect(output).toBeDefined();
         expect(output.initialState).toBeDefined();
@@ -55,5 +56,5 @@ describe('REAL: State Agent', () => {
 
         const outPath = path.join(runDir, "gamestate.json");
         fs.writeFileSync(outPath, JSON.stringify(output, null, 2));
-    });
+    }, 200000);
 });

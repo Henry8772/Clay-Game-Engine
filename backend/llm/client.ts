@@ -136,6 +136,38 @@ export class LLMClient {
         }
     }
 
+    public async generateJSON<T>(
+        system: string,
+        inputData: any,
+        schema?: any,
+        label: string = "llm_generate_json",
+        mockResponse?: any,
+        config?: any
+    ): Promise<T> {
+        // 1. Mock Check
+        if (this.debugMode) {
+            let dataToMock = null;
+            if (mockResponse) {
+                dataToMock = mockResponse;
+                console.log(`DEBUG: Using direct mock response for '${label}'`);
+            } else {
+                dataToMock = await this.tryGetMock(label);
+            }
+
+            if (dataToMock) {
+                return dataToMock as T;
+            }
+        }
+
+        // 2. Live Call
+        const startTime = performance.now();
+        const result = await this.backend.generateJSON<T>(system, inputData, this.model, schema, config);
+        const elapsed = performance.now() - startTime;
+        console.log(`⏱️  [${label}] Completed in: ${elapsed.toFixed(2)}ms`);
+
+        return result;
+    }
+
     public async generateContent(
         prompt: string | any[],
         model: string = "gemini-2.5-flash",
