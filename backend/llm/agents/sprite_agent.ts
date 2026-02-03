@@ -14,15 +14,15 @@ export async function runSpriteAgent(client: LLMClient, sceneBuffer: Buffer, run
     // This helps the model maintain consistency by seeing its own previous output.
     console.log("[SpriteAgent] Isolating sprites (Sequential: White -> Black)...");
 
-    const whiteBuffer = await client.editImage(spritePrompt + " Must use a solid white background.", sceneBuffer, undefined, {
-        config: { temperature: 0, aspectRatio: "16:9" }
-    });
+    // const whiteBuffer = await client.editImage(spritePrompt + " Must use a solid white background.", sceneBuffer, undefined, {
+    //     config: { temperature: 0, aspectRatio: "16:9" }
+    // });
 
-    // if (!runDir) {
-    //     throw new Error("runDir is required for SpriteAgent");
-    // }
+    if (!runDir) {
+        throw new Error("runDir is required for SpriteAgent");
+    }
 
-    // const whiteBuffer = await fs.promises.readFile(path.join(runDir, "sprites_white.png"));
+    const whiteBuffer = await fs.promises.readFile(path.join(runDir, "sprites_white.png"));
 
 
     const blackBuffer = await client.editImage(spritePrompt + " Must use a solid black background.", whiteBuffer, undefined, {

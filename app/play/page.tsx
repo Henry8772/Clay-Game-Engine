@@ -10,6 +10,7 @@ import { api } from "../../convex/_generated/api";
 import { GameErrorBoundary } from "../components/GameErrorBoundary";
 import { Chat } from "../components/Chat";
 import { createGameAction } from "../actions/create-game";
+import { GameDataEditor } from "../components/GameDataEditor";
 
 
 // Temporary Initial State reflecting the structure we expect from the backend
@@ -145,7 +146,19 @@ export default function PlayPage() {
 
     const [reachableTiles, setReachableTiles] = useState<Set<string>>(new Set());
     const fastMove = useMutation(api.games.fastMove);
+
     const resetGame = useMutation(api.games.reset);
+    const debugUpdateState = useMutation(api.games.debugUpdateState);
+
+    const [isEditorOpen, setIsEditorOpen] = useState(false);
+
+    const handleSaveGameState = async (newState: any) => {
+        if (!gameId) return;
+        await debugUpdateState({
+            gameId,
+            newState
+        });
+    };
 
     const load_test = async () => {
         if (!selectedRunId) return;
@@ -355,69 +368,41 @@ export default function PlayPage() {
                         return;
                     }
 
-                    // Strip unique suffix from DropZone ID (e.g. "tile_r0_c0_0" -> "tile_r0_c0")
-                    const targetLabel = to.replace(/_\d+$/, '');
+                    // 1. Construct Natural Language Command
+                    // We need to fetch the entity label/type to make a good sentence
+                    const currentEntity = entitiesList.find((e: any) => e.id === entityId);
+                    const entityLabel = currentEntity?.label || entityId;
 
-                    // COLLISION DETECTION / INTERACTION CHECK
-                    // Check if any OTHER entity is currently in this target zone
-                    const targetZone = navMesh.find((z: any) => z.label === targetLabel);
-                    let isOccupied = false;
-                    let targetUnitName = null;
-
-                    if (targetZone && entitiesList.length > 0) {
-                        // Helper to check intersection (duplicated from manifest, simplified)
-                        const isInside = (point: { x: number, y: number }, box: number[]) => {
-                            const [ymin, xmin, ymax, xmax] = box;
-                            return point.x >= xmin && point.x <= xmax && point.y >= ymin && point.y <= ymax;
-                        };
-
-                        isOccupied = entitiesList.some((e: any) => {
-                            if (e.id === entityId) return false; // Don't check self
-                            if (!e.pixel_box) return false;
-
-                            const [ymin, xmin, ymax, xmax] = e.pixel_box;
-                            const cx = xmin + (xmax - xmin) / 2;
-                            const cy = ymin + (ymax - ymin) / 2;
-
-                            if (isInside({ x: cx, y: cy }, targetZone.box_2d)) {
-                                targetUnitName = e.label || e.id;
-                                return true;
-                            }
-                            return false;
-                        });
+                    let command = "";
+                    if (currentEntity?.type === 'card') {
+                        command = `Play card ${entityLabel} on ${to}`;
+                    } else {
+                        command = `Move ${entityLabel} to ${to}`;
                     }
 
-                    console.log("targetUnitName:", targetUnitName);
-                    // Get the type of  targetUnitName here,  to know if it is a player or an enemy
+                    // 2. Call Server Action (The Brain)
+                    const { processGameMoveAction } = await import("../actions/game-move"); // Dynamic import to avoid server-client issues if any
+                    const result = await processGameMoveAction(currentGameState, rules as string, command, navMesh); // Pass navMesh if needed by server for resolving coordinates? Actually server usually just needs graph.
 
-                    if (isOccupied) {
-                        // --- SLOW PATH (Interaction/Attack) ---
-                        // Trigger LLM Logic
-                        const targetEntity = entitiesList.find((e: any) => e.label === targetUnitName);
-                        const targetUnitType = targetEntity?.type;
-                        const targetUnitId = targetEntity?.id;
+                    if (result.success && result.toolCalls) {
+                        // 3. Execute Tools locally (The Body)
+                        const { GameEngine } = await import("../engine/game_engine");
+                        const engine = new GameEngine(currentGameState, rules as string, null as any, navMesh);
 
-                        if (targetUnitType == "unit") {
-                            const interactionCommand = `${entity} (id: ${entityId}) attack ${targetUnitName} (id: ${targetUnitId})`;
-                            console.log("Interaction Triggered:", interactionCommand);
+                        const { newState, logs } = engine.applyTools(result.toolCalls);
 
-                            // Send to LLM
-                            await sendAction(interactionCommand, navMesh);
-                            setRefreshTrigger(p => p + 1);
+                        // 4. Update UI
+                        setLocalGameState(newState); // Force React re-render
 
-                        }
+                        // 5. Show Logs (Narrative)
+                        logs.forEach(log => console.log("GAME LOG:", log));
+
+                        // Optional: Sync to Convex if you want multiplayer
+                        // await updateGameState({ gameId, state: newState });
+
                     } else {
-
-                        console.log("Fast Move Triggered:", targetLabel);
-
-                        if (targetZone && gameId) {
-                            await fastMove({
-                                gameId: gameId,
-                                entityId: entityId,
-                                newPixelBox: targetZone.box_2d
-                            });
-                        }
-
+                        console.error("Move failed:", result.error);
+                        setRefreshTrigger(p => p + 1); // Revert
                     }
                 } else {
                     console.log("Unknown action format:", commandOrEvent);
@@ -553,6 +538,15 @@ export default function PlayPage() {
                         >
                             Reset
                         </button>
+                        <button
+                            className={`px-3 py-1.5 text-xs font-medium border rounded transition-colors ${isEditorOpen
+                                ? "bg-white text-black border-white"
+                                : "text-neutral-400 hover:text-white border-neutral-800 hover:border-neutral-600"}`}
+                            onClick={() => setIsEditorOpen(true)}
+                            disabled={!currentGameState}
+                        >
+                            Edit State
+                        </button>
                     </div>
                 </div>
             </header>
@@ -614,6 +608,13 @@ export default function PlayPage() {
                     externalIsProcessing={chatIsProcessing}
                 />
             </main >
+
+            <GameDataEditor
+                isOpen={isEditorOpen}
+                onClose={() => setIsEditorOpen(false)}
+                onSave={handleSaveGameState}
+                initialData={currentGameState}
+            />
         </div >
     );
 }

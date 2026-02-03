@@ -1,5 +1,6 @@
 import { UniversalState, GameAction, GameActionType } from "../../backend/llm/agents/universal_state_types";
-import { processGameMove, GameUpdateResult } from "../../backend/llm/agents/game_referee";
+import { resolveGameAction } from "../../backend/llm/agents/game_logic";
+import { GameTool } from "../../backend/llm/agents/game_tools";
 import { LLMClient } from "../../backend/llm/client";
 
 export class GameEngine {
@@ -27,34 +28,23 @@ export class GameEngine {
         return this.state;
     }
 
-    public async processAction(action: GameAction): Promise<GameUpdateResult> {
+    public async processAction(action: GameAction): Promise<GameTool[]> {
         // 1. Translate Action to Natural Language
         const command = this.translateActionToCommand(action);
         console.log(`[GameEngine] Processing Action: ${action.type} -> "${command}"`);
 
         // 2. Call Referee (LLM or Hybrid)
-        const result = await processGameMove(
+        const tools = await resolveGameAction(
             this.llmClient,
             this.state,
             this.rules,
-            command,
-            this.useMock,
-            this.navMesh
+            command
         );
 
-        // 3. Apply Update if Valid
-        if (result.isValid && result.newState) {
-            console.log("[GameEngine] Move Validated. Updating State.");
-            this.state = result.newState;
+        // 3. Apply Tools
+        this.applyTools(tools);
 
-            // Auto-increment turn count if needed? 
-            // The Referee might have done it via patches, but if not, we could enforce it.
-            // For now, trust the Referee.
-        } else {
-            console.warn("[GameEngine] Move Rejected:", result.summary);
-        }
-
-        return result;
+        return tools;
     }
 
     private translateActionToCommand(action: GameAction): string {
@@ -79,22 +69,89 @@ export class GameEngine {
         this.state = newState;
     }
 
-    public async processCommand(command: string): Promise<GameUpdateResult> {
+    public async processCommand(command: string): Promise<GameTool[]> {
         console.log(`[GameEngine] Processing Raw Command: "${command}"`);
-        const result = await processGameMove(
+        const tools = await resolveGameAction(
             this.llmClient,
             this.state,
             this.rules,
-            command, // Direct pass-through
-            this.useMock,
-            this.navMesh
+            command
         );
 
-        if (result.isValid && result.newState) {
-            console.log("[GameEngine] Command Validated. Updating State.");
-            this.state = result.newState;
-        }
+        this.applyTools(tools);
+        return tools;
+    }
 
-        return result;
+    public applyTools(tools: GameTool[]) {
+        const logs: string[] = [];
+
+        tools.forEach(tool => {
+            console.log(`[Engine] Executing: ${tool.name}`, tool.args);
+
+            switch (tool.name) {
+                case "MOVE": {
+                    const { entityId, toZoneId } = tool.args as any;
+                    // @ts-ignore
+                    const entity = this.state.entities.find(e => e.id === entityId);
+                    if (entity) {
+                        entity.location = toZoneId; // Logical update
+                        entity.pixel_box = this.getZoneCoords(toZoneId); // Visual update
+                        logs.push(`Moved ${entity.label || entityId} to ${toZoneId}`);
+                    }
+                    break;
+                }
+
+                case "DESTROY": {
+                    const { entityId } = tool.args as any;
+                    // @ts-ignore
+                    this.state.entities = this.state.entities.filter(e => e.id !== entityId);
+                    logs.push(`Destroyed ${entityId}`);
+                    break;
+                }
+
+                case "SPAWN": {
+                    const { templateId, toZoneId, owner } = tool.args as any;
+                    const newId = `spawn_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+
+                    // @ts-ignore
+                    this.state.entities.push({
+                        id: newId,
+                        t: templateId,
+                        label: templateId.replace('tpl_', ''),
+                        type: 'unit',
+                        team: owner === 'player' ? 'blue' : 'red',
+                        src: 'extracted/figure.png', // Placeholder
+                        pixel_box: this.getZoneCoords(toZoneId)
+                    });
+                    logs.push(`Spawned ${templateId} at ${toZoneId}`);
+                    break;
+                }
+
+                case "NARRATE": {
+                    const { message } = tool.args as any;
+                    logs.push(`Narrator: ${message}`);
+                    break;
+                }
+            }
+        });
+
+        return { newState: this.state, logs };
+    }
+
+    private getZoneCoords(zoneId: string): number[] {
+        if (!this.navMesh) return [0, 0, 0, 0];
+        const zone = this.navMesh.find(z => z.label === zoneId);
+        if (zone) {
+            const [ymin, xmin, ymax, xmax] = zone.box_2d;
+            // Center in zone
+            const w = xmax - xmin;
+            const h = ymax - ymin;
+            // Let's say unit is 80% of tile
+            const size = Math.min(w, h) * 0.8;
+            const cy = ymin + h / 2;
+            const cx = xmin + w / 2;
+            return [cy - size / 2, cx - size / 2, cy + size / 2, cx + size / 2];
+        }
+        return [0, 0, 100, 100]; // Fallback
     }
 }
