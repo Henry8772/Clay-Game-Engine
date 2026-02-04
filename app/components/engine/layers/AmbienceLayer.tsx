@@ -37,7 +37,7 @@ export const AmbienceLayer = ({ assets, width, height }: AmbienceLayerProps) => 
                     sprite.texture = texture;
 
                     // "Cover" Scale Logic
-                    if (texture.width > 0 && texture.height > 0) {
+                    if (texture && texture.width > 0 && texture.height > 0) {
                         const scale = Math.max(width / texture.width, height / texture.height);
                         sprite.scale.set(scale);
                     }

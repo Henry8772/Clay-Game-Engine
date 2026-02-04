@@ -94,7 +94,7 @@ export default function PlayPage() {
         // 1. Check if we have a navmesh URL in the state
         const navMeshUrl = basePath + '/' + assets.navmesh;
 
-        if (navMeshUrl) {
+        if (navMeshUrl && assets.navmesh) {
             console.log("Loading NavMesh from State:", navMeshUrl);
 
             // 2. Fetch directly from the URL provided by Convex
