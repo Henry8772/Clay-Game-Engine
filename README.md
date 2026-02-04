@@ -60,6 +60,7 @@ Install dependencies for both the frontend (root) and the backend.
 **Root (Frontend & Convex):**
 ```bash
 npm install
+npx convex dev #press enter for default
 ```
 
 **Backend (LLM Engine):**
