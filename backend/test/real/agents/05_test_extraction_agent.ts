@@ -32,8 +32,12 @@ describe('REAL: Extraction Agent', () => {
         const files = await runExtractionAgent(spriteBuffer, analysis, outputDir);
 
         expect(files).toBeDefined();
-        expect(files.length).toBeGreaterThan(0);
-        expect(fs.existsSync(path.join(outputDir, files[0]))).toBe(true);
+        const extractedPaths = Object.values(files);
+        expect(extractedPaths.length).toBeGreaterThan(0);
+        // files is now a map of Label -> Path ("extracted/foo.png")
+        // we need to resolve it relative to outputDir's parent or just check the filename
+        const firstFile = extractedPaths[0].split('/').pop()!;
+        expect(fs.existsSync(path.join(outputDir, firstFile))).toBe(true);
 
     });
 });

@@ -13,24 +13,12 @@ export interface DetectedItem {
     label: string;
 }
 
-const ASSET_DESCRIPTION_PROMPT = `**Enemy Faction**
-- **Goblin Archer Card**, **Goblin Miniature**
-- **Orc Grunt Card**, **Orc Warrior Miniature**
-- **Necromancer Card**, **Skeleton Miniature**
-- **Stone Golem Card**, **Stone Golem Miniature**
-- **Spirit Card**, **Ghost Miniature**
-
-**Player Faction**
-- **Black Guard Card**, **Dark Knight Miniature**
-- **Dwarf Fighter Card**, **Dwarf Miniature**
-- **Blue Wizard Card**, **Human Warrior Miniature**
-- **Ranger Card**, **Elf Ranger Miniature**
-- **Militia Card**, **Soldier Miniature**`;
+const ASSET_DESCRIPTION_PROMPT = `On the bottom player side, there are 5 character cards, each with a matching miniature in the board: a Knight, a Ranger, a Templar, a Healer, and Odin. On the top enemy side, there are 5 monster cards, each with a matching miniature : a Skeleton, a Ghost, a Vampire, a Zombie, and an Orc.`;
 
 const ANALYSIS_PROMPT = `
     Detect the all of the prominent items in the image. The box_2d should be [ymin, xmin, ymax, xmax] normalized to 0-1000.
 
-    Use the name in the asset description as the label.
+    Label is name + type, e.g. "knight_miniature" or "knight_card".
     ${ASSET_DESCRIPTION_PROMPT}
 
     JSON Format:

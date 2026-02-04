@@ -8,7 +8,7 @@ export async function runExtractionAgent(
     spriteBuffer: Buffer,
     detectedItems: DetectedItem[],
     outputDir: string
-): Promise<string[]> {
+): Promise<Record<string, string>> {
     console.log("[ExtractionAgent] Extracting assets...");
 
     if (!fs.existsSync(outputDir)) {
@@ -19,7 +19,7 @@ export async function runExtractionAgent(
     const width = metadata.width!;
     const height = metadata.height!;
 
-    const extractedFiles: string[] = [];
+    const manifest: Record<string, string> = {};
 
     for (const item of detectedItems) {
         const [ymin, xmin, ymax, xmax] = item.box_2d;
@@ -46,8 +46,8 @@ export async function runExtractionAgent(
             .extract({ left, top, width: extractWidth, height: extractHeight })
             .toFile(outPath);
 
-        extractedFiles.push(filename);
+        manifest[item.label] = `extracted/${filename}`;
     }
 
-    return extractedFiles;
+    return manifest;
 }
