@@ -34,6 +34,13 @@ export const MODIFICATION_TOOLS_DEF = [
         parameters: z.object({
             newPrompt: z.string().describe("The new game prompt"),
         }),
+    },
+    {
+        name: "update_global_sprite_style",
+        description: "Changes the art style of ALL units and items at once while preserving their game identity and position.",
+        parameters: z.object({
+            styleDescription: z.string().describe("The visual style description (e.g. '8-bit pixel art', 'Watercolor painting')"),
+        }),
     }
 ];
 

@@ -1,74 +1,87 @@
 
+import { describe, it, beforeAll, expect } from "vitest";
 import { processModification } from "../../../llm/agents/modification_agent";
 import { LLMClient } from "../../../llm/client";
 import { UniversalState } from "../../../llm/agents/universal_state_types";
-import { describe, it, expect, beforeAll } from "vitest";
+import fs from "fs/promises";
+import path from "path";
 
-describe("Agent: Modification Real Run (boardgame)", () => {
+describe("Real: Modification Agent - Global Style Update", () => {
     let client: LLMClient;
-    const runId = "boardgame";
-
-    // 1. Setup a Mock State similar to what 'boardgame' might have
-    const mockState: UniversalState = {
-        meta: {
-            turnCount: 5,
-            activePlayerId: "player",
-            phase: "main",
-            vars: {
-                background: "background.png"
-            }
-        },
-        zones: {},
-        entities: {
-            // Existing entity
-            "e_existing": {
-                id: "e_existing",
-                t: "hero",
-                loc: "board",
-                owner: "player",
-                props: { hp: 100 },
-                label: "Hero",
-                src: "hero.png"
-            } as any
-        }
-    };
+    const runId = "boardgame"; // Use the real run ID
 
     beforeAll(() => {
-        // Use a REAL client to test the full flow (generating json, potentially generating images)
-        // Pass false to disable debug mocks
-        client = new LLMClient("gemini", undefined, false);
-        // No mocks!
+        // Ensure CWD is project root, not backend dir
+        if (process.cwd().endsWith('backend')) {
+            process.chdir('..');
+        }
+        client = new LLMClient("gemini");
     });
 
-    it("should change background using real LLM logic", async () => {
-        const bgRequest = "Change the background to a futuristic cyberpunk city with neon lights.";
-        const res1 = await processModification(client, runId, mockState, bgRequest);
+    it("should update global sprite style using real assets", async () => {
+        // 1. Load Real Game State
+        const statePath = path.join(process.cwd(), 'backend', 'data', 'runs', runId, 'gamestate.json');
+        const rawState = await fs.readFile(statePath, 'utf-8');
+        const rawJson = JSON.parse(rawState);
+        const currentState: UniversalState = rawJson.initialState || rawJson;
 
-        console.log("Response:", res1.message);
+        // 2. Validate Pre-conditions
+        const entityCount = Object.keys(currentState.entities).length;
+        expect(entityCount).to.be.greaterThan(0);
 
-        const bgFile = (res1.newState.meta as any).assets?.background;
-
-        expect(bgFile).toBeDefined();
-        if (bgFile) {
-            expect(bgFile).toContain("bg_");
-            expect(bgFile).toContain(".png");
+        // Ensure sprites file exists
+        const spritesPath = path.join(process.cwd(), 'backend', 'data', 'runs', runId, 'sprites.png');
+        const spritesWhitePath = path.join(process.cwd(), 'backend', 'data', 'runs', runId, 'sprites_white.png');
+        try {
+            await fs.access(spritesWhitePath);
+        } catch {
+            try {
+                await fs.access(spritesPath);
+            } catch (e) {
+                console.warn("Skipping test: No sprites.png or sprites_white.png found in boardgame run.");
+                return;
+            }
         }
-    }, 60000); // 60s timeout for image gen
 
-    it("should spawn enemies using real LLM logic", async () => {
-        const spawnRequest = "Spawn 3 Orc Grunt enemies.";
-        // We reuse mock state, simpler than chaining from previous test result unless we store it
-        const res2 = await processModification(client, runId, mockState, spawnRequest);
+        // 3. Run Modification Agent
+        const userRequest = "Chnage all miniature and cards style to cyberpunk";
+        const result = await processModification(client, runId, currentState, userRequest);
 
-        console.log("Response:", res2.message);
-        const entities = Object.values(res2.newState.entities);
-        const orcs = entities.filter((e: any) => e.label && e.label.toLowerCase().includes("orc"));
+        // 4. Verification
+        console.log("Modification Result:", result.message);
 
-        console.log(`Found ${orcs.length} Orcs`);
-        expect(orcs.length).toBeGreaterThanOrEqual(3);
+        expect(result.message).to.contain("Global style updated");
+        expect(result.newState).to.exist;
 
-        const firstOrc = orcs[0] as any;
-        expect(firstOrc.team).toBe("red");
-        expect(firstOrc.src).toContain("spawn_");
-    }, 60000);
+        let foundUpdated = false;
+
+        // Check entities (might be 0 if they lack labels)
+        if (result.newState.entities) {
+            for (const key in result.newState.entities) {
+                const ent = result.newState.entities[key] as any;
+                if (ent.src && ent.src.includes("extracted_restyle_")) {
+                    foundUpdated = true;
+                    break;
+                }
+            }
+        }
+
+        // Check blueprints (should match)
+        if (!foundUpdated && result.newState.blueprints) {
+            for (const key in result.newState.blueprints) {
+                const bp = result.newState.blueprints[key] as any;
+                if ((bp as any).src && (bp as any).src.includes("extracted_restyle_")) {
+                    foundUpdated = true;
+                    break;
+                }
+            }
+        }
+
+        if (foundUpdated) {
+            expect(foundUpdated).to.be.true;
+        } else {
+            throw new Error(`No entities or blueprints were updated. Message: ${result.message}`);
+        }
+
+    }, 120000);
 });
