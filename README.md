@@ -1,21 +1,66 @@
 # Gemini AI Game Engine
 
 > **The first game engine driven entirely by Gemini.**
+>
+> *🏆 Built for the Gemini 3 Hackathon*
 
-This project represents a paradigm shift in game development. Unlike traditional engines that rely on hard-coded scripts and static assets, this framework uses **natural language as the primary source of truth**. The engine, powered by Gemini 1.5 Pro/Flash, generates the environment, assets, and game rules on the fly, and even acts as the game server by interpreting player actions and strictly enforcing rules.
+This project represents a paradigm shift in game development. Unlike traditional engines that rely on hard-coded scripts and static assets, this framework uses **natural language as the primary source of truth**. The engine, powered by **Gemini 2.5 Flash & Nanobana Pro**, generates the environment, assets, and game rules on the fly, and acts as a real-time game server by interpreting player actions through a multimodal agentic pipeline.
 
-📘 **[Read the Full Documentation](./docs/README.md)**
+---
+
+## Highlights: Why This Engine Differs
+
+This project is not just a game generator; it is a **Native Multimodal Engine** that solves the biggest problems in Generative AI gaming: consistency, state management, and real-time modification.
+
+### 1. True "Vibe Coding" for Players (God Mode)
+
+Most "vibe coding" tools are for developers. We brought it to the **end-user**.
+
+- **The Feature:** Players can rewrite game rules or visuals mid-game using natural language (e.g., *"Make the floor lava and give everyone heat resistance"*).
+- **The Tech:** We preserve the game state while hot-swapping assets and JSON logic rules in real-time. No recompilation, no restart—just instant reality shifting.
+
+### 2. Solving the "Generative Hallucination" Problem
+
+Generative games often suffer from shifting visuals and inconsistent scales. We solved this with a **"Scene-First" Pipeline**.
+
+- **The Difference:** Instead of generating assets individually (which leads to style, scale and size mismatches), we generate the **entire scene first**.
+- **The Execution:** Our specialized agent swarm then deconstructs this single coherent image into a background, a NavMesh, and perfectly scaled sprites. This guarantees that every character fits the world perfectly because they were born from it.
+
+### 3. The "Sandwich" Architecture (Visual-Agnostic Actions)
+
+We built a novel interaction layer that separates **Intent** from **Execution**.
+
+- **Top Layer (Actions):** User inputs (drag, pinch, click) are treated as abstract intents.
+- **Middle Layer (Assets):** The visual representation (sprites, cards) is purely cosmetic.
+- **Bottom Layer (Logic):** The "Text-as-State" engine processes the intent against the rules.
+- **Why it matters:** This makes the engine **content-agnostic**. The AI can swap a "Knight" for a "Spaceship" instantly, and the interaction logic (Drag-to-Move) remains perfectly functional without a single line of code change.
+
+### 4. Game State as a "Chat Protocol"
+
+We reimagined multiplayer networking by treating the game state as a **Multi-User Chat Session**.
+
+- **Innovation:** The entire game state is a JSON object stored in a conversation history.
+- **Benefit:** Multiplayer synchronization becomes trivial. Player A sends a "Move" message, the AI Referee validates it, and the state updates for Player B like a new chat message. This allows for infinite scalability and purely AI-managed networking.
+
+### 5. Zero Hard-Coded Logic
+
+Unlike hybrid engines that use AI for assets but C# for logic, our engine is **100% Linguistic**.
+
+- **The Breakthrough:** The physics, combat rules, and movement logic are just text strings processed by Gemini 2.0 Flash.
+- **The Impact:** This enables "Infinite Gameplay." You aren't limited to what the developer coded. If you tell the AI *"Knights can jump over walls,"* it becomes a true mechanic instantly, executed by the AI Referee.
 
 
 ------
 
-## 1. Generation: The "Instant Studio"
+## How it works
+
+### 1. Generation: The "Instant Studio"
 
 *How a text prompt becomes a playable game.*
 
 When you type a prompt like *"A tactical chess game in a volcano,"* the system doesn't just look up a template. It spins up a team of specialized AI agents that work like a movie studio pipeline.
 
-### The Pipeline
+#### The Pipeline
 
 1. **The Concept Artist (Scene Agent):**
 
@@ -53,13 +98,13 @@ When you type a prompt like *"A tactical chess game in a volcano,"* the system d
 
 ------
 
-## 2. User Interaction: The "AI Referee"
+### 2. User Interaction: The "AI Referee"
 
 *How the game is played.*
 
 In traditional games, clicking a unit triggers a hard-coded script. In this engine, the AI watches your moves and interprets them like a Dungeon Master in a tabletop RPG.
 
-### The Gameplay Loop
+#### The Gameplay Loop
 
 1. **The Intent:**
 
@@ -85,13 +130,13 @@ In traditional games, clicking a unit triggers a hard-coded script. In this engi
 
 ------
 
-## 3. Modification: "God Mode"
+### 3. Modification: "God Mode"
 
 *Changing the game while playing it.*
 
 This is the engine's most powerful feature. Because the game exists as data and images controlled by AI, you can rewrite reality on the fly.
 
-### How it Works
+#### How it Works
 
 1. **The Request:**
 
@@ -108,25 +153,6 @@ This is the engine's most powerful feature. Because the game exists as data and 
 
    The engine swaps the assets and rules in real-time. The game doesn't restart; the ground beneath the characters simply transforms, and the new rules apply immediately to the next turn.
 
-------
-
-## Summary Diagram
-
-Code snippet
-
-```
-graph TD
-    User[User Input] -->|1. Generate| Studio[AI Generation Pipeline]
-    Studio -->|Output| State[Game State & Assets]
-    
-    User -->|2. Play| Engine[Game Engine]
-    State <--> Engine
-    Engine -->|Validate| Referee[AI Logic Agent]
-    Referee -->|Update| State
-    
-    User -->|3. Modify| Director[AI Director Agent]
-    Director -->|Repaint/Rewrite| State
-```
 
 ---
 
@@ -163,5 +189,4 @@ npm run test
 run test/real/test_workflow_real test in Vitet UI
 
 Open url at `http://localhost:3000/play`, click `Load Test Run`
-
 
