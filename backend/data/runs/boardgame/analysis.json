@@ -1,182 +1,182 @@
 [
   {
     "box_2d": [
-      14,
-      375,
-      140,
-      421
+      28,
+      370,
+      158,
+      418
     ],
-    "label": "Goblin Archer Card"
+    "label": "skeleton_card"
   },
   {
     "box_2d": [
-      14,
-      428,
-      140,
-      474
+      28,
+      425,
+      158,
+      473
     ],
-    "label": "Orc Grunt Card"
+    "label": "ghost_card"
   },
   {
     "box_2d": [
-      14,
-      481,
-      140,
-      527
+      28,
+      480,
+      158,
+      528
     ],
-    "label": "Necromancer Card"
+    "label": "vampire_card"
   },
   {
     "box_2d": [
-      14,
-      533,
-      140,
-      580
+      28,
+      534,
+      158,
+      582
     ],
-    "label": "Stone Golem Card"
+    "label": "zombie_card"
   },
   {
     "box_2d": [
-      14,
-      586,
-      140,
-      633
+      28,
+      589,
+      158,
+      637
     ],
-    "label": "Spirit Card"
+    "label": "orc_card"
   },
   {
     "box_2d": [
-      313,
-      344,
-      396,
-      389
+      296,
+      350,
+      400,
+      396
     ],
-    "label": "Goblin Miniature"
+    "label": "skeleton_miniature"
   },
   {
     "box_2d": [
-      353,
-      406,
-      458,
+      292,
+      416,
+      400,
       455
     ],
-    "label": "Orc Warrior Miniature"
-  },
-  {
-    "box_2d": [
-      359,
-      471,
-      457,
-      521
-    ],
-    "label": "Skeleton Miniature"
+    "label": "ghost_miniature"
   },
   {
     "box_2d": [
       299,
+      481,
+      400,
+      521
+    ],
+    "label": "vampire_miniature"
+  },
+  {
+    "box_2d": [
+      298,
+      545,
+      400,
+      584
+    ],
+    "label": "zombie_miniature"
+  },
+  {
+    "box_2d": [
+      289,
       604,
-      399,
-      664
+      400,
+      653
     ],
-    "label": "Stone Golem Miniature"
+    "label": "orc_miniature"
   },
   {
     "box_2d": [
-      379,
-      662,
-      485,
-      715
+      556,
+      345,
+      661,
+      391
     ],
-    "label": "Ghost Miniature"
+    "label": "knight_miniature"
   },
   {
     "box_2d": [
-      851,
-      374,
+      521,
+      409,
+      620,
+      458
+    ],
+    "label": "ranger_miniature"
+  },
+  {
+    "box_2d": [
+      559,
+      469,
+      661,
+      524
+    ],
+    "label": "templar_miniature"
+  },
+  {
+    "box_2d": [
+      520,
+      544,
+      620,
+      584
+    ],
+    "label": "healer_miniature"
+  },
+  {
+    "box_2d": [
+      538,
+      607,
+      661,
+      653
+    ],
+    "label": "odin_miniature"
+  },
+  {
+    "box_2d": [
+      841,
+      357,
       977,
-      421
+      410
     ],
-    "label": "Black Guard Card"
+    "label": "knight_card"
   },
   {
     "box_2d": [
-      851,
-      427,
+      841,
+      416,
       977,
-      473
+      469
     ],
-    "label": "Dwarf Fighter Card"
+    "label": "ranger_card"
   },
   {
     "box_2d": [
-      851,
-      480,
+      841,
+      475,
       977,
-      526
+      527
     ],
-    "label": "Blue Wizard Card"
+    "label": "templar_card"
   },
   {
     "box_2d": [
-      851,
+      841,
       533,
       977,
-      579
+      585
     ],
-    "label": "Ranger Card"
+    "label": "healer_card"
   },
   {
     "box_2d": [
-      851,
-      586,
+      841,
+      590,
       977,
-      632
+      642
     ],
-    "label": "Militia Card"
-  },
-  {
-    "box_2d": [
-      562,
-      471,
-      646,
-      520
-    ],
-    "label": "Dark Knight Miniature"
-  },
-  {
-    "box_2d": [
-      547,
-      335,
-      644,
-      385
-    ],
-    "label": "Dwarf Miniature"
-  },
-  {
-    "box_2d": [
-      425,
-      298,
-      532,
-      347
-    ],
-    "label": "Human Warrior Miniature"
-  },
-  {
-    "box_2d": [
-      492,
-      617,
-      584,
-      672
-    ],
-    "label": "Elf Ranger Miniature"
-  },
-  {
-    "box_2d": [
-      519,
-      411,
-      606,
-      461
-    ],
-    "label": "Soldier Miniature"
+    "label": "odin_card"
   }
 ]

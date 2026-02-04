@@ -25,7 +25,8 @@ describe('MOCK: Extraction Agent', () => {
         const files = await runExtractionAgent(buffer, MOCK_VISION_ANALYSIS as any, extractDir);
 
         expect(files).toBeDefined();
-        expect(files.length).toBe(MOCK_VISION_ANALYSIS.length);
+        const extractedPaths = Object.values(files);
+        expect(extractedPaths.length).toBe(MOCK_VISION_ANALYSIS.length);
         expect(fs.existsSync(extractDir)).toBe(true);
         expect(fs.readdirSync(extractDir).length).toBeGreaterThan(0);
     });
