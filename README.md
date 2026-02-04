@@ -76,9 +76,9 @@ When you type a prompt like *"A tactical chess game in a volcano,"* the system d
 3. **The Casting Director (Sprite & Extraction Agents):**
 
    Simultaneously, it isolates every character and item from the original image. It cuts them out, makes their backgrounds transparent, and prepares them as digital "stickers" (sprites) to be moved around.
-   ![alt text](assets/images/sprites_white.png)
-   ![alt text](assets/images/sprites_black.png)
-   ![alt text](assets/images/sprites.png)
+   |                   White BG                   |                   Black BG                   |              Transparent               |
+   | :------------------------------------------: | :------------------------------------------: | :------------------------------------: |
+   | ![alt text](assets/images/sprites_white.png) | ![alt text](assets/images/sprites_black.png) | ![alt text](assets/images/sprites.png) |
 
 4. **The Vision Segmentation (Vision & Segmentation Agent):**
 
