@@ -2,7 +2,7 @@
 
 > **The first game engine driven entirely by Gemini.**
 >
-> *🏆 Built for the Gemini 3 Hackathon*
+> *🏆 Built for the Gemini 3 Hackathon | Made with ❤️*
 
 This project represents a paradigm shift in game development. Unlike traditional engines that rely on hard-coded scripts and static assets, this framework uses **natural language as the primary source of truth**. The engine, powered by **Gemini 2.5 Flash & Nanobana Pro**, generates the environment, assets, and game rules on the fly, and acts as a real-time game server by interpreting player actions through a multimodal agentic pipeline.
 
