@@ -4,50 +4,28 @@
 >
 > *🏆 Built for the Gemini 3 Hackathon | Made with ❤️*
 
-This project represents a paradigm shift in game development. Unlike traditional engines that rely on hard-coded scripts and static assets, this framework uses **natural language as the primary source of truth**. The engine, powered by **Gemini 2.5 Flash & Nanobana Pro**, generates the environment, assets, and game rules on the fly, and acts as a real-time game server by interpreting player actions through a multimodal agentic pipeline.
+This project is a **Native Multimodal Engine**. Unlike tools that just generate code, we use **Gemini 2.5 Flash** as the runtime server. The engine manages state, rules, and assets purely through language, enabling **real-time "God Mode"** modifications in multiplayer environments.
 
 ---
 
-## Highlights: Why This Engine Differs
+## The Paradigm Shift
 
-This project is not just a game generator; it is a **Native Multimodal Engine** that solves the biggest problems in Generative AI gaming: consistency, state management, and real-time modification.
+We are moving beyond "Text-to-Code." We are doing "Text-to-State."
 
-### 1. True "Vibe Coding" for Players (God Mode)
+| **Feature**        | **Traditional Engine** | **AI Code Generators**     | **Gemini Game Engine**      |
+| ------------------ | ---------------------- | -------------------------- | --------------------------- |
+| **Core Logic**     | Hard-coded (C++/C#)    | AI writes code (Python/JS) | **Linguistic (Prompts)**    |
+| **State Source**   | Binary Memory          | Local Variables            | **Chat History (JSON)**     |
+| **Asset Pipeline** | Manual Import          | Inconsistent Generation    | **Scene-First Consistency** |
+| **Multiplayer**    | Complex Networking     | Usually Single Player      | **Native (Chat Protocol)**  |
+| **Modifiability**  | Recompile & Restart    | Regenerate & Restart       | **Hot-Swap in Real-Time**   |
 
-Most "vibe coding" tools are for developers. We brought it to the **end-user**.
+## Key Innovations
 
-- **The Feature:** Players can rewrite game rules or visuals mid-game using natural language (e.g., *"Make the floor lava and give everyone heat resistance"*).
-- **The Tech:** We preserve the game state while hot-swapping assets and JSON logic rules in real-time. No recompilation, no restart—just instant reality shifting.
-
-### 2. Solving the "Generative Hallucination" Problem
-
-Generative games often suffer from shifting visuals and inconsistent scales. We solved this with a **"Scene-First" Pipeline**.
-
-- **The Difference:** Instead of generating assets individually (which leads to style, scale and size mismatches), we generate the **entire scene first**.
-- **The Execution:** Our specialized agent swarm then deconstructs this single coherent image into a background, a NavMesh, and perfectly scaled sprites. This guarantees that every character fits the world perfectly because they were born from it.
-
-### 3. The "Sandwich" Architecture (Visual-Agnostic Actions)
-
-We built a novel interaction layer that separates **Intent** from **Execution**.
-
-- **Top Layer (Actions):** User inputs (drag, pinch, click) are treated as abstract intents.
-- **Middle Layer (Assets):** The visual representation (sprites, cards) is purely cosmetic.
-- **Bottom Layer (Logic):** The "Text-as-State" engine processes the intent against the rules.
-- **Why it matters:** This makes the engine **content-agnostic**. The AI can swap a "Knight" for a "Spaceship" instantly, and the interaction logic (Drag-to-Move) remains perfectly functional without a single line of code change.
-
-### 4. Game State as a "Chat Protocol"
-
-We reimagined multiplayer networking by treating the game state as a **Multi-User Chat Session**.
-
-- **Innovation:** The entire game state is a JSON object stored in a conversation history.
-- **Benefit:** Multiplayer synchronization becomes trivial. Player A sends a "Move" message, the AI Referee validates it, and the state updates for Player B like a new chat message. This allows for infinite scalability and purely AI-managed networking.
-
-### 5. Zero Hard-Coded Logic
-
-Unlike hybrid engines that use AI for assets but C# for logic, our engine is **100% Linguistic**.
-
-- **The Breakthrough:** The physics, combat rules, and movement logic are just text strings processed by Gemini 2.0 Flash.
-- **The Impact:** This enables "Infinite Gameplay." You aren't limited to what the developer coded. If you tell the AI *"Knights can jump over walls,"* it becomes a true mechanic instantly, executed by the AI Referee.
+- **The "Sandwich" Architecture:** We separate **Intent** from **Execution**. User inputs (like dragging) are abstract intents, while the visuals are purely cosmetic.
+- **True "God Mode":** Players can rewrite rules or visuals mid-game (e.g., *"Make the floor lava"*) with zero recompiling. The engine hot-swaps assets and JSON rules in real-time.
+- **No Hallucinations (Scene-First):** We generate the **entire scene as one image** first, then deconstruct it into assets. This guarantees perfect scale and style consistency.
+- **Zero Hard-Coded Logic:** Physics and combat are just text strings processed by the LLM. If you write *"Knights can jump walls,"* it becomes a mechanic instantly.
 
 
 ------
@@ -178,15 +156,4 @@ npm install
 
 npm run dev:all
 ```
-
-### Generation Workflow 
-To run the detailed generation workflow using Vitest (Real Mode):
-```bash
-cd backend
-npm run test
-```
-
-run test/real/test_workflow_real test in Vitet UI
-
-Open url at `http://localhost:3000/play`, click `Load Test Run`
 
