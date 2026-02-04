@@ -1,74 +1,98 @@
-# Gemini 3 Hackathon: AI Game Engine
+# Gemini AI Game Engine
 
-This project represents the first implementation of a game engine driven entirely by a Gemini. Unlike traditional engines that rely on hard-coded scripts, this framework utilizes natural language as the primary source of game logic and rules. The system supports a high-fidelity frontend, where the environment and mechanics are generated and governed by the AI engine.
+> **The first game engine driven entirely by Gemini.**
 
-The system architecture is divided into two primary functional phases: **Generation** and **Interaction**.
+This project represents a paradigm shift in game development. Unlike traditional engines that rely on hard-coded scripts and static assets, this framework uses **natural language as the primary source of truth**. The engine, powered by Gemini 1.5 Pro/Flash, generates the environment, assets, and game rules on the fly, and even acts as the game server by interpreting player actions and strictly enforcing rules.
 
-------
+## ✨ Key Features
 
-## 1. Generation Phase
+### 1. Generative World Building
+Turn a simple text prompt into a fully playable game scene.
+-   **Planner Agent**: Deconstructs your high-level request (e.g., "A spooky dungeon with a dragon") into a functional design document.
+-   **Architect Agent**: Converts the design into a massive JSON state object, defining entities, stats, and relationships.
+-   **Asset Swarm**: A parallelized fleet of agents that generate visual assets (sprites, backgrounds) and functional data (NavMeshes) for every entity in the scene.
 
-The generation phase covers the initial creation and setup of the game environment. The objective is to translate abstract natural language concepts into a structured, playable format.
+### 2. LLM as Game Server (API Client Pattern)
+The game logic is not hard-coded in C++ or C#. It is **inferred** by the LLM.
+-   The "Game Logic Agent" receives the current state and the user's action.
+-   It decides **validity** based on the generated rules.
+-   It executes the move by calling strictly defined **Game Tools** (functions like `moveEntity`, `applyDamage`, `spawnItem`).
+-   This allows for infinite gameplay possibilities that are still constrained by rigorous code execution.
 
-### Workflow Components:
+### 3. "God Mode" (Real-Time Modification)
+Change the game while playing it.
+-   Type a command like "Make the background lava and give everyone fire resistance."
+-   The **modification_agent** analyzes the request, updates the visual assets in real-time, and patches the JSON game state to reflect the new mechanics.
+-   State synchronization is handled instantly via **Convex**.
 
-- **Planner:** Receives input in the form of game rules (free text) and establishes the functional requirements for the session.
-- **UI Designer & Game Engine:** These modules operate in parallel. The UI Designer generates the visual layout, while the Game Engine outputs the initial **Game State** in a structured data format (JSON).
-- **Segmenter (Nanobana):** Once a scene is generated, the segmenter identifies and isolates individual assets. This allows the system to treat visual elements as discrete objects rather than static pixels.
-- **Individual Segmenting:** Each isolated asset is assigned a unique ID and a text description, ensuring the engine can track and manipulate specific items during gameplay.
+### 4. Smart Assets
+-   **Automated NavMesh**: Valid walkability masks are generated automatically from the background image.
+-   **Sprite Extraction**: Characters and items are segmented from generated scenes and processed for transparency and consistency.
 
-------
+---
 
-## 2. Interaction Phase
+## 🏗 Architecture
 
-The interaction phase manages the runtime execution of the game. It handles the communication between the player, the game state, and the AI engine.
+The system operates in two main phases: **Generation** and **Run**.
 
-### Operational Loop:
+### Generation Phase (The "Compiler")
+1.  **User Input**: "I want a sci-fi chess game."
+2.  `SceneAgent` orchestrates the workflow.
+3.  `VisionAgent` & `SpriteAgent` generate the visuals.
+4.  `NavigationAgent` computes pathfinding meshes.
+5.  Output: A comprehensive `gamestate.json` stored in the backend.
 
-- **Game Renderer:** Processes the game state and wireframes to display the interaction layer, typically built using React.
-- **State Management (Convex):** A centralized backend (using Convex) manages the synchronization between the user interface and the game engine.
-- **Inference Engine:** The engine evaluates user actions against the established natural language rules to determine the resulting state.
-- **AI Player:** Because the rules are stored as natural language, an AI agent can interpret and interact with the game using the same logic as a human player.
+### Run Phase (The "Runtime")
+1.  **Frontend**: A Next.js 15 application utilizing React for the game loop.
+2.  **State Sync**: [Convex](https://www.convex.dev/) acts as the realtime database, pushing state changes to the client (60fps feel).
+3.  **Game Loop**:
+    -   User clicks -> Action sent to Convex.
+    -   Convex enqueues action for the `GameLogic` agent.
+    -   LLM processes action -> updates Convex state -> Client updates.
 
-------
+---
 
-## 4. Future Roadmap: Real-Time Adaptive UI
+## 🚀 Quick Start
 
-The next stage of development focuses on the implementation of **Adaptive Game UI**.
+### Prerequisites
+-   Node.js 18+
+-   A Gemini API Key (set in `backend/.env` and `.env.local`)
 
-In current iterations, the UI remains relatively static once generated. The future objective is to enable the Game Engine to request and generate entirely new UI components in real-time. This will allow the frontend to transform dynamically based on game events—for example, shifting the entire control scheme or visual theme instantly as the narrative or mechanical requirements of the game evolve.
+### Installation
 
+1.  **Install dependencies**:
+    ```bash
+    # Frontend & Convex
+    npm install
 
-## Setup & Installation
+    # Backend (AI Engine)
+    cd backend
+    npm install
+    ```
 
-### 1. Install Dependencies
-Install dependencies for both the frontend (root) and the backend.
+2.  **Start the Development Environment**:
+    This command runs the Next.js frontend, Convex backend, and the AI Agent runner simultaneously.
+    ```bash
+    npm run dev:all
+    ```
+    Open `http://localhost:3000/play` to see the game.
 
-**Root (Frontend & Convex):**
-```bash
-npm install
-npx convex dev # create .env.local
-```
-
-**Backend (LLM Engine):**
-```bash
-cd backend
-npm install
-```
-
-## Running the Application
-```bash
-
-npm run dev:all
-```
-
-### Generation Workflow 
-To run the detailed generation workflow using Vitest (Real Mode):
+### Running the Agent Runner (Backend Only)
+If you want to isolate the AI generation workflow or run the "God Mode" backend listener:
 ```bash
 cd backend
 npm run test
 ```
+*Note: We use Vitest as a task runner for our agents because of its excellent watch mode and immediate feedback loop.*
 
-run test/real/test_workflow_real test in Vitet UI
+## 🧪 Testing & Generation Workflows
 
-Open url at `http://localhost:3000/play`, click `Load Test Run`
+To trigger a new game generation effectively, we currently use our **Real Mode** test suite.
+
+1.  Navigate to `backend/test/real`.
+2.  Run the workflow test:
+    ```bash
+    # In backend directory
+    npx vitest test/real/test_workflow_real
+    ```
+3.  This will trigger the full pipeline: Planning -> Architecture -> Asset Generation -> State Creation.
