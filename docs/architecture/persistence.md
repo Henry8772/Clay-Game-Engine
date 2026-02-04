@@ -22,7 +22,13 @@ Convex is the source of truth for the *active* game session. It stores the light
         isActive: v.boolean(),
         
         // Link to the backend filesystem artifacts (runs directory).
-        runId: v.optional(v.string()) 
+        runId: v.optional(v.string()),
+
+        // Engine Configuration & Status
+        engine_tools: v.optional(v.any()), // Dynamic tool definitions
+        engine_logic: v.optional(v.string()), // Dynamic logic guide
+        status: v.string(), // "idle" | "generating" | "playing" | "failed"
+        progress: v.optional(v.string()) // e.g., "Generating Sprites..."
     }),
     
     messages: defineTable({

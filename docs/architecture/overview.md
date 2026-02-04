@@ -9,17 +9,17 @@ The architecture consists of three main pillars:
 1.  **Generation Pipeline (Backend Graph)**
     *   **Goal**: Turn a user prompt into a playable game state + assets.
     *   **Tech**: LangGraph, Node.js, Image Generation Models.
-    *   [Read more](./generation_workflow.md)
+    *   [Read more](../workflows/generation.md)
 
 2.  **Runtime Engine (Frontend & Backend)**
     *   **Goal**: Play the game with rule enforcement and AI opponents.
-    *   **Tech**: Next.js (React), Convex (DB), Node.js (Referee Agent).
-    *   [Read more](./runtime_engine.md)
+    *   **Tech**: Next.js (React), Convex (DB), Node.js (Game Logic Agent).
+    *   [Read more](./runtime.md)
 
 3.  **Data Persistence (Convex & Files)**
     *   **Goal**: Store game states, history, and large asset files.
     *   **Tech**: Convex (State/Meta), FileSystem (Assets/Runs).
-    *   [Read more](./data_persistence.md)
+    *   [Read more](./persistence.md)
 
 ## High-Level Data Flow
 
@@ -33,6 +33,6 @@ graph TD
     Assets -->|Load| Client
     
     Client -->|Action| ServerAction[Backend Server Action]
-    ServerAction -->|Process| Referee[Game Referee Agent]
+    ServerAction -->|Process| Logic[Game Logic Agent]
     ServerAction -->|Update| Convex
 ```
