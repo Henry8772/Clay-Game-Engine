@@ -6,7 +6,7 @@ The generation pipeline transforms a user's natural language prompt into a compl
 
 ## Workflow Steps
 
-The process follows a strictly linear sequence. The `GrapgState` object is passed through each node, accumulating data.
+The process follows a strictly linear sequence. The `GraphState` object is passed through each node, accumulating data.
 
 | Step  | Node Name                 | Input                           | Output            | Description                                                            |
 | :---- | :------------------------ | :------------------------------ | :---------------- | :--------------------------------------------------------------------- |
