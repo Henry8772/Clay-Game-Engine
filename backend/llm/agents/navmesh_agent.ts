@@ -15,7 +15,7 @@ export async function runNavMeshAgent(client: LLMClient, backgroundBuffer: Buffe
         Look at this top-down game board.
         
         **Mission:**
-        Identify EVERY single "Playable Tile" or "Grid Cell" on the central floor area.
+        Identify 6 by 6 "Playable Tile" or "Grid Cell" on the central floor area.
 
         **Output Requirement:**
         Return a JSON list of bounding boxes [ymin, xmin, ymax, xmax] (0-1000 normalized).

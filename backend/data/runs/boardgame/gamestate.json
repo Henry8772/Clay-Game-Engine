@@ -12,460 +12,346 @@
       }
     },
     "blueprints": {
-      "tpl_goblin_archer_card": {
-        "label": "Goblin Archer Card",
+      "tpl_skeleton_card": {
+        "id": "tpl_skeleton_card",
         "type": "item",
-        "team": "blue",
-        "src": "extracted/goblin_archer_card.png",
-        "spawns": "tpl_goblin_archer_miniature"
+        "label": "Skeleton Card",
+        "src": "extracted/skeleton_card.png",
+        "spawns": "tpl_skeleton_miniature"
       },
-      "tpl_goblin_archer_miniature": {
-        "label": "Goblin Archer",
-        "type": "unit",
-        "src": "extracted/goblin_miniature.png"
-      },
-      "tpl_orc_grunt_card": {
-        "label": "Orc Grunt Card",
+      "tpl_ghost_card": {
+        "id": "tpl_ghost_card",
         "type": "item",
-        "team": "neutral",
-        "src": "extracted/orc_grunt_card.png",
-        "spawns": "tpl_orc_grunt_miniature"
+        "label": "Ghost Card",
+        "src": "extracted/ghost_card.png",
+        "spawns": "tpl_ghost_miniature"
       },
-      "tpl_orc_grunt_miniature": {
-        "label": "Orc Grunt",
-        "type": "unit",
-        "src": "extracted/orc_warrior_miniature.png"
-      },
-      "tpl_necromancer_card": {
-        "label": "Necromancer Card",
+      "tpl_vampire_card": {
+        "id": "tpl_vampire_card",
         "type": "item",
-        "team": "neutral",
-        "src": "extracted/necromancer_card.png",
-        "spawns": "tpl_necromancer_miniature"
+        "label": "Vampire Card",
+        "src": "extracted/vampire_card.png",
+        "spawns": "tpl_vampire_miniature"
       },
-      "tpl_necromancer_miniature": {
-        "label": "Necromancer",
-        "type": "unit",
-        "src": "extracted/skeleton_miniature.png"
-      },
-      "tpl_stone_golem_card": {
-        "label": "Stone Golem Card",
+      "tpl_zombie_card": {
+        "id": "tpl_zombie_card",
         "type": "item",
-        "team": "neutral",
-        "src": "extracted/stone_golem_card.png",
-        "spawns": "tpl_stone_golem_miniature"
+        "label": "Zombie Card",
+        "src": "extracted/zombie_card.png",
+        "spawns": "tpl_zombie_miniature"
       },
-      "tpl_stone_golem_miniature": {
-        "label": "Stone Golem",
-        "type": "unit",
-        "src": "extracted/stone_golem_miniature.png"
-      },
-      "tpl_spirit_card": {
-        "label": "Spirit Card",
+      "tpl_orc_card": {
+        "id": "tpl_orc_card",
         "type": "item",
-        "team": "neutral",
-        "src": "extracted/spirit_card.png",
-        "spawns": "tpl_spirit_miniature"
-      },
-      "tpl_spirit_miniature": {
-        "label": "Spirit",
-        "type": "unit",
-        "src": "extracted/ghost_miniature.png"
-      },
-      "tpl_goblin_miniature": {
-        "label": "Goblin",
-        "type": "unit",
-        "team": "neutral",
-        "src": "extracted/goblin_miniature.png"
-      },
-      "tpl_orc_warrior_miniature": {
-        "label": "Orc Warrior",
-        "type": "unit",
-        "team": "neutral",
-        "src": "extracted/orc_warrior_miniature.png"
+        "label": "Orc Card",
+        "src": "extracted/orc_card.png",
+        "spawns": "tpl_orc_miniature"
       },
       "tpl_skeleton_miniature": {
-        "label": "Skeleton",
+        "id": "tpl_skeleton_miniature",
         "type": "unit",
-        "team": "red",
-        "src": "extracted/skeleton_miniature.png"
+        "label": "Skeleton",
+        "src": "extracted/skeleton_miniature.png",
+        "spawns": null
       },
       "tpl_ghost_miniature": {
+        "id": "tpl_ghost_miniature",
+        "type": "unit",
         "label": "Ghost",
-        "type": "unit",
-        "team": "neutral",
-        "src": "extracted/ghost_miniature.png"
+        "src": "extracted/ghost_miniature.png",
+        "spawns": null
       },
-      "tpl_black_guard_card": {
-        "label": "Black Guard Card",
+      "tpl_vampire_miniature": {
+        "id": "tpl_vampire_miniature",
+        "type": "unit",
+        "label": "Vampire",
+        "src": "extracted/vampire_miniature.png",
+        "spawns": null
+      },
+      "tpl_zombie_miniature": {
+        "id": "tpl_zombie_miniature",
+        "type": "unit",
+        "label": "Zombie",
+        "src": "extracted/zombie_miniature.png",
+        "spawns": null
+      },
+      "tpl_orc_miniature": {
+        "id": "tpl_orc_miniature",
+        "type": "unit",
+        "label": "Orc",
+        "src": "extracted/orc_miniature.png",
+        "spawns": null
+      },
+      "tpl_knight_miniature": {
+        "id": "tpl_knight_miniature",
+        "type": "unit",
+        "label": "Knight",
+        "src": "extracted/knight_miniature.png",
+        "spawns": null
+      },
+      "tpl_ranger_miniature": {
+        "id": "tpl_ranger_miniature",
+        "type": "unit",
+        "label": "Ranger",
+        "src": "extracted/ranger_miniature.png",
+        "spawns": null
+      },
+      "tpl_templar_miniature": {
+        "id": "tpl_templar_miniature",
+        "type": "unit",
+        "label": "Templar",
+        "src": "extracted/templar_miniature.png",
+        "spawns": null
+      },
+      "tpl_healer_miniature": {
+        "id": "tpl_healer_miniature",
+        "type": "unit",
+        "label": "Healer",
+        "src": "extracted/healer_miniature.png",
+        "spawns": null
+      },
+      "tpl_odin_miniature": {
+        "id": "tpl_odin_miniature",
+        "type": "unit",
+        "label": "Odin",
+        "src": "extracted/odin_miniature.png",
+        "spawns": null
+      },
+      "tpl_knight_card": {
+        "id": "tpl_knight_card",
         "type": "item",
-        "team": "neutral",
-        "src": "extracted/black_guard_card.png",
-        "spawns": "tpl_black_guard_miniature"
-      },
-      "tpl_black_guard_miniature": {
-        "label": "Black Guard",
-        "type": "unit",
-        "src": "extracted/dark_knight_miniature.png"
-      },
-      "tpl_dwarf_fighter_card": {
-        "label": "Dwarf Fighter Card",
-        "type": "item",
-        "team": "neutral",
-        "src": "extracted/dwarf_fighter_card.png",
-        "spawns": "tpl_dwarf_fighter_miniature"
-      },
-      "tpl_dwarf_fighter_miniature": {
-        "label": "Dwarf Fighter",
-        "type": "unit",
-        "src": "extracted/dwarf_miniature.png"
-      },
-      "tpl_blue_wizard_card": {
-        "label": "Blue Wizard Card",
-        "type": "item",
-        "team": "blue",
-        "src": "extracted/blue_wizard_card.png",
-        "spawns": "tpl_blue_wizard_miniature"
-      },
-      "tpl_blue_wizard_miniature": {
-        "label": "Blue Wizard",
-        "type": "unit",
-        "src": "extracted/dwarf_miniature.png"
+        "label": "Knight Card",
+        "src": "extracted/knight_card.png",
+        "spawns": "tpl_knight_miniature"
       },
       "tpl_ranger_card": {
-        "label": "Ranger Card",
+        "id": "tpl_ranger_card",
         "type": "item",
-        "team": "neutral",
+        "label": "Ranger Card",
         "src": "extracted/ranger_card.png",
         "spawns": "tpl_ranger_miniature"
       },
-      "tpl_ranger_miniature": {
-        "label": "Ranger",
-        "type": "unit",
-        "src": "extracted/elf_ranger_miniature.png"
-      },
-      "tpl_militia_card": {
-        "label": "Militia Card",
+      "tpl_templar_card": {
+        "id": "tpl_templar_card",
         "type": "item",
-        "team": "neutral",
-        "src": "extracted/militia_card.png",
-        "spawns": "tpl_militia_miniature"
+        "label": "Templar Card",
+        "src": "extracted/templar_card.png",
+        "spawns": "tpl_templar_miniature"
       },
-      "tpl_militia_miniature": {
-        "label": "Militia",
-        "type": "unit",
-        "src": "extracted/soldier_miniature.png"
+      "tpl_healer_card": {
+        "id": "tpl_healer_card",
+        "type": "item",
+        "label": "Healer Card",
+        "src": "extracted/healer_card.png",
+        "spawns": "tpl_healer_miniature"
       },
-      "tpl_dark_knight_miniature": {
-        "label": "Dark Knight",
-        "type": "unit",
-        "team": "blue",
-        "src": "extracted/dark_knight_miniature.png"
-      },
-      "tpl_dwarf_miniature": {
-        "label": "Dwarf",
-        "type": "unit",
-        "team": "neutral",
-        "src": "extracted/dwarf_miniature.png"
-      },
-      "tpl_human_warrior_miniature": {
-        "label": "Human Warrior",
-        "type": "unit",
-        "team": "neutral",
-        "src": "extracted/human_warrior_miniature.png"
-      },
-      "tpl_elf_ranger_miniature": {
-        "label": "Elf Ranger",
-        "type": "unit",
-        "team": "neutral",
-        "src": "extracted/elf_ranger_miniature.png"
-      },
-      "tpl_soldier_miniature": {
-        "label": "Soldier",
-        "type": "unit",
-        "team": "neutral",
-        "src": "extracted/soldier_miniature.png"
+      "tpl_odin_card": {
+        "id": "tpl_odin_card",
+        "type": "item",
+        "label": "Odin Card",
+        "src": "extracted/odin_card.png",
+        "spawns": "tpl_odin_miniature"
       }
     },
     "entities": {
       "entity_0": {
         "id": "entity_0",
-        "t": "tpl_goblin_archer_card",
-        "label": "Goblin Archer Card",
-        "team": "blue",
-        "type": "unit",
-        "src": "extracted/goblin_archer_card.png",
+        "t": "tpl_skeleton_card",
         "pixel_box": [
-          14,
-          375,
-          140,
-          421
+          28,
+          370,
+          158,
+          418
         ]
       },
       "entity_1": {
         "id": "entity_1",
-        "t": "tpl_orc_grunt_card",
-        "label": "Orc Grunt Card",
-        "team": "neutral",
-        "type": "prop",
-        "src": "extracted/orc_grunt_card.png",
+        "t": "tpl_ghost_card",
         "pixel_box": [
-          14,
-          428,
-          140,
-          474
+          28,
+          425,
+          158,
+          473
         ]
       },
       "entity_2": {
         "id": "entity_2",
-        "t": "tpl_necromancer_card",
-        "label": "Necromancer Card",
-        "team": "neutral",
-        "type": "prop",
-        "src": "extracted/necromancer_card.png",
+        "t": "tpl_vampire_card",
         "pixel_box": [
-          14,
-          481,
-          140,
-          527
+          28,
+          480,
+          158,
+          528
         ]
       },
       "entity_3": {
         "id": "entity_3",
-        "t": "tpl_stone_golem_card",
-        "label": "Stone Golem Card",
-        "team": "neutral",
-        "type": "prop",
-        "src": "extracted/stone_golem_card.png",
+        "t": "tpl_zombie_card",
         "pixel_box": [
-          14,
-          533,
-          140,
-          580
+          28,
+          534,
+          158,
+          582
         ]
       },
       "entity_4": {
         "id": "entity_4",
-        "t": "tpl_spirit_card",
-        "label": "Spirit Card",
-        "team": "neutral",
-        "type": "prop",
-        "src": "extracted/spirit_card.png",
+        "t": "tpl_orc_card",
         "pixel_box": [
-          14,
-          586,
-          140,
-          633
+          28,
+          589,
+          158,
+          637
         ]
       },
       "entity_5": {
         "id": "entity_5",
-        "t": "tpl_goblin_miniature",
-        "label": "Goblin Miniature",
-        "team": "neutral",
-        "type": "prop",
-        "src": "extracted/goblin_miniature.png",
+        "t": "tpl_skeleton_miniature",
         "pixel_box": [
-          313,
-          344,
-          396,
-          389
+          296,
+          350,
+          400,
+          396
         ]
       },
       "entity_6": {
         "id": "entity_6",
-        "t": "tpl_orc_warrior_miniature",
-        "label": "Orc Warrior Miniature",
-        "team": "neutral",
-        "type": "prop",
-        "src": "extracted/orc_warrior_miniature.png",
+        "t": "tpl_ghost_miniature",
         "pixel_box": [
-          353,
-          406,
-          458,
+          292,
+          416,
+          400,
           455
         ]
       },
       "entity_7": {
         "id": "entity_7",
-        "t": "tpl_skeleton_miniature",
-        "label": "Skeleton Miniature",
-        "team": "red",
-        "type": "unit",
-        "src": "extracted/skeleton_miniature.png",
+        "t": "tpl_vampire_miniature",
         "pixel_box": [
-          359,
-          471,
-          457,
+          299,
+          481,
+          400,
           521
         ]
       },
       "entity_8": {
         "id": "entity_8",
-        "t": "tpl_stone_golem_miniature",
-        "label": "Stone Golem Miniature",
-        "team": "neutral",
-        "type": "prop",
-        "src": "extracted/stone_golem_miniature.png",
+        "t": "tpl_zombie_miniature",
         "pixel_box": [
-          299,
-          604,
-          399,
-          664
+          298,
+          545,
+          400,
+          584
         ]
       },
       "entity_9": {
         "id": "entity_9",
-        "t": "tpl_ghost_miniature",
-        "label": "Ghost Miniature",
-        "team": "neutral",
-        "type": "prop",
-        "src": "extracted/ghost_miniature.png",
+        "t": "tpl_orc_miniature",
         "pixel_box": [
-          379,
-          662,
-          485,
-          715
+          289,
+          604,
+          400,
+          653
         ]
       },
       "entity_10": {
         "id": "entity_10",
-        "t": "tpl_black_guard_card",
-        "label": "Black Guard Card",
-        "team": "neutral",
-        "type": "prop",
-        "src": "extracted/black_guard_card.png",
+        "t": "tpl_knight_miniature",
         "pixel_box": [
-          851,
-          374,
-          977,
-          421
+          556,
+          345,
+          661,
+          391
         ]
       },
       "entity_11": {
         "id": "entity_11",
-        "t": "tpl_dwarf_fighter_card",
-        "label": "Dwarf Fighter Card",
-        "team": "neutral",
-        "type": "prop",
-        "src": "extracted/dwarf_fighter_card.png",
+        "t": "tpl_ranger_miniature",
         "pixel_box": [
-          851,
-          427,
-          977,
-          473
+          521,
+          409,
+          620,
+          458
         ]
       },
       "entity_12": {
         "id": "entity_12",
-        "t": "tpl_blue_wizard_card",
-        "label": "Blue Wizard Card",
-        "team": "blue",
-        "type": "unit",
-        "src": "extracted/blue_wizard_card.png",
+        "t": "tpl_templar_miniature",
         "pixel_box": [
-          851,
-          480,
-          977,
-          526
+          559,
+          469,
+          661,
+          524
         ]
       },
       "entity_13": {
         "id": "entity_13",
-        "t": "tpl_ranger_card",
-        "label": "Ranger Card",
-        "team": "neutral",
-        "type": "prop",
-        "src": "extracted/ranger_card.png",
+        "t": "tpl_healer_miniature",
         "pixel_box": [
-          851,
-          533,
-          977,
-          579
+          520,
+          544,
+          620,
+          584
         ]
       },
       "entity_14": {
         "id": "entity_14",
-        "t": "tpl_militia_card",
-        "label": "Militia Card",
-        "team": "neutral",
-        "type": "prop",
-        "src": "extracted/militia_card.png",
+        "t": "tpl_odin_miniature",
         "pixel_box": [
-          851,
-          586,
-          977,
-          632
-        ]
-      },
-      "entity_15": {
-        "id": "entity_15",
-        "t": "tpl_dark_knight_miniature",
-        "label": "Dark Knight Miniature",
-        "team": "blue",
-        "type": "unit",
-        "src": "extracted/dark_knight_miniature.png",
-        "pixel_box": [
-          562,
-          471,
-          646,
-          520
+          538,
+          607,
+          661,
+          653
         ]
       },
       "entity_16": {
         "id": "entity_16",
-        "t": "tpl_dwarf_miniature",
-        "label": "Dwarf Miniature",
-        "team": "neutral",
-        "type": "prop",
-        "src": "extracted/dwarf_miniature.png",
+        "t": "tpl_knight_card",
         "pixel_box": [
-          547,
-          335,
-          644,
-          385
+          841,
+          357,
+          977,
+          410
         ]
       },
       "entity_17": {
         "id": "entity_17",
-        "t": "tpl_human_warrior_miniature",
-        "label": "Human Warrior Miniature",
-        "team": "neutral",
-        "type": "prop",
-        "src": "extracted/human_warrior_miniature.png",
+        "t": "tpl_ranger_card",
         "pixel_box": [
-          425,
-          298,
-          532,
-          347
+          841,
+          416,
+          977,
+          469
         ]
       },
       "entity_18": {
         "id": "entity_18",
-        "t": "tpl_elf_ranger_miniature",
-        "label": "Elf Ranger Miniature",
-        "team": "neutral",
-        "type": "prop",
-        "src": "extracted/elf_ranger_miniature.png",
+        "t": "tpl_templar_card",
         "pixel_box": [
-          492,
-          617,
-          584,
-          672
+          841,
+          475,
+          977,
+          527
         ]
       },
       "entity_19": {
         "id": "entity_19",
-        "t": "tpl_soldier_miniature",
-        "label": "Soldier Miniature",
-        "team": "neutral",
-        "type": "prop",
-        "src": "extracted/soldier_miniature.png",
+        "t": "tpl_healer_card",
         "pixel_box": [
-          519,
-          411,
-          606,
-          461
+          841,
+          533,
+          977,
+          585
+        ]
+      },
+      "entity_20": {
+        "id": "entity_20",
+        "t": "tpl_odin_card",
+        "pixel_box": [
+          841,
+          590,
+          977,
+          642
         ]
       }
     },
@@ -476,228 +362,327 @@
     "navMesh": [
       {
         "box_2d": [
-          224,
-          187,
-          330,
-          312
+          218,
+          182,
+          307,
+          288
         ],
         "label": "tile_r0_c0"
       },
       {
         "box_2d": [
-          224,
-          312,
-          330,
-          437
+          218,
+          288,
+          307,
+          394
         ],
         "label": "tile_r0_c1"
       },
       {
         "box_2d": [
-          224,
-          437,
-          330,
-          562
+          218,
+          394,
+          307,
+          500
         ],
         "label": "tile_r0_c2"
       },
       {
         "box_2d": [
-          224,
-          562,
-          330,
-          687
+          218,
+          500,
+          307,
+          606
         ],
         "label": "tile_r0_c3"
       },
       {
         "box_2d": [
-          224,
-          687,
-          330,
-          813
+          218,
+          606,
+          307,
+          712
         ],
         "label": "tile_r0_c4"
       },
       {
         "box_2d": [
-          330,
-          187,
-          436,
-          312
+          218,
+          712,
+          307,
+          818
+        ],
+        "label": "tile_r0_c5"
+      },
+      {
+        "box_2d": [
+          307,
+          182,
+          397,
+          288
         ],
         "label": "tile_r1_c0"
       },
       {
         "box_2d": [
-          330,
-          312,
-          436,
-          437
+          307,
+          288,
+          397,
+          394
         ],
         "label": "tile_r1_c1"
       },
       {
         "box_2d": [
-          330,
-          437,
-          436,
-          562
+          307,
+          394,
+          397,
+          500
         ],
         "label": "tile_r1_c2"
       },
       {
         "box_2d": [
-          330,
-          562,
-          436,
-          687
+          307,
+          500,
+          397,
+          606
         ],
         "label": "tile_r1_c3"
       },
       {
         "box_2d": [
-          330,
-          687,
-          436,
-          813
+          307,
+          606,
+          397,
+          712
         ],
         "label": "tile_r1_c4"
       },
       {
         "box_2d": [
-          436,
-          187,
-          542,
-          312
+          307,
+          712,
+          397,
+          818
+        ],
+        "label": "tile_r1_c5"
+      },
+      {
+        "box_2d": [
+          397,
+          182,
+          486,
+          288
         ],
         "label": "tile_r2_c0"
       },
       {
         "box_2d": [
-          436,
-          312,
-          542,
-          437
+          397,
+          288,
+          486,
+          394
         ],
         "label": "tile_r2_c1"
       },
       {
         "box_2d": [
-          436,
-          437,
-          542,
-          562
+          397,
+          394,
+          486,
+          500
         ],
         "label": "tile_r2_c2"
       },
       {
         "box_2d": [
-          436,
-          562,
-          542,
-          687
+          397,
+          500,
+          486,
+          606
         ],
         "label": "tile_r2_c3"
       },
       {
         "box_2d": [
-          436,
-          687,
-          542,
-          813
+          397,
+          606,
+          486,
+          712
         ],
         "label": "tile_r2_c4"
       },
       {
         "box_2d": [
-          542,
-          187,
-          648,
-          312
+          397,
+          712,
+          486,
+          818
+        ],
+        "label": "tile_r2_c5"
+      },
+      {
+        "box_2d": [
+          486,
+          182,
+          576,
+          288
         ],
         "label": "tile_r3_c0"
       },
       {
         "box_2d": [
-          542,
-          312,
-          648,
-          437
+          486,
+          288,
+          576,
+          394
         ],
         "label": "tile_r3_c1"
       },
       {
         "box_2d": [
-          542,
-          437,
-          648,
-          562
+          486,
+          394,
+          576,
+          500
         ],
         "label": "tile_r3_c2"
       },
       {
         "box_2d": [
-          542,
-          562,
-          648,
-          687
+          486,
+          500,
+          576,
+          606
         ],
         "label": "tile_r3_c3"
       },
       {
         "box_2d": [
-          542,
-          687,
-          648,
-          813
+          486,
+          606,
+          576,
+          712
         ],
         "label": "tile_r3_c4"
       },
       {
         "box_2d": [
-          648,
-          187,
-          755,
-          312
+          486,
+          712,
+          576,
+          818
+        ],
+        "label": "tile_r3_c5"
+      },
+      {
+        "box_2d": [
+          576,
+          182,
+          665,
+          288
         ],
         "label": "tile_r4_c0"
       },
       {
         "box_2d": [
-          648,
-          312,
-          755,
-          437
+          576,
+          288,
+          665,
+          394
         ],
         "label": "tile_r4_c1"
       },
       {
         "box_2d": [
-          648,
-          437,
-          755,
-          562
+          576,
+          394,
+          665,
+          500
         ],
         "label": "tile_r4_c2"
       },
       {
         "box_2d": [
-          648,
-          562,
-          755,
-          687
+          576,
+          500,
+          665,
+          606
         ],
         "label": "tile_r4_c3"
       },
       {
         "box_2d": [
-          648,
-          687,
-          755,
-          813
+          576,
+          606,
+          665,
+          712
         ],
         "label": "tile_r4_c4"
+      },
+      {
+        "box_2d": [
+          576,
+          712,
+          665,
+          818
+        ],
+        "label": "tile_r4_c5"
+      },
+      {
+        "box_2d": [
+          665,
+          182,
+          755,
+          288
+        ],
+        "label": "tile_r5_c0"
+      },
+      {
+        "box_2d": [
+          665,
+          288,
+          755,
+          394
+        ],
+        "label": "tile_r5_c1"
+      },
+      {
+        "box_2d": [
+          665,
+          394,
+          755,
+          500
+        ],
+        "label": "tile_r5_c2"
+      },
+      {
+        "box_2d": [
+          665,
+          500,
+          755,
+          606
+        ],
+        "label": "tile_r5_c3"
+      },
+      {
+        "box_2d": [
+          665,
+          606,
+          755,
+          712
+        ],
+        "label": "tile_r5_c4"
+      },
+      {
+        "box_2d": [
+          665,
+          712,
+          755,
+          818
+        ],
+        "label": "tile_r5_c5"
       }
     ]
   },
