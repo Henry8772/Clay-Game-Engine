@@ -110,16 +110,32 @@ export async function removeWhiteBackground(buffer: Buffer, threshold: number = 
  */
 export async function createTransparencyMask(whiteBuffer: Buffer, blackBuffer: Buffer): Promise<Buffer> {
     const whiteImage = sharp(whiteBuffer);
-    const blackImage = sharp(blackBuffer);
+    let blackImage = sharp(blackBuffer);
 
-    const [whiteMeta, blackMeta] = await Promise.all([whiteImage.metadata(), blackImage.metadata()]);
-
-    if (whiteMeta.width !== blackMeta.width || whiteMeta.height !== blackMeta.height) {
-        throw new Error("Images must have same dimensions");
-    }
+    const whiteMeta = await whiteImage.metadata();
+    const blackMeta = await blackImage.metadata();
 
     const width = whiteMeta.width!;
     const height = whiteMeta.height!;
+
+    // --- FIX START: Auto-correct size mismatch ---
+    // If the AI gave us different sizes, force the black layer to stretch/squash to match the white layer.
+    if (whiteMeta.width !== blackMeta.width || whiteMeta.height !== blackMeta.height) {
+        console.warn(`[TransparencyMask] Dimension mismatch detected! Auto-fixing...`);
+        console.warn(`White: ${whiteMeta.width}x${whiteMeta.height} | Black: ${blackMeta.width}x${blackMeta.height}`);
+
+        // We use 'fill' to ignore aspect ratio and force exact pixel match
+        const resizedBlackBuffer = await blackImage
+            .resize({
+                width: width,
+                height: height,
+                fit: 'fill'
+            })
+            .toBuffer();
+
+        blackImage = sharp(resizedBlackBuffer);
+    }
+    // --- FIX END ---
 
     const [whiteData, blackData] = await Promise.all([
         whiteImage.ensureAlpha().raw().toBuffer(),
@@ -138,19 +154,24 @@ export async function createTransparencyMask(whiteBuffer: Buffer, blackBuffer: B
         const gb = blackData[i + 1] / 255;
         const bb = blackData[i + 2] / 255;
 
-        // Calculate Alpha for each channel and average them to reduce noise
-        // A = 1 - (W - B)
-        const ar = 1 - (rw - rb);
-        const ag = 1 - (gw - gb);
-        const ab = 1 - (bw - bb);
+        // Calculate Alpha: A = 1 - (WhitePixel - BlackPixel)
+        // This math relies on the fact that:
+        // PixelOnWhite = Color * Alpha + 1 * (1 - Alpha)
+        // PixelOnBlack = Color * Alpha + 0 * (1 - Alpha)
+        // Therefore: White - Black = 1 - Alpha  =>  Alpha = 1 - (White - Black)
 
-        let alpha = (ar + ag + ab) / 3;
+        const diffR = rw - rb;
+        const diffG = gw - gb;
+        const diffB = bw - bb;
 
-        // Clamp alpha
+        // Average the differences to get a smoother alpha
+        const avgDiff = (diffR + diffG + diffB) / 3;
+        let alpha = 1.0 - avgDiff;
+
+        // Clamp alpha to valid range
         alpha = Math.max(0, Math.min(1, alpha));
 
-        // Recover Color: C = B / A
-        // If alpha is near 0, use black (or white) - technically it doesn't matter as it's transparent
+        // Color Recovery: C = PixelOnBlack / Alpha
         let r = 0, g = 0, b = 0;
 
         if (alpha > 0.01) {

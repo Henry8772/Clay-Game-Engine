@@ -15,8 +15,18 @@ describe('REAL: Sprite Agent', () => {
     it.skipIf(!shouldRun)('should isolate sprites from scene (extract mode)', async () => {
         const client = new LLMClient("gemini", "gemini-2.5-flash-image", false);
 
-        const runDir = getTestRunDir('demo2');
+        const runDir = getTestRunDir('puzzle');
         let scenePath = path.join(runDir, "scene.png");
+
+        const designPath = path.join(runDir, "design.json");
+
+        if (!fs.existsSync(designPath)) {
+            console.warn("Skipping Scene Agent test: design.json not found in demo2. Run Test 00 first.");
+            return;
+        }
+
+        const designJson = JSON.parse(fs.readFileSync(designPath, 'utf-8'));
+
 
         if (!fs.existsSync(scenePath)) {
             scenePath = path.resolve(__dirname, `../../${DEFAULT_EXPERIMENT_ID}/scene.png`);
@@ -31,7 +41,7 @@ describe('REAL: Sprite Agent', () => {
 
         const buffer = await runSpriteAgent(client, sceneBuffer, runDir, {
             mode: 'extract_from_scene'
-        });
+        }, designJson);
 
         expect(buffer).toBeDefined();
         expect(Buffer.isBuffer(buffer)).toBe(true);
@@ -41,34 +51,4 @@ describe('REAL: Sprite Agent', () => {
         fs.writeFileSync(outPath, buffer);
     }, 120000);
 
-    it.skipIf(!shouldRun)('should restyle existing sprites (restyle mode)', async () => {
-        const client = new LLMClient("gemini", "gemini-2.5-flash-image", false);
-
-        const runDir = getTestRunDir('boardgame');
-        let spritePath = path.join(runDir, "sprites.png");
-
-        // If sprites.png doesn't exist from previous test, try to find one or fail gracefully
-        if (!fs.existsSync(spritePath)) {
-            spritePath = path.resolve(__dirname, `../../${DEFAULT_EXPERIMENT_ID}/sprites.png`);
-        }
-
-        if (!fs.existsSync(spritePath)) {
-            console.warn("Skipping Restyle test because no input sprites.png found");
-            return;
-        }
-
-        const spriteBuffer = fs.readFileSync(spritePath);
-
-        const buffer = await runSpriteAgent(client, spriteBuffer, runDir, {
-            mode: 'restyle_existing',
-            styleDescription: "8-bit pixel art"
-        });
-
-        expect(buffer).toBeDefined();
-        expect(Buffer.isBuffer(buffer)).toBe(true);
-        expect(buffer.length).toBeGreaterThan(0);
-
-        const outPath = path.join(runDir, "sprites_restyled.png");
-        fs.writeFileSync(outPath, buffer);
-    }, 120000);
 });

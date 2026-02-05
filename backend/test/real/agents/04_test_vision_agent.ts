@@ -16,9 +16,20 @@ describe('REAL: Vision Agent', () => {
     it.skipIf(!shouldRun)('should analyze sprites provided', async () => {
         const client = new LLMClient("gemini", "gemini-2.5-flash-image", false);
 
-        const runDir = getTestRunDir('demo2');
+        const runDir = getTestRunDir('puzzle');
         // let spritePath = path.join(runDir, "sprites.png");
         // 
+
+        // load design.json
+        const designPath = path.join(runDir, "design.json");
+        if (!fs.existsSync(designPath)) {
+            console.warn("Skipping Vision Agent test because design.json not found");
+            return;
+        }
+
+        const designJson = JSON.parse(fs.readFileSync(designPath, 'utf-8'));
+        console.log("Loaded Design:", designJson.art_style);
+
         let spritePath = path.join(runDir, "sprites.png");
         if (!fs.existsSync(spritePath)) {
             spritePath = path.join(runDir, "sprites.png");
@@ -35,7 +46,7 @@ describe('REAL: Vision Agent', () => {
 
         const spriteBuffer = fs.readFileSync(spritePath);
 
-        const items = await runVisionAgent(client, spriteBuffer);
+        const items = await runVisionAgent(client, spriteBuffer, designJson);
 
         expect(items).toBeDefined();
         expect(Array.isArray(items)).toBe(true);

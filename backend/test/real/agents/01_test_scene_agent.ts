@@ -15,7 +15,7 @@ describe('REAL: Scene Agent', () => {
         const client = new LLMClient("gemini", "gemini-3-pro-image-preview", false);
 
         // Load the Design from Test 00
-        const runDir = getTestRunDir('demo2');
+        const runDir = getTestRunDir('puzzle');
         const designPath = path.join(runDir, "design.json");
 
         if (!fs.existsSync(designPath)) {
@@ -24,7 +24,6 @@ describe('REAL: Scene Agent', () => {
         }
 
         const designJson = JSON.parse(fs.readFileSync(designPath, 'utf-8'));
-        console.log("Loaded Design:", designJson.art_style);
 
         const buffer = await runSceneAgent(client, designJson);
 

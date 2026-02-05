@@ -1,0 +1,24 @@
+{
+  "art_style": "16-bit Top-Down RPG Pixel Art. Vibrant colors, distinct tile boundaries, high contrast between safe zones (floor) and hazard zones (lava).",
+  "grid_type": "Continuous NavMesh (Free Movement)",
+  "player_team": [
+    "Alchemist Hero"
+  ],
+  "enemy_team": [],
+  "interactable_objects": [
+    "Treasure Chest (Interactable Object)"
+  ],
+  "game_loop_mechanics": "Player controls Hero via WASD. If Hero coordinates intersect with 'Hazard' mask (Lava) -> DESTROY Hero and RESPAWN at start. If Player submits command (e.g., 'Freeze Lava') -> TRIGGER VisionAgent to regenerate background with 'Ice' prompt -> TRIGGER NavigationAgent to re-bake Walkability Mask. If Hero coordinates intersect with 'Goal' (Chest) -> SPAWN Loot Item.",
+  "background_theme": "Underground cavern. A wide, glowing river of magma separates a rocky starting ledge from a stone island containing a treasure chest.",
+  "obstacles": [
+    "Magma River (Tag: Impassable, Deadly)",
+    "Cavern Walls (Tag: Impassable)"
+  ],
+  "perspective": "Top-Down 2D (Zelda-like)",
+  "rules_summary": "A generative immersive sim puzzle. The player cannot cross the obstacle using standard movement. The objective is to use the 'Reality Editor' (text input) to chemically alter the obstacle (Lava -> Ice or Stone), changing its NavMesh properties from 'Blocked' to 'Walkable' to reach the chest.",
+  "ui_elements": [
+    "Command Input Terminal (Bottom Center)",
+    "NavMesh Visualizer Toggle (Debug)",
+    "Status Log ('System: Heat levels critical.')"
+  ]
+}

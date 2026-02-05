@@ -17,6 +17,7 @@ export interface GameDesign {
     // Assets (Vision Agent)
     player_team: string[];  // e.g. ["Knight", "Ranger"]
     enemy_team: string[];   // e.g. ["Skeleton", "Ghost"]
+    interactable_objects: string[]; // e.g. ["Treasure Chest", "Lever"]
     obstacles: string[];    // e.g. ["Rock"]
     ui_elements: string[];  // e.g. ["Card Hand", "Graveyard"]
 
