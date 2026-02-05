@@ -6,11 +6,18 @@ import fs from 'fs';
 let backendRoot = path.resolve(__dirname, '../..'); // Default fallback
 
 const cwd = process.cwd();
-// Heuristic: If we are running from project root (standard next dev), we expect a 'backend' folder
-if (fs.existsSync(path.join(cwd, 'backend'))) {
+// Heuristic: Identify backend root by the presence of 'llm' directory which is unique to backend root
+if (fs.existsSync(path.join(cwd, 'llm'))) {
+    // We are in the backend root
+    backendRoot = cwd;
+} else if (fs.existsSync(path.join(cwd, 'backend', 'llm'))) {
+    // We are in the project root
     backendRoot = path.join(cwd, 'backend');
-} else if (cwd.endsWith('backend')) {
-    // If running from backend directory directly
+} else if (cwd.endsWith('backend') && fs.existsSync(path.join(cwd, '../llm'))) {
+    // Fallback: if we are in a subdirectory of backend (though likely covered by first case if we are literally IN backend)
+    // Actually, if we are inside backend, cwd ends in backend, and llm is inside.
+    // The first check covers 'gemini-ai-engine/backend' where 'llm' exists.
+    // This else block is just a safe fallback or for different structures.
     backendRoot = cwd;
 }
 

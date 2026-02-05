@@ -1,0 +1,182 @@
+[
+  {
+    "box_2d": [
+      24,
+      375,
+      159,
+      423
+    ],
+    "label": "skeleton_card"
+  },
+  {
+    "box_2d": [
+      24,
+      429,
+      159,
+      477
+    ],
+    "label": "ghost_card"
+  },
+  {
+    "box_2d": [
+      24,
+      484,
+      159,
+      532
+    ],
+    "label": "vampire_card"
+  },
+  {
+    "box_2d": [
+      24,
+      538,
+      159,
+      586
+    ],
+    "label": "zombie_card"
+  },
+  {
+    "box_2d": [
+      24,
+      593,
+      159,
+      641
+    ],
+    "label": "orc_card"
+  },
+  {
+    "box_2d": [
+      305,
+      354,
+      406,
+      401
+    ],
+    "label": "skeleton_miniature"
+  },
+  {
+    "box_2d": [
+      299,
+      419,
+      406,
+      458
+    ],
+    "label": "ghost_miniature"
+  },
+  {
+    "box_2d": [
+      304,
+      484,
+      406,
+      528
+    ],
+    "label": "vampire_miniature"
+  },
+  {
+    "box_2d": [
+      304,
+      549,
+      406,
+      590
+    ],
+    "label": "zombie_miniature"
+  },
+  {
+    "box_2d": [
+      296,
+      595,
+      406,
+      661
+    ],
+    "label": "orc_miniature"
+  },
+  {
+    "box_2d": [
+      524,
+      350,
+      669,
+      398
+    ],
+    "label": "knight_miniature"
+  },
+  {
+    "box_2d": [
+      487,
+      414,
+      627,
+      472
+    ],
+    "label": "ranger_miniature"
+  },
+  {
+    "box_2d": [
+      523,
+      476,
+      669,
+      537
+    ],
+    "label": "templar_miniature"
+  },
+  {
+    "box_2d": [
+      492,
+      543,
+      628,
+      599
+    ],
+    "label": "healer_miniature"
+  },
+  {
+    "box_2d": [
+      506,
+      604,
+      669,
+      665
+    ],
+    "label": "odin_miniature"
+  },
+  {
+    "box_2d": [
+      839,
+      367,
+      974,
+      417
+    ],
+    "label": "knight_card"
+  },
+  {
+    "box_2d": [
+      839,
+      424,
+      974,
+      474
+    ],
+    "label": "ranger_card"
+  },
+  {
+    "box_2d": [
+      839,
+      481,
+      974,
+      531
+    ],
+    "label": "templar_card"
+  },
+  {
+    "box_2d": [
+      839,
+      539,
+      974,
+      588
+    ],
+    "label": "healer_card"
+  },
+  {
+    "box_2d": [
+      839,
+      595,
+      974,
+      646
+    ],
+    "label": "odin_card"
+  }
+]

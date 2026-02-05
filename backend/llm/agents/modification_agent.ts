@@ -6,7 +6,11 @@ import fs from "fs/promises";
 import path from "path";
 import sharp from "sharp";
 import { runExtractionAgent } from "./extraction_agent";
-import { createTransparencyMask } from "../utils/image_processor";
+import { createTransparencyMask, drawBoundingBoxes } from "../utils/image_processor";
+
+import { runVisionAgent } from "./vision_agent";
+import { runSpriteAgent } from "./sprite_agent";
+
 
 export async function processModification(
     client: LLMClient,
@@ -57,14 +61,18 @@ export async function processModification(
 
     const inputData = [{ role: 'user', content: `${userRequest}\n\n[Context] Game Entities Count: ${Object.keys(currentState.entities).length}` }];
 
-    const response = await client.generateJSON<{ tool: string; args: any }>(
-        systemPrompt,
-        inputData,
-        toolSchema,
-        "modification_agent"
-    );
+    // const response = await client.generateJSON<{ tool: string; args: any }>(
+    //     systemPrompt,
+    //     inputData,
+    //     toolSchema,
+    //     "modification_agent"
+    // );
 
-    const { tool, args } = response;
+    // const { tool, args } = response;
+
+    // debug 
+    const tool = "update_global_sprite_style";
+    const args = { styleDescription: "cyberpunk" };
 
     console.log(`[ModificationAgent] Tool: ${tool}`, args);
 
@@ -119,98 +127,60 @@ export async function processModification(
             break;
         }
 
-        case "spawn_entity": {
-            const count = args.count || 1;
-            const desc = args.description || args.name;
-            let assetPath: string;
+        case "spawn_entity":
+            {
+                const count = args.count || 1;
+                const desc = args.description || args.name;
+                let assetPath: string;
 
-            // [Strategy: EditImage] Try to find master spritesheet to maintain style coherence
-            // We look for 'sprites.png' or 'sprites_white.png' (segmented version)
-            const spriteSheetName = "sprites.png";
-            const spriteSheetPath = path.join(process.cwd(), 'backend', 'data', 'runs', runId, spriteSheetName);
+                // [Strategy: EditImage] Try to find master spritesheet to maintain style coherence
+                // We look for 'sprites.png' or 'sprites_white.png' (segmented version)
+                const spriteSheetName = "sprites.png";
+                const spriteSheetPath = path.join(process.cwd(), 'backend', 'data', 'runs', runId, spriteSheetName);
 
-            let spriteBuffer: Buffer;
-
-            try {
-                const sheetBuffer = await fs.readFile(spriteSheetPath);
-                console.log(`[ModAgent] Using master spritesheet as style reference.`);
-
-                // We ask the model to add the new entity to the sheet or use the sheet as style ref
-                // "Add a [Entity] to this sprite sheet" might return a full sheet.
-                // For this agent which spawns *instances*, we ideally want an isolated sprite.
-                // We'll treat the sheet as a visual reference for the edit/generation.
-                const editPrompt = `Create a new sprite of ${desc}. Match the art style, line weight, and perspective of the provided reference sprites exactly. Output on a white background.`;
-
-                spriteBuffer = await client.editImage(editPrompt, sheetBuffer, "gemini-2.5-flash-image");
-            } catch (e) {
-                console.log(`[ModAgent] No master spritesheet found (${e}), generating from scratch.`);
-                spriteBuffer = await client.generateImage(`Sprite of ${desc}, isolated on white background`, "gemini-2.5-flash-image");
-            }
-
-            const filename = `spawn_${Date.now()}.png`;
-            assetPath = await saveAsset(runId, spriteBuffer, filename);
-
-            for (let i = 0; i < count; i++) {
-                const newId = `ent_${Date.now()}_${i}`;
-
-                // Add to State
-                currentState.entities[newId] = {
-                    t: "generated_spawn",
-                    id: newId,
-                    label: args.name,
-                    type: args.type,
-                    team: args.team === "player" ? "blue" : (args.team === "enemy" ? "red" : "neutral"),
-                    src: assetPath,
-                    // Place them near center or use navmesh logic if available (simplified here)
-                    pixel_box: [350 + (i * 20), 450 + (i * 20), 450 + (i * 20), 550 + (i * 20)],
-                    location: "tile_r2_c2",
-                    loc: "board",
-                    owner: "ai",
-                    props: {}
-                } as any;
-            }
-            message = `Spawned ${count} x ${args.name}`;
-            break;
-        }
-
-        case "update_visual_style": {
-            // Find matching entities
-            const entities = Object.values(currentState.entities || {});
-            const targets = entities.filter((e: any) => e.label && e.label.toLowerCase().includes(args.targetName.toLowerCase()));
-
-            if (targets.length > 0) {
-                // Take the source image of the first target as the base to edit
-                const firstTarget = targets[0] as any;
-                let newStyleBuffer: Buffer;
+                let spriteBuffer: Buffer;
 
                 try {
-                    const srcPath = getDiskPath(firstTarget.src);
-                    const sourceBuffer = await fs.readFile(srcPath);
-                    console.log(`[ModAgent] updating style based on: ${srcPath}`);
+                    const sheetBuffer = await fs.readFile(spriteSheetPath);
+                    console.log(`[ModAgent] Using master spritesheet as style reference.`);
 
-                    const editPrompt = `Redraw this sprite as: ${args.newStyleDescription}. Maintain the same pose and size.`;
-                    newStyleBuffer = await client.editImage(editPrompt, sourceBuffer, "gemini-2.5-flash-image");
+                    // We ask the model to add the new entity to the sheet or use the sheet as style ref
+                    // "Add a [Entity] to this sprite sheet" might return a full sheet.
+                    // For this agent which spawns *instances*, we ideally want an isolated sprite.
+                    // We'll treat the sheet as a visual reference for the edit/generation.
+                    const editPrompt = `Create a new sprite of ${desc}. Match the art style, line weight, and perspective of the provided reference sprites exactly. Output on a white background.`;
 
+                    spriteBuffer = await client.editImage(editPrompt, sheetBuffer, "gemini-2.5-flash-image");
                 } catch (e) {
-                    // Fallback if file missing
-                    newStyleBuffer = await client.generateImage(`${args.newStyleDescription}, isolated on white background`, "gemini-2.5-flash-image");
+                    console.log(`[ModAgent] No master spritesheet found (${e}), generating from scratch.`);
+                    spriteBuffer = await client.generateImage(`Sprite of ${desc}, isolated on white background`, "gemini-2.5-flash-image");
                 }
 
-                const filename = `restyle_${Date.now()}.png`;
-                const assetPath = await saveAsset(runId, newStyleBuffer, filename);
+                const filename = `spawn_${Date.now()}.png`;
+                assetPath = await saveAsset(runId, spriteBuffer, filename);
 
-                targets.forEach((e: Entity) => {
-                    (e as any).src = assetPath;
-                    if (currentState.blueprints && currentState.blueprints[e.t]) {
-                        (currentState.blueprints[e.t] as any).src = assetPath;
-                    }
-                });
-                message = `Updated visual style for ${targets.length} entities.`;
-            } else {
-                message = `No entities found matching '${args.targetName}'.`;
+                for (let i = 0; i < count; i++) {
+                    const newId = `ent_${Date.now()}_${i}`;
+
+                    // Add to State
+                    currentState.entities[newId] = {
+                        t: "generated_spawn",
+                        id: newId,
+                        label: args.name,
+                        type: args.type,
+                        team: args.team === "player" ? "blue" : (args.team === "enemy" ? "red" : "neutral"),
+                        src: assetPath,
+                        // Place them near center or use navmesh logic if available (simplified here)
+                        pixel_box: [350 + (i * 20), 450 + (i * 20), 450 + (i * 20), 550 + (i * 20)],
+                        location: "tile_r2_c2",
+                        loc: "board",
+                        owner: "ai",
+                        props: {}
+                    } as any;
+                }
+                message = `Spawned ${count} x ${args.name}`;
+                break;
             }
-            break;
-        }
 
         case "trigger_regeneration": {
             shouldRegenerate = true;
@@ -223,8 +193,7 @@ export async function processModification(
             const style = args.styleDescription;
             console.log(`[ModAgent] Global style update to: ${style}`);
 
-            // 1. Locate Resources
-            // Try white version first, then normal
+            // 1. Locate Resources (Use White version if available for cleaner input)
             let spritePath = path.join(process.cwd(), 'backend', 'data', 'runs', runId, 'sprites_white.png');
             try {
                 await fs.access(spritePath);
@@ -232,154 +201,93 @@ export async function processModification(
                 spritePath = path.join(process.cwd(), 'backend', 'data', 'runs', runId, 'sprites.png');
             }
 
-            const analysisPath = path.join(process.cwd(), 'backend', 'data', 'runs', runId, 'analysis.json');
+            const inputBuffer = await fs.readFile(spritePath);
 
+            // 2. Run Modular Sprite Agent (Handles White -> Black -> Transparent)
+            // Note: runSpriteAgent now returns the transparent buffer
+            const newSheetBuffer = await runSpriteAgent(client, inputBuffer, path.join(process.cwd(), 'backend', 'data', 'runs', runId), {
+                mode: 'restyle_existing',
+                styleDescription: style
+            });
+
+            // Debug code to load analysis_modified.json as newSheetBuffer
+            // const newSheetBuffer = await fs.readFile(path.join(process.cwd(), 'backend', 'data', 'runs', runId, 'sprites_restyle_1770278685817.png'));
+
+            // Save the final transparent sheet
+            const timestamp = Date.now();
+            const finalSheetName = `sprites_restyle_${timestamp}.png`;
+            const finalSheetPath = await saveAsset(runId, newSheetBuffer, finalSheetName);
+
+            // 3. Run Vision Agent (Uses the transparent buffer)
+            console.log(`[ModAgent] Running vision agent to detect items...`);
+            const detectedItems = await runVisionAgent(client, newSheetBuffer);
+
+            // --- Generate Debug Segmentation Image ---
             try {
-                // Check if files exist
-                await fs.access(spritePath);
-                await fs.access(analysisPath);
+                const segmentedBuffer = await drawBoundingBoxes(newSheetBuffer, detectedItems);
 
-                const spriteBuffer = await fs.readFile(spritePath);
-                const analysisData = JSON.parse(await fs.readFile(analysisPath, 'utf-8'));
-                // Determine if analysisData is the raw array or wrapped
-                const boundingBoxes = Array.isArray(analysisData) ? analysisData : (analysisData.boxes || analysisData.items || []);
+                const segmentedName = `sprites_restyle_segmented_${timestamp}.png`;
+                await saveAsset(runId, segmentedBuffer, segmentedName);
+                console.log(`[ModAgent] Saved segmentation debug image: ${segmentedName}`);
 
-                if (!boundingBoxes || boundingBoxes.length === 0) {
-                    throw new Error("No bounding boxes found in analysis.json");
+            } catch (err) {
+                console.warn(`[ModAgent] Failed to generate debug segmentation image:`, err);
+            }
+
+            // Debug code to load analysis_modified.json as detectedItems
+            // const filePath = path.join(process.cwd(), 'backend', 'data', 'runs', runId, 'analysis_modified.json');
+            // const fileContent = await fs.readFile(filePath, 'utf-8');
+            // const detectedItems = JSON.parse(fileContent);
+
+            // 4. Run Extraction Agent
+            const outputDirName = `extracted_restyle_${timestamp}`;
+            const outputDir = path.join(process.cwd(), 'backend', 'data', 'runs', runId, outputDirName);
+
+            const manifest = await runExtractionAgent(newSheetBuffer, detectedItems, outputDir);
+
+            // 5. State Patching (Mapping manifest back to State)
+            let updatedCount = 0;
+
+            // Helper to match labels loosely
+            function normalizeLabel(l: string) { return l.toLowerCase().replace(/[^a-z0-9]/g, '_'); }
+
+            // Update Entities
+            for (const entityId in currentState.entities) {
+                const entity = currentState.entities[entityId];
+                let labelToMatch = (entity as any).label;
+
+                if (!labelToMatch && entity.t && currentState.blueprints && currentState.blueprints[entity.t]) {
+                    labelToMatch = currentState.blueprints[entity.t].label;
                 }
+                if (labelToMatch) {
+                    const normLabel = normalizeLabel(labelToMatch);
+                    // Try exact match, then normalized match
+                    const matchKey = manifest[labelToMatch] ? labelToMatch : (manifest[normLabel] ? normLabel : null);
 
-                // 2. AI Generation (Repaint)
-                console.log(`[ModAgent] Repainting spritesheet (Phase 1: White BG)...`);
-                const repaintPrompt = `Redraw this sprite sheet in the style of: ${style}. Maintain the exact position, scale, and silhouette of every element. Do not add or remove objects. Keep the white background.`;
-
-                const newSheetBufferWhite = await client.editImage(repaintPrompt, spriteBuffer, "gemini-2.5-flash-image");
-
-                console.log(`[ModAgent] Repainting spritesheet (Phase 2: Black BG for Alpha)...`);
-                // We use the NEW white buffer as input to ensure alignment, asking for black background
-                const alphaPrompt = `Redraw this sprite sheet in the style of: ${style}. Maintain the exact position, scale, and silhouette of every element. Do not add or remove objects. Use a solid black background.`;
-                // Use temperature 0 for consistency if possible, though editImage params might be limited
-                const newSheetBufferBlack = await client.editImage(alphaPrompt, newSheetBufferWhite, "gemini-2.5-flash-image");
-
-                console.log(`[ModAgent] Computing transparency mask...`);
-
-                const newSheetBufferTransparent = await createTransparencyMask(newSheetBufferWhite, newSheetBufferBlack);
-
-                // Save all assets
-                const timestamp = Date.now();
-                const whiteName = `sprites_restyle_white_${timestamp}.png`;
-                const blackName = `sprites_restyle_black_${timestamp}.png`;
-                const finalName = `sprites_restyle_${timestamp}.png`;
-
-                await saveAsset(runId, newSheetBufferWhite, whiteName);
-                await saveAsset(runId, newSheetBufferBlack, blackName);
-                await saveAsset(runId, newSheetBufferTransparent, finalName);
-
-                // --- Generate Debug Segmentation Image ---
-                try {
-                    const meta = await sharp(newSheetBufferTransparent).metadata();
-                    const w = meta.width!;
-                    const h = meta.height!;
-                    const pad = 30; // Match the padding used in runExtractionAgent
-
-                    const svgRects = boundingBoxes.map((item: any) => {
-                        // Normalize coords (0-1000) to pixels
-                        const box = Array.isArray(item.box_2d) ? item.box_2d : item.box_2d;
-                        const [ymin, xmin, ymax, xmax] = box;
-
-                        let top = Math.floor((ymin / 1000) * h);
-                        let left = Math.floor((xmin / 1000) * w);
-                        let bottom = Math.ceil((ymax / 1000) * h);
-                        let right = Math.ceil((xmax / 1000) * w);
-
-                        // Apply Padding (Smart Extraction Logic)
-                        top = Math.max(0, top - pad);
-                        left = Math.max(0, left - pad);
-                        bottom = Math.min(h, bottom + pad);
-                        right = Math.min(w, right + pad);
-
-                        const width = right - left;
-                        const height = bottom - top;
-
-                        // Green box for search area, stroke width 2
-                        return `<rect x="${left}" y="${top}" width="${width}" height="${height}" fill="none" stroke="#00FF00" stroke-width="2" />`;
-                    }).join('\n');
-
-                    const svg = `
-                    <svg width="${w}" height="${h}">
-                        ${svgRects}
-                    </svg>
-                    `;
-
-                    const segmentedBuffer = await sharp(newSheetBufferTransparent)
-                        .composite([{ input: Buffer.from(svg) }])
-                        .png()
-                        .toBuffer();
-
-                    const segmentedName = `sprites_restyle_segmented_${timestamp}.png`;
-                    await saveAsset(runId, segmentedBuffer, segmentedName);
-                    console.log(`[ModAgent] Saved segmentation debug image: ${segmentedName}`);
-
-                } catch (err) {
-                    console.warn(`[ModAgent] Failed to generate debug segmentation image:`, err);
+                    if (matchKey) {
+                        const filename = path.basename(manifest[matchKey]);
+                        (entity as any).src = `${outputDirName}/${filename}`;
+                        updatedCount++;
+                    }
                 }
-                // -----------------------------------------
+            }
 
-
-                // 3. Re-Extraction
-                const outputDirName = `extracted_restyle_${timestamp}`;
-                const outputDir = path.join(process.cwd(), 'backend', 'data', 'runs', runId, outputDirName);
-
-                console.log(`[ModAgent] Extracting to ${outputDir}...`);
-                const manifest = await runExtractionAgent(newSheetBufferTransparent, boundingBoxes, outputDir, { useSmartExtraction: true, padding: 30 });
-
-                // 4. State Patching
-                let updatedCount = 0;
-
-                function normalizeLabel(l: string) {
-                    return l.toLowerCase().replace(/[^a-z0-9]/g, '_');
-                }
-
-                // Update Entities
-                for (const entityId in currentState.entities) {
-                    const entity = currentState.entities[entityId];
-                    const label = (entity as any).label;
-                    if (label) {
-                        const normLabel = normalizeLabel(label);
-                        const matchKey = manifest[label] ? label : (manifest[normLabel] ? normLabel : null);
-
+            // Update Blueprints
+            if (currentState.blueprints) {
+                for (const bpName in currentState.blueprints) {
+                    const bp = currentState.blueprints[bpName];
+                    if (bpName) {
+                        const matchKey = bpName.replace('tpl_', '');
                         if (matchKey) {
                             const filename = path.basename(manifest[matchKey]);
-                            const newRelativePath = `${outputDirName}/${filename}`;
-                            (entity as any).src = newRelativePath;
+                            (bp as any).src = `${outputDirName}/${filename}`;
                             updatedCount++;
                         }
                     }
                 }
-
-                // Update Blueprints
-                if (currentState.blueprints) {
-                    for (const bpName in currentState.blueprints) {
-                        const bp = currentState.blueprints[bpName];
-                        const label = (bp as any).label;
-                        if (label) {
-                            const normLabel = normalizeLabel(label);
-                            const matchKey = manifest[label] ? label : (manifest[normLabel] ? normLabel : null);
-                            if (matchKey) {
-                                const filename = path.basename(manifest[matchKey]);
-                                const newRelativePath = `${outputDirName}/${filename}`;
-                                (bp as any).src = newRelativePath;
-                                updatedCount++;
-                            }
-                        }
-                    }
-                }
-
-                message = `Global style updated to '${style}'. Modified ${updatedCount} entities.`;
-
-            } catch (e: any) {
-                console.error("[ModAgent] Global style update failed:", e);
-                message = `Failed to update global style: ${e.message}`;
             }
+
+            message = `Global style updated to '${style}'. Updated ${updatedCount} assets.`;
             break;
         }
 

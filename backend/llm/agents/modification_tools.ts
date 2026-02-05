@@ -21,14 +21,6 @@ export const MODIFICATION_TOOLS_DEF = [
         }),
     },
     {
-        name: "update_visual_style",
-        description: "Updates the visual style (image) of existing entities matching a criteria.",
-        parameters: z.object({
-            targetName: z.string().describe("The name/label of entities to change (e.g. 'Goblin')"),
-            newStyleDescription: z.string().describe("Description of the new look (e.g. 'Cyberpunk style goblin')"),
-        }),
-    },
-    {
         name: "trigger_regeneration",
         description: "Triggers a complete regeneration of the game. Use this if the user wants to change the entire premise.",
         parameters: z.object({

@@ -44,4 +44,4 @@ export const getRunId = (): string => {
     return "unknown_run_id";
 }
 
-export const DEFAULT_EXPERIMENT_ID = 'experiment-3';
+export const DEFAULT_EXPERIMENT_ID = 'boardgame';

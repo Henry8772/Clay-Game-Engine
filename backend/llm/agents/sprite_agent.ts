@@ -3,49 +3,74 @@
 import { LLMClient } from "../client";
 import * as fs from 'fs';
 import * as path from 'path';
-
 import { createTransparencyMask } from "../utils/image_processor";
 
-export async function runSpriteAgent(client: LLMClient, sceneBuffer: Buffer, runDir?: string, debugCallback?: (white: Buffer, black: Buffer) => void): Promise<Buffer> {
-    const spritePrompt = "A image of all the sprites and each cards in equal spacing.";
+export interface SpriteAgentConfig {
+    mode?: 'extract_from_scene' | 'restyle_existing';
+    styleDescription?: string; // "8-bit pixel art", "Watercolor", etc.
+    debugCallback?: (white: Buffer, black: Buffer) => void;
+}
 
-    // We strictly need the output to be pixel-perfectly aligned between the two calls, so we use temperature 0.
-    // We run this sequentially: Scene -> White BG -> Black BG.
-    // This helps the model maintain consistency by seeing its own previous output.
-    console.log("[SpriteAgent] Isolating sprites (Sequential: White -> Black)...");
+export async function runSpriteAgent(
+    client: LLMClient,
+    inputBuffer: Buffer,
+    runDir: string,
+    config: SpriteAgentConfig = {}
+): Promise<Buffer> {
+    const mode = config.mode || 'extract_from_scene';
 
-    // const whiteBuffer = await client.editImage(spritePrompt + " Must use a solid white background.", sceneBuffer, undefined, {
-    //     config: { temperature: 0, aspectRatio: "16:9" }
-    // });
+    console.log(`[SpriteAgent] Running in mode: ${mode}`);
 
-    if (!runDir) {
-        throw new Error("runDir is required for SpriteAgent");
+    // 1. Determine Prompt based on Mode
+    let whitePrompt = "";
+    if (mode === 'extract_from_scene') {
+        whitePrompt = "A image of all the sprites and each cards in equal spacing. Must use a solid white background.";
+    } else {
+        // Restyle Mode: We want to preserve layout but change style
+        whitePrompt = `Redraw this sprite sheet in the style of: ${config.styleDescription || 'standard'}. Maintain the exact position, scale, and silhouette of every element. Do not add or remove objects. Keep the white background.`;
     }
 
-    const whiteBuffer = await fs.promises.readFile(path.join(runDir, "sprites_white.png"));
+    // 2. Generate White Background Layer
+    console.log("[SpriteAgent] Generating White Layer...");
 
+    // In 'restyle' mode, we use the inputBuffer (which should be the old sheet). 
+    // In 'extract' mode, inputBuffer is the Scene.
+    const temperature = mode === 'extract_from_scene' ? 0 : 0.7;
+    const whiteBuffer = await client.editImage(whitePrompt, inputBuffer, undefined, {
+        config: { temperature: temperature, aspectRatio: "16:9" }
+    });
 
-    const blackBuffer = await client.editImage(spritePrompt + " Must use a solid black background.", whiteBuffer, undefined, {
+    // 3. Generate Black Background Layer (for Alpha)
+    console.log("[SpriteAgent] Generating Black Layer (for Alpha)...");
+    const blackPrompt = (mode === 'restyle_existing')
+        ? `Redraw this sprite sheet in the style of: ${config.styleDescription || 'standard'}. Maintain the exact position. Use a solid black background.`
+        : "A image of all the sprites and each cards in equal spacing. Must use a solid black background.";
+
+    // CRITICAL: We use the *newly generated* whiteBuffer as the reference for the black buffer 
+    // to ensure the pixels align perfectly.
+    const blackBuffer = await client.editImage(blackPrompt, whiteBuffer, undefined, {
         config: { temperature: 0, aspectRatio: "16:9" }
     });
 
+    // 4. Save Debug Assets
     if (runDir) {
         try {
-            if (!fs.existsSync(runDir)) {
-                fs.mkdirSync(runDir, { recursive: true });
-            }
-            await fs.promises.writeFile(path.join(runDir, "sprites_white.png"), whiteBuffer);
-            await fs.promises.writeFile(path.join(runDir, "sprites_black.png"), blackBuffer);
-            console.log(`[SpriteAgent] Saved intermediate sprites to ${runDir}`);
+            if (!fs.existsSync(runDir)) fs.mkdirSync(runDir, { recursive: true });
+            const timestamp = Date.now();
+            await fs.promises.writeFile(path.join(runDir, `sprites_${mode}_white_${timestamp}.png`), whiteBuffer);
+            await fs.promises.writeFile(path.join(runDir, `sprites_${mode}_black_${timestamp}.png`), blackBuffer);
+            // Ensure 'sprites.png' or 'sprites_white.png' is updated if needed for other agents finding it by default name?
+            // Maybe best to just leave them as timestamped debugs and let caller handle main asset naming.
         } catch (e) {
             console.error("[SpriteAgent] Failed to save intermediate sprites:", e);
         }
     }
 
-    if (debugCallback) {
-        debugCallback(whiteBuffer, blackBuffer);
+    if (config.debugCallback) {
+        config.debugCallback(whiteBuffer, blackBuffer);
     }
 
+    // 5. Compute Transparency
     console.log("[SpriteAgent] Computing alpha mask...");
     return createTransparencyMask(whiteBuffer, blackBuffer);
 }

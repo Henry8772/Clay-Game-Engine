@@ -43,9 +43,9 @@ export async function runVisionAgent(client: LLMClient, spriteBuffer: Buffer): P
     const config = {
         temperature: 0.7,
         responseMimeType: "application/json",
-        thinkingConfig: {
-            thinkingLevel: 'HIGH' as const,
-        },
+        // thinkingConfig: {
+        //     thinkingLevel: 'HIGH' as const,
+        // },
     };
 
     const imagePart = {
