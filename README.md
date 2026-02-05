@@ -145,12 +145,6 @@ npm install
 npx convex dev #press enter for default
 ```
 
-**Backend (LLM Engine):**
-```bash
-cd backend
-npm install
-```
-
 ## Running the Application
 ```bash
 
