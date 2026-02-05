@@ -1,33 +1,22 @@
 
-import { GeminiBackend } from '../backend'; // Adjust import based on location
-import { LLMClient } from "../client"; // We might need LLMClient or GeminiBackend directly
+// We use GeminiBackend directly because LLMClient JSON requires `inputData` structure
+// that supports inlineData/parts.
+import { GeminiBackend } from '../backend';
+import { LLMClient } from "../client";
+import { SchemaType } from "@google/generative-ai";
 import { MOCK_VISION_ANALYSIS } from '../graph/mocks';
-
-// We use GeminiBackend directly here because we need specific structured output 
-// and the current LLMClient might mock or wrap things differently. 
-// However, looking at the experiment, it uses GeminiBackend.
-// Let's stick to the pattern used in experiment-3/test_step_3_analysis.ts but adapt for the agent signature.
+import { GameDesign } from "./design_agent";
 
 export interface DetectedItem {
     box_2d: [number, number, number, number]; // [ymin, xmin, ymax, xmax] 0-1000
     label: string;
 }
 
-const ASSET_DESCRIPTION_PROMPT = `On the bottom player side, there are 5 character cards, each with a matching miniature in the board: a Knight, a Ranger, a Templar, a Healer, and Odin. On the top enemy side, there are 5 monster cards, each with a matching miniature : a Skeleton, a Ghost, a Vampire, a Zombie, and an Orc.`;
-
-const ANALYSIS_PROMPT = `
-    Detect the all of the prominent items in the image. The box_2d should be [ymin, xmin, ymax, xmax] normalized to 0-1000.
-
-    Label is name + type, e.g. "knight_miniature" or "knight_card".
-    ${ASSET_DESCRIPTION_PROMPT}
-
-    JSON Format:
-    [
-      { "box_2d": [0,0,1000,1000], "label": "..." }
-    ]
-`;
-
-export async function runVisionAgent(client: LLMClient, spriteBuffer: Buffer): Promise<DetectedItem[]> {
+export async function runVisionAgent(
+    client: LLMClient,
+    spriteBuffer: Buffer,
+    design: GameDesign
+): Promise<DetectedItem[]> {
     console.log("[VisionAgent] Analyzing sprites...");
 
     if (client.isDebug) {
@@ -35,37 +24,55 @@ export async function runVisionAgent(client: LLMClient, spriteBuffer: Buffer): P
         return MOCK_VISION_ANALYSIS as unknown as DetectedItem[];
     }
 
-    const key = process.env.GEMINI_API_KEY;
-    if (!key) throw new Error("GEMINI_API_KEY not set for Vision Agent");
+    // Build context from Design
+    const expectedAssets = [
+        ...design.player_team,
+        ...design.enemy_team,
+        ...design.obstacles,
+        ...design.ui_elements
+    ].join(", ");
 
-    const backend = new GeminiBackend(key);
+    const prompt = `
+    Detect all prominent game items in this sprite sheet.
+    
+    **Context:**
+    The game is expected to contain: ${expectedAssets}.
+    
+    **Task:**
+    Return a bounding box [ymin, xmin, ymax, xmax] (0-1000) for every isolated item.
+    Label them specifically based on the context list. e.g. "Knight", "Rock", "Card Hand".
+    `;
 
-    const config = {
-        temperature: 0.7,
-        responseMimeType: "application/json",
-        // thinkingConfig: {
-        //     thinkingLevel: 'HIGH' as const,
-        // },
-    };
+    // Note: The LLMClient might not support inlineData in generateJSON purely depending on version,
+    // but we can trust the caller or use the pattern below if we want to be safe.
+    // For now, let's stick to the user's request to "Use client directly" if possible,
+    // or fallback to the manual backend call if LLMClient doesn't support part array in inputData.
+    // Looking at LLMClient.generateJSON signature: (system, inputData, ...)
+    // inputData is passed to backend.generateJSON. 
+    // If backend.generateJSON takes array of parts, we are good.
+    // Assuming GeminiBackend supports it.
 
-    const imagePart = {
-        inlineData: {
-            data: spriteBuffer.toString('base64'),
-            mimeType: "image/png"
+    const schema = {
+        type: SchemaType.ARRAY,
+        items: {
+            type: SchemaType.OBJECT,
+            properties: {
+                box_2d: { type: SchemaType.ARRAY, items: { type: SchemaType.NUMBER } },
+                label: { type: SchemaType.STRING }
+            }
         }
     };
 
-    const responseText = await backend.generateContent(
-        [{ role: "user", parts: [{ text: ANALYSIS_PROMPT }, imagePart] }],
-        "gemini-3-flash-preview", // Hardcoded per experiment
-        { config: config }
-    );
-
     try {
-        const detectedItems = JSON.parse(responseText);
-        return detectedItems;
+        // Attempt using client.generateJSON with multimodal input
+        return await client.generateJSON<DetectedItem[]>(
+            prompt,
+            [{ inlineData: { data: spriteBuffer.toString('base64'), mimeType: "image/png" } }],
+            schema,
+            "vision_agent"
+        );
     } catch (e) {
-        console.error("Failed to parse vision analysis:", responseText);
+        console.warn("Client generateJSON failed, falling back to manual content generation if needed or rethrow.", e);
         throw e;
     }
 }

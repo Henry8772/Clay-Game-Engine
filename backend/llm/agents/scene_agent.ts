@@ -1,40 +1,35 @@
 
 import { LLMClient } from "../client";
 
-const SCENE_PROMPT_TEMPLATE = `You are a master pixel artist for a 1990s SNES tactical RPG.
+const SCENE_PROMPT_TEMPLATE = `You are a master game artist.
+    **Task:** Generate a high-fidelity gameplay screenshot.
+    **Style:** {{ART_STYLE}}.
+    **Perspective:** {{PERSPECTIVE}}.
+    **Setting:** {{BACKGROUND_THEME}}.
 
-**Task:** Generate a high-fidelity, top-down gameplay screenshot of a "Tactical Puzzle" setup.
-**Constraint:** This is a "Closed System" game. All game pieces that exist in the match must be visible on screen NOW.
+    **Composition:**
+    1. **Play Area:** A {{GRID_TYPE}} in the center.
+    2. **Player Assets:** Place {{PLAYER_TEAM}} on one side.
+    3. **Enemy Assets:** Place {{ENEMY_TEAM}} on the opposite side.
+    4. **Obstacles:** Place {{OBSTACLES}} scattered around.
+    5. **UI/HUD:** Visible elements: {{UI_ELEMENTS}}.
 
-**CORE COMPOSITION:**
-1.  **Perspective:** Strict orthographic top-down (90° camera).
-2.  **Layout:**
-    * **The Grid (Battlefield):** A central 6x6 tiled area (stone dungeon floor).
-        * **Content:** Place exactly 3 "Hero" units (Blue team) on the bottom row.
-        * **Content:** Place exactly 4 "Monster" units (Red team) scattered in the middle/top rows.
-        * **Obstacles:** Place 2 rock obstacles on the grid.
-        * **Empty Space:** The rest of the tiles must be empty and flat.
-    * **The UI Rails (Sidebars):**
-        * **Left Sidebar:** A vertical rack containing 3 "Ability Icons" or "Power-up Tokens" (These are interactive items).
-        * **Right Sidebar:** An empty "Graveyard" zone (a dark pit or trash bin) where defeated units will be dragged to.
+    **Constraint:** Ensure all assets are spatially isolated (no overlapping) for easy sprite extraction.
+    `;
 
-**Playability Rules:**
-* **Isolation:** Every single unit, obstacle, and icon must be surrounded by at least a few pixels of "floor".
-* **No Stacking:** Nothing overlaps.
-* **Total Visibility:** Do not hide anything behind walls.
+export async function runSceneAgent(client: LLMClient, design: import("./design_agent").GameDesign): Promise<Buffer> {
+    console.log("[SceneAgent] Generating scene based on design...");
 
-**Art Direction:**
-* **Style:** Crisp 16-bit pixel art.
-* **Color Coding:** Blue units must look distinct from Red units (e.g., Blue armor vs Red skin) so the logic can auto-team them.
+    let prompt = SCENE_PROMPT_TEMPLATE
+        .replace("{{ART_STYLE}}", design.art_style)
+        .replace("{{PERSPECTIVE}}", design.perspective)
+        .replace("{{BACKGROUND_THEME}}", design.background_theme)
+        .replace("{{GRID_TYPE}}", design.grid_type)
+        .replace("{{PLAYER_TEAM}}", design.player_team.join(", "))
+        .replace("{{ENEMY_TEAM}}", design.enemy_team.join(", "))
+        .replace("{{OBSTACLES}}", design.obstacles.join(", "))
+        .replace("{{UI_ELEMENTS}}", design.ui_elements.join(", "));
 
-**User Request:**
-{{USER_REQUEST}}
-`;
-
-export async function runSceneAgent(client: LLMClient, userRequest: string): Promise<Buffer> {
-    const prompt = SCENE_PROMPT_TEMPLATE.replace("{{USER_REQUEST}}", userRequest);
-
-    console.log("[SceneAgent] Generating scene...");
     const imageBuffer = await client.generateImage(prompt, "gemini-3-pro-image-preview", {
         config: { temperature: 1, aspectRatio: "16:9" }
     });

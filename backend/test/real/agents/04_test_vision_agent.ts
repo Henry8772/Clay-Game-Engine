@@ -16,7 +16,7 @@ describe('REAL: Vision Agent', () => {
     it.skipIf(!shouldRun)('should analyze sprites provided', async () => {
         const client = new LLMClient("gemini", "gemini-2.5-flash-image", false);
 
-        const runDir = getTestRunDir('boardgame');
+        const runDir = getTestRunDir('demo2');
         // let spritePath = path.join(runDir, "sprites.png");
         // 
         let spritePath = path.join(runDir, "sprites.png");

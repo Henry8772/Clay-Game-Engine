@@ -1,4 +1,3 @@
-
 import { describe, it, expect } from 'vitest';
 import { LLMClient } from "../../../llm/client";
 import { runSceneAgent } from "../../../llm/agents/scene_agent";
@@ -12,18 +11,28 @@ dotenv.config();
 describe('REAL: Scene Agent', () => {
     const shouldRun = process.env.GEMINI_API_KEY && !process.env.GEMINI_API_KEY.includes("dummy");
 
-    it.skipIf(!shouldRun)('should generate a scene image', async () => {
+    it.skipIf(!shouldRun)('should generate a scene image based on design', async () => {
         const client = new LLMClient("gemini", "gemini-3-pro-image-preview", false);
-        const userRequest = "A high-stakes chess match in a volcano";
 
-        const buffer = await runSceneAgent(client, userRequest);
+        // Load the Design from Test 00
+        const runDir = getTestRunDir('demo2');
+        const designPath = path.join(runDir, "design.json");
+
+        if (!fs.existsSync(designPath)) {
+            console.warn("Skipping Scene Agent test: design.json not found in demo2. Run Test 00 first.");
+            return;
+        }
+
+        const designJson = JSON.parse(fs.readFileSync(designPath, 'utf-8'));
+        console.log("Loaded Design:", designJson.art_style);
+
+        const buffer = await runSceneAgent(client, designJson);
 
         expect(buffer).toBeDefined();
         expect(Buffer.isBuffer(buffer)).toBe(true);
         expect(buffer.length).toBeGreaterThan(0);
 
         // Save for visual inspection during dev
-        const runDir = getTestRunDir('run_test_real_agents');
         const outPath = path.join(runDir, "scene.png");
         fs.writeFileSync(outPath, buffer);
         console.log("Saved scene to", outPath);

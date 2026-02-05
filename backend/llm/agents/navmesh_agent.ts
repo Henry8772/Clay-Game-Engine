@@ -1,66 +1,48 @@
 
-import { GeminiBackend } from '../backend';
 import { LLMClient } from "../client";
+import { SchemaType } from "@google/generative-ai";
 import { MOCK_NAVMESH } from '../graph/mocks';
+import { GameDesign } from "./design_agent";
 
-export async function runNavMeshAgent(client: LLMClient, backgroundBuffer: Buffer): Promise<any[]> {
-    console.log("[NavMeshAgent] Generating NavMesh...");
+export async function runNavMeshAgent(
+    client: LLMClient,
+    backgroundBuffer: Buffer,
+    design: GameDesign
+): Promise<any[]> {
+    console.log(`[NavMeshAgent] Generating NavMesh for ${design.grid_type}...`);
 
     if (client.isDebug) {
         console.log("[NavMeshAgent] Returning MOCK_NAVMESH");
         return MOCK_NAVMESH;
     }
 
-    const NAVMESH_PROMPT = `
-        Look at this top-down game board.
+    const prompt = `
+        Look at this game background.
         
         **Mission:**
-        Identify 6 by 6 "Playable Tile" or "Grid Cell" on the central floor area.
-
-        **Output Requirement:**
-        Return a JSON list of bounding boxes [ymin, xmin, ymax, xmax] (0-1000 normalized).
+        Identify the playable area based on this topology: "${design.grid_type}".
         
-        **Labels:**
-        - Use "tile_r{row}_c{col}" for tiles.
-
-        JSON Format:
-        [
-          {"box_2d": [0,0,100,100], "label": "tile_r0_c0"},
-          ...
-        ]
+        - If "Grid" (e.g. 6x6, 8x8): Identify individual cells. Label: "tile_rX_cY".
+        - If "Free Move" / "Platformer": Identify walkable floors. Label: "floor", "platform".
+        
+        **Output:** JSON list of bounding boxes [ymin, xmin, ymax, xmax] (0-1000).
     `;
 
-    const key = process.env.GEMINI_API_KEY;
-    if (!key) throw new Error("GEMINI_API_KEY not set for NavMesh Agent");
-
-    const backend = new GeminiBackend(key);
-
-    const config = {
-        temperature: 0.5,
-        responseMimeType: "application/json",
-        thinkingConfig: {
-            thinkingLevel: 'HIGH' as const,
-        },
-    };
-
-    const imagePart = {
-        inlineData: {
-            data: backgroundBuffer.toString('base64'),
-            mimeType: "image/png"
+    const schema = {
+        type: SchemaType.ARRAY,
+        items: {
+            type: SchemaType.OBJECT,
+            properties: {
+                box_2d: { type: SchemaType.ARRAY, items: { type: SchemaType.NUMBER } },
+                label: { type: SchemaType.STRING }
+            }
         }
     };
 
-    const responseText = await backend.generateContent(
-        [{ role: "user", parts: [{ text: NAVMESH_PROMPT }, imagePart] }],
-        "gemini-3-flash-preview",
-        { config: config }
+    return await client.generateJSON(
+        prompt,
+        [{ inlineData: { data: backgroundBuffer.toString('base64'), mimeType: "image/png" } }],
+        schema,
+        "navmesh_agent"
     );
-
-    try {
-        const navMesh = JSON.parse(responseText);
-        return navMesh;
-    } catch (e) {
-        console.error("Failed to parse NavMesh:", responseText);
-        throw e;
-    }
 }

@@ -11,7 +11,7 @@ describe('REAL: State Agent', () => {
     const shouldRun = process.env.GEMINI_API_KEY && !process.env.GEMINI_API_KEY.includes("dummy");
 
     it.skipIf(!shouldRun)('should combine artifacts into game state', async () => {
-        const runDir = getTestRunDir('boardgame');
+        const runDir = getTestRunDir('demo2');
         let analysisPath = path.join(runDir, "analysis.json");
         let navMeshPath = path.join(runDir, "navmesh.json");
         let spritePath = path.join(runDir, "sprites.png");

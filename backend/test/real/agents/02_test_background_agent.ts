@@ -24,7 +24,7 @@ describe('REAL: Background Agent', () => {
         // Let's rely on the previous test output or the Experiment 3 output.
 
         // Try to read from current run directory first (integration style)
-        const runDir = getTestRunDir('boardgame');
+        const runDir = getTestRunDir('demo2');
         const runScenePath = path.join(runDir, "scene.png");
 
         // Fallback to experiment-3 if not in current run (for isolated testing)

@@ -23,7 +23,7 @@ describe('REAL: Workflow E2E (Image-First)', () => {
         const app = compileGenerationGraph();
 
         // Use centralized run ID
-        const runDir = getTestRunDir('run_test_real_workflow');
+        const runDir = getTestRunDir('real_workflow_run');
         const runId = path.basename(runDir);
 
         console.log(`[Test] Run ID: ${runId}`);

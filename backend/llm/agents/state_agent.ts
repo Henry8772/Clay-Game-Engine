@@ -1,12 +1,14 @@
 import { DetectedItem } from './vision_agent';
 import { LLMClient } from '../client';
 import { SchemaType } from "@google/generative-ai";
+import { GameDesign } from './design_agent';
 
 export async function runStateAgent(
     client: LLMClient,
     items: DetectedItem[],
     navMesh: any[],
     runId: string,
+    design: GameDesign,
     assetManifest: Record<string, string> = {}
 ): Promise<any> {
     console.log("[StateAgent] Handing over State Architecture to LLM...");
@@ -21,9 +23,10 @@ export async function runStateAgent(
         })),
         available_assets: assetManifest,
         design_goals: [
-            "Link Cards to their corresponding Miniatures via 'spawns' property.",
-            "Assign 'team' based on standard fantasy tropes (Undead/Orcs = red/enemy, Humans/Elves = blue/player).",
-            "Assign 'type' (unit, item, prop, ui). Cards are 'items', Miniatures are 'units'.",
+            `Link Cards to their corresponding Miniatures via 'spawns' property.`,
+            `Assign 'team' based on: ${design.player_team.join(", ")} vs ${design.enemy_team.join(", ")}.`,
+            `Assign 'type' (unit, item, prop, ui).`,
+            `Rules Context: ${design.rules_summary}`
         ]
     };
 
@@ -68,7 +71,7 @@ export async function runStateAgent(
     };
 
     const systemPrompt = `
-    You are the Lead Game Designer and Data Architect for a tactical RPG.
+    You are the Lead Game Designer and Data Architect.
     Your job is to convert raw computer vision detection data into a structured Game State.
 
     **INPUT DATA:**
@@ -133,7 +136,7 @@ export async function runStateAgent(
     // 5. Return Full Config
     return {
         initialState,
-        rules: "Standard Skirmish Rules",
+        rules: design.rules_summary,
         engine_tools: [
             "1. MOVE(entityId, toZoneId) -> Teleport a unit.",
             "2. SPAWN(templateId, toZoneId, owner) -> Create a new unit from a card/template.",
@@ -141,6 +144,6 @@ export async function runStateAgent(
             "4. DESTROY(entityId) -> Remove an entity (e.g. card used, unit dead).",
             "5. NARRATE(message) -> Show text to the user."
         ],
-        engine_logic: "1. **Card Play:** If user draws a CARD to the BOARD -> DESTROY the card, then SPAWN the corresponding unit at that location.\n2. **Movement:** If user drags a UNIT to a TILE -> MOVE the unit.\n3. **Attack:** If user drags a UNIT to an ENEMY -> ATTACK the enemy (and usually don't move the attacker)."
+        engine_logic: design.game_loop_mechanics
     };
 }

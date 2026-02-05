@@ -10,6 +10,9 @@ export interface GraphState {
 
     // --- NEW IMAGE WORKFLOW STATE ---
 
+    // NEW: The Source of Truth
+    gameDesign?: import("../agents/design_agent").GameDesign;
+
     // --- NEW IMAGE WORKFLOW STATE ---
     sceneImage?: Buffer;
     backgroundImage?: Buffer;

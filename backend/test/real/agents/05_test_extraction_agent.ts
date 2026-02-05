@@ -9,7 +9,7 @@ describe('REAL: Extraction Agent', () => {
 
     it('should extract assets based on analysis', async () => {
         // No LLM needed for this step, uses Sharp
-        const runDir = getTestRunDir('boardgame');
+        const runDir = getTestRunDir('demo2');
         let spritePath = path.join(runDir, "sprites.png");
         let analysisPath = path.join(runDir, "analysis.json");
 

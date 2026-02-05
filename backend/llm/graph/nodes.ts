@@ -8,6 +8,7 @@ import { runVisionAgent } from "../agents/vision_agent";
 import { runExtractionAgent } from "../agents/extraction_agent";
 import { runNavMeshAgent } from "../agents/navmesh_agent";
 import { runStateAgent } from "../agents/state_agent";
+import { runDesignAgent } from "../agents/design_agent";
 import * as Mocks from "./mocks";
 
 // Helper to save artifacts
@@ -34,14 +35,28 @@ export interface GenerationGraphConfig {
     onProgress?: (msg: string) => Promise<void>;
 }
 
+// 0. Design Generator (NEW)
+export const nodeDesignGenerator = async (state: GraphState, config?: { configurable?: GenerationGraphConfig }) => {
+    const { client, onProgress } = config?.configurable || {};
+    if (!client) throw new Error("Client not found");
+
+    if (onProgress) await onProgress("Architecting Game Design...");
+
+    const gameDesign = await runDesignAgent(client, state.userInput);
+    await saveRunArtifact(state.runId, "design.json", JSON.stringify(gameDesign, null, 2));
+
+    return { gameDesign };
+};
+
 // 1. Scene Generator
 export const nodeSceneGenerator = async (state: GraphState, config?: { configurable?: GenerationGraphConfig }) => {
     const { client, onProgress } = config?.configurable || {};
     if (!client) throw new Error("Client not found");
+    if (!state.gameDesign) throw new Error("Game Design missing");
 
     if (onProgress) await onProgress("Generating Scene...");
 
-    const sceneImage = await runSceneAgent(client, state.userInput);
+    const sceneImage = await runSceneAgent(client, state.gameDesign);
     await saveRunArtifact(state.runId, "scene.png", sceneImage);
 
     return { sceneImage };
@@ -77,7 +92,7 @@ export const nodeSpriteIsolator = async (state: GraphState, config?: { configura
         runDir = path.resolve(DATA_RUNS_DIR, state.runId);
     }
 
-    const spriteImage = await runSpriteAgent(client, state.sceneImage, runDir);
+    const spriteImage = await runSpriteAgent(client, state.sceneImage, runDir || "");
     await saveRunArtifact(state.runId, "sprites.png", spriteImage);
 
     return { spriteImage };
@@ -88,10 +103,11 @@ export const nodeVisionAnalyzer = async (state: GraphState, config?: { configura
     const { client, onProgress } = config?.configurable || {};
     if (!client) throw new Error("Client not found");
     if (!state.spriteImage) throw new Error("Sprite image missing");
+    if (!state.gameDesign) throw new Error("Game Design missing");
 
     if (onProgress) await onProgress("Analyzing Sprites...");
 
-    const analysisJson = await runVisionAgent(client, state.spriteImage);
+    const analysisJson = await runVisionAgent(client, state.spriteImage, state.gameDesign);
     await saveRunArtifact(state.runId, "analysis.json", JSON.stringify(analysisJson, null, 2));
 
     return { analysisJson };
@@ -122,10 +138,11 @@ export const nodeNavMeshGenerator = async (state: GraphState, config?: { configu
     const { client, onProgress } = config?.configurable || {};
     if (!client) throw new Error("Client not found");
     if (!state.backgroundImage) throw new Error("Background image missing");
+    if (!state.gameDesign) throw new Error("Game Design missing");
 
     if (onProgress) await onProgress("Generating NavMesh...");
 
-    const navMesh = await runNavMeshAgent(client, state.backgroundImage);
+    const navMesh = await runNavMeshAgent(client, state.backgroundImage, state.gameDesign);
     await saveRunArtifact(state.runId, "navmesh.json", JSON.stringify(navMesh, null, 2));
 
     return { navMesh };
@@ -138,10 +155,11 @@ export const nodeStateGenerator = async (state: GraphState, config?: { configura
     if (!state.analysisJson) throw new Error("Analysis JSON missing");
     if (!state.navMesh) throw new Error("NavMesh missing");
     if (!state.runId) throw new Error("Run ID missing");
+    if (!state.gameDesign) throw new Error("Game Design missing");
 
     if (onProgress) await onProgress("Generating Game State...");
 
-    const finalGameState = await runStateAgent(client, state.analysisJson, state.navMesh, state.runId);
+    const finalGameState = await runStateAgent(client, state.analysisJson, state.navMesh, state.runId, state.gameDesign);
     await saveRunArtifact(state.runId, "gamestate.json", JSON.stringify(finalGameState, null, 2));
 
     return { finalGameState };

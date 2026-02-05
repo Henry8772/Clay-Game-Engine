@@ -15,7 +15,7 @@ describe('REAL: Sprite Agent', () => {
     it.skipIf(!shouldRun)('should isolate sprites from scene (extract mode)', async () => {
         const client = new LLMClient("gemini", "gemini-2.5-flash-image", false);
 
-        const runDir = getTestRunDir('boardgame');
+        const runDir = getTestRunDir('demo2');
         let scenePath = path.join(runDir, "scene.png");
 
         if (!fs.existsSync(scenePath)) {

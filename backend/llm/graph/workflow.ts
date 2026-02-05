@@ -2,6 +2,7 @@
 import { StateGraph, StateGraphArgs, START, END } from "@langchain/langgraph";
 import { GraphState } from "./state";
 import {
+    nodeDesignGenerator,
     nodeSceneGenerator,
     nodeBackgroundExtractor,
     nodeSpriteIsolator,
@@ -20,7 +21,8 @@ export function compileGenerationGraph() {
         userInput: { value: (x, y) => y ?? x, default: () => "" },
         runId: { value: (x, y) => y ?? x, default: () => "" },
 
-        // New Image Workflow artifacts
+        // NEW: The Source of Truth
+        gameDesign: { value: (x, y) => y ?? x, default: () => undefined },
 
         // New Image Workflow artifacts
         sceneImage: { value: (x, y) => y ?? x, default: () => undefined },
@@ -35,6 +37,7 @@ export function compileGenerationGraph() {
     const builder = new StateGraph<GraphState>({ channels: graphState });
 
     // 2. Add Nodes
+    builder.addNode("design_generator", nodeDesignGenerator as any);
     builder.addNode("scene_generator", nodeSceneGenerator as any);
     builder.addNode("background_extractor", nodeBackgroundExtractor as any);
     builder.addNode("sprite_isolator", nodeSpriteIsolator as any);
@@ -45,8 +48,11 @@ export function compileGenerationGraph() {
 
     // 3. Define Edges (Linear Flow)
 
-    // START -> Scene
-    builder.addEdge(START, "scene_generator" as any);
+    // START -> Design
+    builder.addEdge(START, "design_generator" as any);
+
+    // Design -> Scene
+    builder.addEdge("design_generator" as any, "scene_generator" as any);
 
     // Scene -> Background
     builder.addEdge("scene_generator" as any, "background_extractor" as any);
