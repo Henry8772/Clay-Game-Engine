@@ -138,17 +138,30 @@ export class GeminiBackend implements LLMBackend {
         if (typeof inputData === "string") {
             contents.push({ role: "user", parts: [{ text: inputData }] });
         } else {
-            // Convert OpenAI style [{role, content}] to Gemini style [{role, parts:[{text}]}]
-            contents = inputData.map((msg: any) => {
-                let role = msg.role;
-                if (role === 'assistant') role = 'model';
-                if (role === 'system') return null; // System handled in config
-                return {
-                    role: role,
-                    parts: [{ text: msg.content }]
-                };
-            }).filter(x => x !== null);
+            // Check if it's OpenAI style [{role, content}] or raw parts [{text}, {inlineData}]
+            const isMessageObject = inputData.length > 0 && (inputData[0].role !== undefined || inputData[0].content !== undefined);
+
+            if (isMessageObject) {
+                // Convert OpenAI style [{role, content}] to Gemini style [{role, parts:[{text}]}]
+                contents = inputData.map((msg: any) => {
+                    let role = msg.role;
+                    if (role === 'assistant') role = 'model';
+                    if (role === 'system') return null; // System handled in config
+                    return {
+                        role: role,
+                        parts: [{ text: msg.content }]
+                    };
+                }).filter(x => x !== null);
+            } else {
+                // Assume it is an array of parts for a single user message (e.g. images)
+                contents = [{ role: "user", parts: inputData }];
+            }
         }
+
+        console.log("DEBUG: generateJSON contents:", JSON.stringify(contents, (key, value) => {
+            if (key === 'data') return '<base64_hidden>'; // Don't spam logs
+            return value;
+        }, 2));
 
         const result = await model.generateContent({ contents });
         const response = result.response;

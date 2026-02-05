@@ -24,7 +24,7 @@ export async function runSpriteAgent(
     // 1. Determine Prompt based on Mode
     let whitePrompt = "";
     if (mode === 'extract_from_scene') {
-        whitePrompt = "A image of all the sprites and each cards in equal spacing. Must use a solid white background.";
+        whitePrompt = "Keep all characters, units, and foreground objects in their exact original positions. Do not move or rearrange them. Remove the background scenery and replace it with a solid white background.";
     } else {
         // Restyle Mode: We want to preserve layout but change style
         whitePrompt = `Redraw this sprite sheet in the style of: ${config.styleDescription || 'standard'}. Maintain the exact position, scale, and silhouette of every element. Do not add or remove objects. Keep the white background.`;

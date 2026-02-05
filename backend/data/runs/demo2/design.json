@@ -1,0 +1,35 @@
+{
+  "art_style": "Gritty Cyberpunk with stark neon lighting and holographic elements, rendered in a detailed stylized 3D.",
+  "grid_type": "8x8 Chess Grid",
+  "player_team": [
+    "King (Hacker Overlord)",
+    "Queen (AI Agent)",
+    "Rook (Combat Drone)",
+    "Bishop (Data Weaver)",
+    "Knight (Cyber-Bike Rider)",
+    "Pawn (Street Enforcer)"
+  ],
+  "enemy_team": [
+    "King (Corporate CEO)",
+    "Queen (Executive Android)",
+    "Rook (Security Turret)",
+    "Bishop (Corporate Spy)",
+    "Knight (Hover-Car Patrol)",
+    "Pawn (Corporate Guard)"
+  ],
+  "game_loop_mechanics": "Player selects a unit, valid move tiles are highlighted. If selected tile is empty, MOVE unit to tile. If selected tile contains an enemy unit, ATTACK enemy unit, DESTROY enemy unit, then MOVE player unit to tile. Special moves like Castling and En Passant follow standard chess rules. Game ends when a King is checkmated or a stalemate occurs.",
+  "background_theme": "Rain-slicked neon metropolis with towering skyscrapers, holographic billboards, and flying vehicles.",
+  "obstacles": [
+    "Data Stream Zones (visual only)",
+    "Temporary Energy Grids (visual only)"
+  ],
+  "perspective": "Isometric 3/4 view",
+  "rules_summary": "A turn-based strategy game where two players control distinct cyberpunk-themed armies on an 8x8 grid, following traditional chess movement and capture rules. The objective is to strategically maneuver your units to put the opponent's King (Hacker Overlord/Corporate CEO) into an inescapable 'checkmate' position.",
+  "ui_elements": [
+    "Turn Indicator",
+    "Captured Piece Display",
+    "Check/Checkmate/Stalemate notifications",
+    "Move History",
+    "Resign Button"
+  ]
+}

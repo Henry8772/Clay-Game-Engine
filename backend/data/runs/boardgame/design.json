@@ -1,0 +1,36 @@
+{
+  "art_style": "",
+  "grid_type": "6 * 6 grids",
+  "player_team": [
+    "Hacker King",
+    "AI Queen",
+    "Drone Rooks",
+    "Mech Knights",
+    "Android Bishops",
+    "Cyborg Pawns"
+  ],
+  "enemy_team": [
+    "Syndicate Boss King",
+    "Enforcer Queen",
+    "Security Drone Rooks",
+    "Assault Bot Knights",
+    "Propaganda Bishops",
+    "Gang Member Pawns"
+  ],
+  "game_loop_mechanics": "If Player selects Unit -> Highlight valid MOVE tiles and ATTACK targets. If Player drags Unit to empty valid Tile -> Unit performs MOVE. If Player drags Unit to valid Enemy Unit Tile -> Unit performs ATTACK, DESTROY Enemy Unit, Unit performs MOVE to that Tile. Objective: Checkmate the opposing King.",
+  "background_theme": "Sprawling Neon Megalopolis with flying vehicles, skyscraper vistas, and dynamic weather effects like 'synth-rain'.",
+  "obstacles": [
+    "Data Spikes (Impassable tiles, randomly generated or mission-specific)",
+    "Energy Field (Slows movement of units entering for one turn)",
+    "Holographic Billboard (Provides temporary cover, blocking ranged attacks for a turn)"
+  ],
+  "perspective": "Isometric 3/4 view",
+  "rules_summary": "A turn-based strategy game adapting classic chess rules to a dynamic cyberpunk setting. Players command a team of futuristic units, each with unique abilities based on their traditional chess counterparts, moving and attacking across an 8x8 holographic grid to achieve checkmate against the enemy King.",
+  "ui_elements": [
+    "Player Turn Indicator (Holographic)",
+    "Captured Pieces Display (Digital tally)",
+    "Unit Info Panel (Shows unit stats, movement range, attack potential)",
+    "In-game Menu (Pause, Options)",
+    "Match Timer (Optional, competitive modes)"
+  ]
+}

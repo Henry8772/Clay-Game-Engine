@@ -53,4 +53,5 @@ backend/test/real/experiment-3/extracted
 public/generated-assets
 backend/data/runs/*
 !backend/data/runs/boardgame/
+!backend/data/runs/demo2/
 backend/backend
