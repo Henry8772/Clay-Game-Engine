@@ -1,7 +1,6 @@
 import { LLMClient } from "../client";
 import { UniversalState, Entity } from "./universal_state_types";
-import { MODIFICATION_TOOLS_DEF } from "./modification_tools";
-import { saveAsset } from "../../utils/paths";
+import { MODIFICATION_TOOLS_DEF, FORMATTED_MOD_TOOLS } from "./modification_tools"; import { saveAsset } from "../../utils/paths";
 import fs from "fs/promises";
 import path from "path";
 import sharp from "sharp";
@@ -10,6 +9,7 @@ import { createTransparencyMask, drawBoundingBoxes } from "../utils/image_proces
 
 import { runVisionAgent } from "./vision_agent";
 import { runSpriteAgent } from "./sprite_agent";
+import { reclassifyMap } from "./navmesh_agent";
 
 
 export async function processModification(
@@ -42,7 +42,15 @@ export async function processModification(
                     targetName: { type: "STRING", description: "Name of target entities to modify" },
                     newStyleDescription: { type: "STRING", description: "New visual description for update" },
                     newPrompt: { type: "STRING", description: "New game prompt for regeneration" },
-                    styleDescription: { type: "STRING", description: "Global style description" }
+                    styleDescription: { type: "STRING", description: "Global style description" },
+                    visual_instruction: {
+                        type: "STRING",
+                        description: "Prompt for the image editor (e.g., 'Turn the lava into solid blue ice')"
+                    },
+                    logic_instruction: {
+                        type: "STRING",
+                        description: "Context for the NavMesh agent (e.g., 'The ice is solid ground')"
+                    }
                 }
             }
         },
@@ -56,23 +64,27 @@ export async function processModification(
     Current Game Context: ${currentState.meta?.vars ? JSON.stringify(currentState.meta.vars) : "No context vars"}
     
     Tools Available:
-    ${MODIFICATION_TOOLS_DEF.map(t => `- ${t.name}: ${t.description}`).join('\n')}
+    ${FORMATTED_MOD_TOOLS.join('\n')}
+    CRITICAL: Output PURE JSON matching the tool schema. Do NOT generate conversational text.
     `;
 
     const inputData = [{ role: 'user', content: `${userRequest}\n\n[Context] Game Entities Count: ${Object.keys(currentState.entities).length}` }];
 
-    // const response = await client.generateJSON<{ tool: string; args: any }>(
-    //     systemPrompt,
-    //     inputData,
-    //     toolSchema,
-    //     "modification_agent"
-    // );
+    console.log(`[ModificationAgent] systemPrompt: ${systemPrompt}`);
+    console.log(`[ModificationAgent] inputData: ${JSON.stringify(inputData)}`);
 
-    // const { tool, args } = response;
+    const response = await client.generateJSON<{ tool: string; args: any }>(
+        systemPrompt,
+        inputData,
+        toolSchema,
+        "modification_agent"
+    );
+
+    const { tool, args } = response;
 
     // debug 
-    const tool = "update_global_sprite_style";
-    const args = { styleDescription: "cyberpunk" };
+    // const tool = "update_global_sprite_style";
+    // const args = { styleDescription: "cyberpunk" };
 
     console.log(`[ModificationAgent] Tool: ${tool}`, args);
 
@@ -288,6 +300,57 @@ export async function processModification(
             }
 
             message = `Global style updated to '${style}'. Updated ${updatedCount} assets.`;
+            break;
+        }
+
+        case "modify_environment": {
+            // const { visual_instruction, logic_instruction } = args;
+            const visual_instruction = args.visual_instruction || `Update backgroundenvironment follows ${userRequest}`;
+            const logic_instruction = args.logic_instruction ||
+                `Modified terrain described as '${userRequest}'.`;
+            console.log(`[ModAgent] Environment Update: Visual="${visual_instruction}", Logic="${logic_instruction}"`);
+
+
+
+            // 1. Load Current Background
+            const currentBgPath = (currentState.meta as any).vars?.background;
+            if (!currentBgPath) throw new Error("No background found to modify");
+
+            const bgDiskPath = getDiskPath(currentBgPath);
+            const bgBuffer = await fs.readFile(bgDiskPath);
+
+            // 2. VISUAL PHASE: Edit the Image
+            // Use the user's prompt to guide the diffusion model
+            const editPrompt = `Edit this game map. ${visual_instruction}. Maintain exact perspective and grid layout.`;
+            const newBgBuffer = await client.editImage(editPrompt, bgBuffer, "gemini-2.5-flash-image");
+
+            // 3. LOGIC PHASE: Re-scan NavMesh
+            // Pass the new image AND the logic instruction to the NavMesh agent
+            if (currentState.navMesh) {
+                const rows = (currentState as any).grid?.rows || 6;
+                const cols = (currentState as any).grid?.cols || 6;
+
+                const updatedNavMesh = await reclassifyMap(
+                    client,
+                    newBgBuffer,
+                    rows,
+                    cols,
+                    currentState.navMesh,
+                    logic_instruction // e.g. "The frozen lava is now safe floor"
+                );
+
+                currentState.navMesh = updatedNavMesh;
+            }
+
+            // 4. Update State & Assets
+            const filename = `bg_mod_${Date.now()}.png`;
+            const newAssetPath = await saveAsset(runId, newBgBuffer, filename);
+
+            // Update global variable for background
+            if (!currentState.meta.vars) currentState.meta.vars = {};
+            (currentState.meta as any).vars.background = newAssetPath;
+
+            message = `Environment updated. Visuals changed and navigation logic re-calculated.`;
             break;
         }
 

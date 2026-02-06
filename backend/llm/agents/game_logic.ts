@@ -57,14 +57,30 @@ export async function resolveGameAction(
     Return a JSON object containing an array of tool calls.
     `;
 
+
+    // 1. EXTRACT FOCUSED INTERACTION (The Missing Link)
+    let interactionContext = "";
+    if (currentState.focused_interaction) {
+        const { target_zone_id, target_zone_type, target_zone_metadata } = currentState.focused_interaction;
+
+        interactionContext = `
+    **INTERACTION CONTEXT:**
+    - Target Zone: ${target_zone_id}
+    - Zone Type: ${target_zone_type.toUpperCase()}
+    - Hazard Info: ${target_zone_type === 'hazard' ? "DANGER! This tile is DEADLY." : "Safe."}
+        `;
+    }
+
     const userInput = `
     **CURRENT GAME STATE:**
     - Entities on Board: ${JSON.stringify(simplifiedEntities)}
     - Game Rules: ${rules}
+    ${interactionContext}
     
     **USER ACTION:**
     "${actionDescription}"
     `;
+
 
     console.log("System Instruction:", systemInstruction);
     console.log("User Input:", userInput);

@@ -90,23 +90,29 @@ export default function PlayPage() {
     const assets = currentGameState?.meta?.vars || {};
 
     useEffect(() => {
+        // STRATEGY 1: Load directly from the live Game State (Best Practice / Fast)
+        // The Modification Agent updates this directly in the DB.
+        if (currentGameState?.navMesh && Array.isArray(currentGameState.navMesh) && currentGameState.navMesh.length > 0) {
+            console.log("Using Live NavMesh from Convex State");
+            setNavMesh(currentGameState.navMesh);
+            return;
+        }
+
+        // STRATEGY 2: Fallback to File Fetch (Legacy / Slow)
+        // Only runs if the NavMesh isn't in the DB object (e.g., older runs)
         const basePath = `/api/asset-proxy/runs/${selectedRunId}`;
-        // 1. Check if we have a navmesh URL in the state
         const navMeshUrl = basePath + '/' + assets.navmesh;
 
         if (navMeshUrl && assets.navmesh) {
-            console.log("Loading NavMesh from State:", navMeshUrl);
-
-            // 2. Fetch directly from the URL provided by Convex
+            console.log("Loading NavMesh from File (Legacy):", navMeshUrl);
             fetch(navMeshUrl)
                 .then(res => res.json())
                 .then(data => setNavMesh(data))
-                .catch(err => console.error("Failed to load navmesh:", err));
+                .catch(err => console.error("Failed to load navmesh file:", err));
         } else {
-            // Fallback or clear
             setNavMesh([]);
         }
-    }, [assets.navmesh, selectedRunId]); // Re-run if URL or Run ID changes
+    }, [currentGameState?.navMesh, assets.navmesh, selectedRunId]);
 
     // 1. Derive Turn Status
     const activePlayer = currentGameState?.meta?.activePlayerId || 'player';

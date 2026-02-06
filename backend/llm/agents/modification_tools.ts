@@ -33,6 +33,14 @@ export const MODIFICATION_TOOLS_DEF = [
         parameters: z.object({
             styleDescription: z.string().describe("The visual style description (e.g. '8-bit pixel art', 'Watercolor painting')"),
         }),
+    },
+    {
+        name: "modify_environment",
+        description: "Updates the game background visuals and re-calculates the navigation mesh logic based on natural language instructions.",
+        parameters: z.object({
+            visual_instruction: z.string().describe("Prompt for the image editor"),
+            logic_instruction: z.string().describe("Context for the NavMesh agent to understand the new terrain"),
+        }),
     }
 ];
 
