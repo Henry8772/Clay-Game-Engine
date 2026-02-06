@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo, useEffect } from "react";
 import { SmartScene } from "../components/engine/SmartScene";
-import { SceneManifest, AssetManifest } from "../components/engine/types";
+import { SceneManifest, AssetManifest, UserCommand } from "../components/engine/types";
 import { useGameEngine } from "../hooks/useGameEngine";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
@@ -353,66 +353,83 @@ export default function PlayPage() {
     const [refreshTrigger, setRefreshTrigger] = useState(0);
     const { sendAction } = useGameEngine();
 
-    const handleAction = async (commandOrEvent: string) => {
+    const handleAction = async (commandOrEvent: string | object) => {
         try {
-            // Check if it's a JSON event from SmartScene
-            if (commandOrEvent.startsWith('{')) {
-                const event = JSON.parse(commandOrEvent);
-
-                // PICK UP EVENT (Start Drag)
-                if (event.type === 'PICK_UP') {
-                    return;
-                }
-
-                // DROP EVENT (End Drag)
-                if (event.type === 'MOVE') {
-                    setReachableTiles(new Set()); // Clear highlights
-
-                    const { entityId, to } = event;
-
-                    // Find the entity locally to check its type (Card vs Unit)
-                    const entity = entitiesList.find((e: any) => e.id === entityId);
-
-                    if (!entity || !to) return;
-
-                    // VERB SELECTION
-                    const verb = entity.type === 'prop' || entity.label.toLowerCase().includes('card')
-                        ? "PLAY_CARD"
-                        : "MOVE_UNIT";
-
-                    const command = `ACTION: ${verb} entity ${entityId} (${entity.label}) TARGETING ${to}`;
-
-                    // Recursive call with string command
-                    handleAction(command);
-                    return;
-                } else {
-                    console.log("Unknown action format:", commandOrEvent);
-                }
-            } else {
-                // Command string directly (e.g. "ACTION: END_TURN")
+            // 1. HANDLE CHAT (String input)
+            if (typeof commandOrEvent === 'string' && !commandOrEvent.startsWith('{')) {
                 if (isInteractionLocked) return;
 
-                setIsProcessingAction(true);
-                try {
-                    // 2. Call Server Action (The Brain)
-                    const { processGameMoveAction } = await import("../actions/game-move");
-                    const result = await processGameMoveAction(currentGameState, rules as string, commandOrEvent, navMesh);
+                // Construct Chat Command
+                const chatAction: UserCommand = {
+                    type: "CHAT",
+                    description: `Player says: "${commandOrEvent}"`,
+                    payload: { text: commandOrEvent }
+                };
 
-                    if (result.success) {
-                        result.logs?.forEach((log: any) => console.log("GAME LOG:", log));
-                    } else {
-                        console.error("Move failed:", result.error);
-                        setRefreshTrigger(p => p + 1);
-                        if (result.error) alert(result.error);
-                    }
-                } finally {
-                    setIsProcessingAction(false);
-                }
+                await executeCommand(chatAction);
+                return;
             }
+
+            // 2. HANDLE SMART SCENE EVENTS (JSON String or Object)
+            const event = typeof commandOrEvent === 'string'
+                ? JSON.parse(commandOrEvent)
+                : commandOrEvent;
+
+            // IGNORE Pick Up (Visual only)
+            if (event.type === 'PICK_UP') return;
+
+            // HANDLE MOVE / DROP
+            if (event.type === 'MOVE') {
+                setReachableTiles(new Set());
+
+                const { entityId, to } = event;
+                const entity = entitiesList.find((e: any) => e.id === entityId);
+                if (!entity || !to) return;
+
+                // Determine Description based on context (Optional flavor)
+                const isCard = entity.type === 'prop' || entity.label.toLowerCase().includes('card');
+                const desc = isCard
+                    ? `Player plays card ${entity.label} on ${to}`
+                    : `Player moves ${entity.label} to ${to}`;
+
+                // CONSTRUCT STRUCTURED COMMAND
+                const moveAction: UserCommand = {
+                    type: "MOVE",
+                    description: desc,
+                    payload: {
+                        entityId: entityId,
+                        targetId: to
+                    }
+                };
+
+                await executeCommand(moveAction);
+            }
+
         } catch (e) {
             console.error("Failed to parse action:", e);
             setReachableTiles(new Set());
-            setRefreshTrigger(p => p + 1); // Safety revert
+            setRefreshTrigger(p => p + 1);
+            setIsProcessingAction(false);
+        }
+    };
+
+    // Helper to actually send to server
+    const executeCommand = async (action: UserCommand) => {
+        setIsProcessingAction(true);
+        try {
+            const { processGameMoveAction } = await import("../actions/game-move");
+            // PASS THE OBJECT, NOT THE STRING
+            // @ts-ignore - We are about to update the server action signature
+            const result = await processGameMoveAction(currentGameState, rules as string, action, navMesh);
+
+            if (result.success) {
+                result.logs?.forEach((log: any) => console.log("GAME LOG:", log));
+            } else {
+                console.error("Move failed:", result.error);
+                setRefreshTrigger(p => p + 1);
+                if (result.error) alert(result.error);
+            }
+        } finally {
             setIsProcessingAction(false);
         }
     };

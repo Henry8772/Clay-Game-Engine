@@ -1067,7 +1067,7 @@
       350
     ],
     "label": "tile_r5_c6",
-    "type": "floor"
+    "type": "hazard"
   },
   {
     "box_2d": [
@@ -1267,7 +1267,7 @@
       350
     ],
     "label": "tile_r6_c6",
-    "type": "floor"
+    "type": "hazard"
   },
   {
     "box_2d": [

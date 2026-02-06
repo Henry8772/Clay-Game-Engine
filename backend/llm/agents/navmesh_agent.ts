@@ -27,6 +27,59 @@ function generateFullScreenGrid(rows: number, cols: number) {
     return tiles;
 }
 
+export async function reclassifyMap(
+    client: LLMClient,
+    imageBuffer: Buffer,
+    rows: number,
+    cols: number,
+    existingGrid: any[],
+    logicContext: string // <--- NEW: Dynamic Context
+): Promise<any[]> {
+    console.log(`[NavMeshAgent] Re-classifying with context: "${logicContext}"`);
+
+    const prompt = `
+        Look at this updated game map.
+        I have a ${rows}x${cols} grid overlay.
+        
+        **Context for this Update:**
+        ${logicContext}
+        
+        **Task:**
+        Classify every single cell in reading order based on the visual and the context provided above.
+        
+        **Standard Types:**
+        - "floor": Walkable/Safe.
+        - "hazard": Deadly/Damage (Lava, Water, Spikes).
+        - "wall": Obstacles.
+        
+        **Output:**
+        A single array of strings (types) corresponding to the ${rows * cols} cells.
+    `;
+
+    const schema = {
+        type: SchemaType.OBJECT,
+        properties: {
+            tile_types: {
+                type: SchemaType.ARRAY,
+                items: { type: SchemaType.STRING }
+            }
+        }
+    };
+
+    const result = await client.generateJSON<{ tile_types: string[] }>(
+        prompt,
+        [{ inlineData: { data: imageBuffer.toString('base64'), mimeType: "image/png" } }],
+        schema,
+        "navmesh_reclassify"
+    );
+
+    // Merge logic: Preserve IDs/Boxes, update Type
+    return existingGrid.map((tile, i) => ({
+        ...tile,
+        type: result.tile_types[i] || "floor"
+    }));
+}
+
 export async function runNavMeshAgent(
     client: LLMClient,
     backgroundBuffer: Buffer,

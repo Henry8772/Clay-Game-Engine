@@ -23,3 +23,13 @@ export interface SceneManifest {
         juice: AssetManifest[];
     };
 }
+
+export interface UserCommand {
+    type: "MOVE" | "CHAT"; // Frontend only really does these two
+    description: string;   // The text for the LLM: "Player moves Hero to tile_1"
+    payload: {             // The data for the Engine to "peek" at
+        entityId?: string;
+        targetId?: string;   // The NavMesh Zone ID
+        text?: string;       // For chat
+    };
+}

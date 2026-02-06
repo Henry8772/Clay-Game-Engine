@@ -158,11 +158,6 @@ export class GeminiBackend implements LLMBackend {
             }
         }
 
-        console.log("DEBUG: generateJSON contents:", JSON.stringify(contents, (key, value) => {
-            if (key === 'data') return '<base64_hidden>'; // Don't spam logs
-            return value;
-        }, 2));
-
         const result = await model.generateContent({ contents });
         const response = result.response;
         const text = response.text();

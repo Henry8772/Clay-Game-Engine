@@ -3,6 +3,7 @@ import sharp from 'sharp';
 interface Box2DItem {
     box_2d: [number, number, number, number]; // [ymin, xmin, ymax, xmax] 0-1000
     label?: string;
+    type?: string;
 }
 
 /**
@@ -264,8 +265,8 @@ export async function drawNavMesh(imageBuffer: Buffer, tiles: Box2DItem[]): Prom
         return `
             <rect x="${x}" y="${y}" width="${w}" height="${h}" 
                   fill="${color}" fill-opacity="0.3" stroke="${color}" stroke-width="1" />
-             <text x="${x + w / 2}" y="${y + h / 2}" font-family="Arial" font-size="10" fill="white" text-anchor="middle" dominant-baseline="middle" style="text-shadow: 1px 1px 1px black;">
-                ${tile.label || ''}
+            <text x="${x + w / 2}" y="${y + h / 2}" font-family="Arial" font-size="10" fill="white" text-anchor="middle" dominant-baseline="middle" style="text-shadow: 1px 1px 1px black;">
+                ${tile.label || ''} ${tile.type ? `(${tile.type})` : ''}
             </text>
         `;
     }).join('\n');

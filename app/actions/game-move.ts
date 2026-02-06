@@ -4,98 +4,93 @@ import { LLMClient } from "../../backend/llm/client";
 import { fetchMutation, fetchQuery } from "convex/nextjs";
 import { api } from "../../convex/_generated/api";
 import { GameEngine } from "../engine/game_engine";
+import { UserCommand } from "../components/engine/types";
 
+export async function processGameMoveAction(
+    currentState: any,
+    rules: string,
+    userAction: UserCommand,
+    navMesh?: any[]
+) {
+    console.log("Processing User Action:", userAction);
 
-export async function processGameMoveAction(currentState: any, rules: string, command: string, navMesh?: any[]) {
-    console.log("Processing game move:", command);
     try {
-        // 1. Get current active game ID if not passed (optional, for safety)
         const activeGame = await fetchQuery(api.games.get, {});
-        if (!activeGame) throw new Error("No active game found in DB");
+        if (!activeGame) throw new Error("No active game found");
 
-        // 1. Validate Turn (Security check)
-        // @ts-ignore
-        const activePlayer = currentState.meta?.activePlayerId || 'player';
-        // if (activePlayer !== 'player') {
-        //      return { success: false, error: "It is not your turn." };
-        // }
-
-        // 2. Setup Engine
         const client = new LLMClient();
 
-        // console.log("rules", rules);
-        // console.log("currentState", currentState);
-        // console.log("navMesh", navMesh);
+        // =========================================================
+        // 1. CONTEXT INJECTION (The "Hazard" Fix)
+        // =========================================================
+        let stateForLLM = { ...currentState };
 
+        // If this is a move, peek at the target tile
+        if (userAction.type === 'MOVE' && userAction.payload?.targetId && navMesh) {
+            const targetId = userAction.payload.targetId;
 
-        // Instantiate Engine with Current State
+            // Find the specific tile data
+            const targetTile = navMesh.find((zone: any) => zone.label === targetId);
+
+            if (targetTile) {
+                console.log(`[Context] Focused Zone: ${targetId} (Type: ${targetTile.type})`);
+
+                // INJECT into State so LLM sees it
+                stateForLLM = {
+                    ...currentState,
+                    // We add a temporary field "focused_interaction"
+                    focused_interaction: {
+                        target_zone_id: targetTile.label,
+                        target_zone_type: targetTile.type || "normal",
+                        target_zone_metadata: targetTile
+                    }
+                };
+            }
+        }
+
+        // =========================================================
+        // 2. SETUP ENGINE
+        // =========================================================
         const engine = new GameEngine(
-            currentState,
+            stateForLLM, // Pass the Enriched State
             rules,
             client,
             navMesh,
             false,
-            [...activeGame.engine_tools, "6. END_TURN() -> Pass play to the opponent."], // Inject End Turn tool
+            [...activeGame.engine_tools, "6. END_TURN() -> Pass play to the opponent."],
             activeGame.engine_logic
         );
 
-        // 3. Process Move
-        const result = await engine.processCommand(command);
+        // =========================================================
+        // 3. EXECUTE WITH DESCRIPTION
+        // =========================================================
+        // We pass the natural language description to the LLM
+        const result = await engine.processCommand(userAction.description);
 
-        // 3. Persist to Convex (including invalid moves to show error in chat)
+        // Persist to Convex
         if (result.newState) {
+            // Clean up the temporary 'focused_interaction' before saving to DB
+            // so we don't pollute persistent state
+            if (result.newState.focused_interaction) {
+                delete result.newState.focused_interaction;
+            }
+
             await fetchMutation(api.games.updateState, {
                 gameId: activeGame._id,
                 newState: result.newState,
-                summary: result.logs.join('\n'), // Save the logs as the summary
-                role: "agent",
-                command: command
+                summary: result.logs.join('\n'),
+                role: "user",
+                command: userAction.description // Log the text
             });
         }
 
-        // 4. Enemy AI Turn (Only if user move was valid AND navMesh exists)
-        // if (result.isValid && result.newState && navMesh) {
-        //     console.log("Triggering Enemy AI turn...");
-        //     const { generateEnemyMove } = await import("../../backend/llm/agents/enemy_ai");
-
-        //     // AI THINKS
-        //     // We use the NEW state from the user's move
-        //     const aiDecision = await generateEnemyMove(client, result.newState, rules, navMesh);
-        //     console.log("Enemy AI Decision:", aiDecision);
-
-        //     // AI MOVES (Via Engine)
-        //     // We need to update the engine's state first (it already is updated internally, but new instance needed?)
-        //     // Actually `engine` instance has the updated state in `engine.getState()`. It is persistent in memory for this function scope.
-
-        //     const aiMoveResult = await engine.processCommand(aiDecision.command);
-
-        //     if (aiMoveResult.newState) {
-        //         // Persist Enemy Move
-        //         await fetchMutation(api.games.updateState, {
-        //             gameId: activeGame._id,
-        //             newState: aiMoveResult.newState,
-        //             summary: `[RED TURN] ${aiDecision.reasoning}\nRef: ${aiMoveResult.summary}`,
-        //             role: "agent",
-        //             command: `(AI) ${aiDecision.command}`
-        //         });
-        //     }
-        // }
-
         // ======================================================
         // THE "FROZEN" & AI UPDATE LOOP
-        // If the tool execution resulted in a turn change (to AI), 
-        // we process the AI move immediately in this request.
         // ======================================================
-
         // @ts-ignore
         if (result.turnChanged && result.newState.meta.activePlayerId === 'ai') {
 
-            // 5. Run AI Logic (Simplified for example)
             console.log("--> Triggering AI Turn...");
-
-            // Artificial delay to let the frontend "Feel" the thinking (optional)
-            // await new Promise(r => setTimeout(r, 1000));
-
             const aiCommand = await generateEnemyMove(client, result.newState, rules);
 
             const aiResult = await engine.processCommand(aiCommand);
@@ -106,27 +101,30 @@ export async function processGameMoveAction(currentState: any, rules: string, co
             // @ts-ignore
             result.logs = [...result.logs, ...aiResult.logs];
 
-            // 6. Save AI State to DB
+            // Save AI State to DB
             await fetchMutation(api.games.updateState, {
                 gameId: activeGame._id,
                 newState: aiResult.newState,
                 summary: aiResult.logs.join('\n'),
-                role: "assistant", // Mark as AI
+                role: "assistant",
                 command: aiCommand
             });
         }
 
         return {
             success: true,
-            toolCalls: result.tools, // Map tools -> toolCalls for frontend compatibility
             newState: result.newState,
-            logs: result.logs
+            logs: result.logs,
+            toolCalls: result.tools
         };
+
     } catch (error) {
-        console.error("Error processing game move:", error);
+        console.error("Error processing move:", error);
+        // @ts-ignore
         return { success: false, error: String(error) };
     }
 }
+
 // Simple Helper for AI decision
 async function generateEnemyMove(client: LLMClient, state: any, rules: string) {
     // Artificial delay to simulate thinking
