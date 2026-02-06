@@ -422,6 +422,10 @@ export default function PlayPage() {
     // Helper to actually send to server
     const executeCommand = async (action: UserCommand) => {
         setIsProcessingAction(true);
+        // VISUAL FEEDBACK: Show in chat immediately
+        setChatOptimisticMessage(action.description);
+        setChatIsProcessing(true);
+
         try {
             const { processGameMoveAction } = await import("../actions/game-move");
             // PASS THE OBJECT, NOT THE STRING
@@ -437,6 +441,9 @@ export default function PlayPage() {
             }
         } finally {
             setIsProcessingAction(false);
+            // Clear visual feedback
+            setChatOptimisticMessage(null);
+            setChatIsProcessing(false);
         }
     };
 
