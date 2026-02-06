@@ -19,7 +19,7 @@ export async function modifyGameAction(gameId: string, userRequest: string) {
     const runId = gameState.runId || "boardgame";
 
     // 2. Init LLM
-    const client = new LLMClient("gemini", undefined, false);
+    const client = await LLMClient.createWithConvexKey("gemini", undefined, false);
 
     try {
         // 3. Run Agent

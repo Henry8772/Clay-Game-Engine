@@ -13,7 +13,7 @@ export async function createGameAction(prompt: string, gameId: string) {
 
     // 1. Setup Client
     // Pass false as 3rd arg to disable debug/mock mode
-    const client = new LLMClient("gemini", undefined, false);
+    const client = await LLMClient.createWithConvexKey("gemini", undefined, false);
     const runId = `run_${Date.now()}_${crypto.randomUUID().slice(0, 8)}`;
 
     // 2. Setup Callback to report progress to Convex
