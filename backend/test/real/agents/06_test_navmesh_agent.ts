@@ -2,13 +2,11 @@
 import { describe, it, expect } from 'vitest';
 import { LLMClient } from "../../../llm/client";
 import { runNavMeshAgent } from "../../../llm/agents/navmesh_agent";
-import { drawNavMeshCentroid, runNavMesCentroidhAgent } from "../../../llm/agents/navmesh_agent_centroid";
 import * as dotenv from "dotenv";
 import fs from 'fs';
 import path from 'path';
 import { getTestRunDir, DEFAULT_EXPERIMENT_ID } from '../../utils';
-import { drawNavMesh } from '../../../llm/utils/image_processor';
-// remove drawNavMesh import as we use the one from agent now
+import { drawNavMesh } from "../../../llm/utils/image_processor";
 
 dotenv.config();
 
