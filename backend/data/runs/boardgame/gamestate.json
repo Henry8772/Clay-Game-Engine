@@ -9,7 +9,20 @@
       "vars": {
         "background": "background.png",
         "navmesh": "navmesh.json"
-      }
+      },
+      "activePlayerIndex": 0,
+      "players": [
+        {
+          "id": "human_p1",
+          "type": "human",
+          "team": "blue"
+        },
+        {
+          "id": "ai_boss",
+          "type": "ai",
+          "team": "red"
+        }
+      ]
     },
     "blueprints": {
       "tpl_skeleton_card": {

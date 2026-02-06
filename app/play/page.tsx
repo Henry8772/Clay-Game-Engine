@@ -115,8 +115,14 @@ export default function PlayPage() {
     }, [currentGameState?.navMesh, assets.navmesh, selectedRunId]);
 
     // 1. Derive Turn Status
-    const activePlayer = currentGameState?.meta?.activePlayerId || 'player';
-    const isPlayerTurn = activePlayer === 'player';
+    const activePlayerId = currentGameState?.meta?.activePlayerId || 'player';
+    const players = currentGameState?.meta?.players || [];
+    const activePlayerObj = players.find((p: any) => p.id === activePlayerId);
+
+    // Check if it's a human turn (either by type 'human' or legacy 'player' ID)
+    const isPlayerTurn = activePlayerObj
+        ? activePlayerObj.type === 'human'
+        : activePlayerId === 'player';
 
     // 2. Logic to block interaction
     // We block if it's not our turn, OR if we are currently sending a command

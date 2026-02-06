@@ -5,6 +5,7 @@ import { fetchMutation, fetchQuery } from "convex/nextjs";
 import { api } from "../../convex/_generated/api";
 import { GameEngine } from "../engine/game_engine";
 import { UserCommand } from "../components/engine/types";
+import { generateEnemyMove } from "../../backend/llm/agents/enemy_ai";
 
 export async function processGameMoveAction(
     currentState: any,
@@ -13,6 +14,8 @@ export async function processGameMoveAction(
     navMesh?: any[]
 ) {
     console.log("Processing User Action:", userAction);
+
+
 
     try {
         const activeGame = await fetchQuery(api.games.get, {});
@@ -84,14 +87,24 @@ export async function processGameMoveAction(
             });
         }
 
+        const players = result.newState.meta.players;
+        let activeIndex = result.newState.meta.activePlayerIndex;
+        let activePlayer = players[activeIndex];
+
         // ======================================================
         // THE "FROZEN" & AI UPDATE LOOP
         // ======================================================
         // @ts-ignore
-        if (result.turnChanged && result.newState.meta.activePlayerId === 'ai') {
+        console.log("Active Player:", activePlayer);
+        console.log(result.turnChanged, activePlayer.type === 'ai');
+        if (result.turnChanged && activePlayer.type === 'ai') {
 
             console.log("--> Triggering AI Turn...");
-            const aiCommand = await generateEnemyMove(client, result.newState, rules);
+            // Use result.newState as the latest state
+            const aiMoveResult = await generateEnemyMove(client, result.newState, rules, navMesh || [], activePlayer);
+            const aiCommand = aiMoveResult.command;
+
+            console.log(`[AI] Command decided: "${aiCommand}"`);
 
             const aiResult = await engine.processCommand(aiCommand);
 
@@ -123,25 +136,4 @@ export async function processGameMoveAction(
         // @ts-ignore
         return { success: false, error: String(error) };
     }
-}
-
-// Simple Helper for AI decision
-async function generateEnemyMove(client: LLMClient, state: any, rules: string) {
-    // Artificial delay to simulate thinking
-    await new Promise(resolve => setTimeout(resolve, 1500));
-
-    // 1. Check if AI has any units
-    const aiUnits = state.entities?.filter((e: any) => e.owner === 'ai') || [];
-
-    if (aiUnits.length === 0) {
-        // AI spawns a unit if it has none
-        /* 
-           Ideally we would spawn here, but we need a valid tile.
-           For now, we just pass the turn back. 
-           Future: return `ACTION: SPAWN entity minion AT tile_...`;
-        */
-        console.log("AI has no units, ending turn.");
-    }
-
-    return "ACTION: END_TURN";
 }

@@ -90,13 +90,14 @@ export class GameEngine {
             this.engineLogic
         );
 
-        const { newState, logs } = this.applyTools(tools);
+        const { newState, logs, turnChanged } = this.applyTools(tools);
 
         // RETURN EVERYTHING
         return {
             tools,
             newState,
             logs,
+            turnChanged,
             isValid: true
         };
     }
@@ -216,16 +217,23 @@ export class GameEngine {
                 }
 
                 case "END_TURN": {
-                    const current = this.state.meta.activePlayerId;
-                    // Simple toggle logic (extendable later)
-                    const nextPlayer = current === 'player' ? 'ai' : 'player';
+                    // 1. Get current meta
+                    const meta = this.state.meta;
+                    const players = meta.players || [{ id: 'default', type: 'human' }]; // Fallback
 
-                    this.state.meta.activePlayerId = nextPlayer;
-                    this.state.meta.turnCount = (this.state.meta.turnCount || 0) + 1;
+                    // 2. Calculate Next Index (Cyclic)
+                    // (0 -> 1 -> 0) OR (0 -> 0 for puzzles)
+                    const nextIndex = (meta.activePlayerIndex + 1) % players.length;
 
-                    logs.push(`Turn ended. It is now ${nextPlayer}'s turn.`);
+                    // 3. Update State
+                    meta.activePlayerIndex = nextIndex;
+                    meta.activePlayerId = players[nextIndex].id; // Helper for frontend
+                    meta.turnCount++;
 
-                    // Mark flag
+                    // 4. Log it
+                    const nextPlayer = players[nextIndex];
+                    logs.push(`Turn passed to ${nextPlayer.id} (${nextPlayer.type})`);
+
                     this.turnChanged = true;
                     break;
                 }

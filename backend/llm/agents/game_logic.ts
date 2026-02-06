@@ -52,6 +52,7 @@ export async function resolveGameAction(
     **NAMING CONVENTION:**
     - Use the exact 'template' ID provided in the entity list.
     - If spawning a new unit, use the exact ID found in the 'spawns' field of the card.
+    - If the user's action concludes their turn (like moving), DO NOT forget to call END_TURN().
 
     **OUTPUT:**
     Return a JSON object containing an array of tool calls.
@@ -96,7 +97,7 @@ export async function resolveGameAction(
                     type: SchemaType.OBJECT,
                     required: ["name", "args"],
                     properties: {
-                        name: { type: SchemaType.STRING, enum: ["MOVE", "SPAWN", "ATTACK", "DESTROY", "NARRATE"] },
+                        name: { type: SchemaType.STRING, enum: ["MOVE", "SPAWN", "ATTACK", "DESTROY", "NARRATE", "END_TURN"] },
                         args: {
                             type: SchemaType.OBJECT,
                             properties: {
