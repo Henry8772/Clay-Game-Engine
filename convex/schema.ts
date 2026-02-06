@@ -21,4 +21,11 @@ export default defineSchema({
         timestamp: v.number(),
         data: v.optional(v.any()), // Extra data for specialized logs (e.g. relatedEntityId)
     }).index("by_gameId", ["gameId"]),
+    apiKeys: defineTable({
+        key: v.optional(v.string()), // The actual API key (stored server-side)
+        keyHash: v.string(), // Hash of the API key (for verification)
+        createdAt: v.number(),
+        lastUsedAt: v.optional(v.number()),
+        isActive: v.boolean(),
+    }).index("by_keyHash", ["keyHash"]),
 });

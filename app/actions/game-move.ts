@@ -20,8 +20,8 @@ export async function processGameMoveAction(currentState: any, rules: string, co
         //      return { success: false, error: "It is not your turn." };
         // }
 
-        // 2. Setup Engine
-        const client = new LLMClient();
+        // 2. Setup Engine with automatic API key fetching
+        const client = await LLMClient.createWithConvexKey();
 
         // console.log("rules", rules);
         // console.log("currentState", currentState);

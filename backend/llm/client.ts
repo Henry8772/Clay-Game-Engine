@@ -13,18 +13,48 @@ export class LLMClient {
     constructor(
         manufacturer: "gemini" = "gemini",
         model?: string,
-        debugMode?: boolean
+        debugMode?: boolean,
+        apiKey?: string
     ) {
         this.debugMode = debugMode ?? (process.env.USE_MOCK_MODE === 'true');
         this.model = model || process.env.DEFAULT_LLM_MODEL || "gemini-2.5-flash";
 
         if (manufacturer === "gemini") {
-            const apiKey = process.env.GEMINI_API_KEY;
-            if (!apiKey) throw new Error("GEMINI_API_KEY not found");
-            this.backend = new GeminiBackend(apiKey);
+            // Priority: passed key > environment variable
+            const finalApiKey = apiKey || process.env.GEMINI_API_KEY;
+            if (!finalApiKey) throw new Error("GEMINI_API_KEY not found and no API key provided");
+            this.backend = new GeminiBackend(finalApiKey);
         } else {
             throw new Error(`Unsupported manufacturer: ${manufacturer}`);
         }
+    }
+
+    /**
+     * Factory function to create LLMClient with automatic API key fetching from Convex
+     * Only use from Next.js server actions/API routes
+     */
+    static async createWithConvexKey(
+        manufacturer: "gemini" = "gemini",
+        model?: string,
+        debugMode?: boolean
+    ): Promise<LLMClient> {
+        let apiKey = process.env.GEMINI_API_KEY;
+
+        // Try to fetch from Convex if available
+        try {
+            const { fetchQuery } = await import("convex/nextjs");
+            const { api } = await import("../../convex/_generated/api");
+            const userKey = await fetchQuery(api.apiKeys.getLatestKey, {});
+            if (userKey) {
+                apiKey = userKey;
+                console.log("[LLMClient] Using user-configured API key from Convex");
+            }
+        } catch (err) {
+            // Fallback to env variable if Convex fetch fails
+            console.log("[LLMClient] Could not fetch from Convex, falling back to env");
+        }
+
+        return new LLMClient(manufacturer, model, debugMode, apiKey);
     }
 
     public get isDebug(): boolean {
