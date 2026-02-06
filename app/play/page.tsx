@@ -90,23 +90,21 @@ export default function PlayPage() {
     const assets = currentGameState?.meta?.vars || {};
 
     useEffect(() => {
-        const basePath = `/api/asset-proxy/runs/${selectedRunId}`;
-        // 1. Check if we have a navmesh URL in the state
-        const navMeshUrl = basePath + '/' + assets.navmesh;
-
-        if (navMeshUrl) {
-            console.log("Loading NavMesh from State:", navMeshUrl);
-
-            // 2. Fetch directly from the URL provided by Convex
-            fetch(navMeshUrl)
-                .then(res => res.json())
-                .then(data => setNavMesh(data))
-                .catch(err => console.error("Failed to load navmesh:", err));
-        } else {
-            // Fallback or clear
+        if (!selectedRunId || !assets.navmesh) {
             setNavMesh([]);
+            return;
         }
-    }, [assets.navmesh]); // Only re-run if the URL changes
+
+        const basePath = `/api/asset-proxy/runs/${selectedRunId}`;
+        const navMeshUrl = `${basePath}/${assets.navmesh}`;
+
+        console.log("Loading NavMesh from State:", navMeshUrl);
+
+        fetch(navMeshUrl)
+            .then(res => res.json())
+            .then(data => setNavMesh(data))
+            .catch(err => console.error("Failed to load navmesh:", err));
+    }, [assets.navmesh, selectedRunId]); // Only re-run if the URL changes
 
     // 1. Derive Turn Status
     const activePlayer = currentGameState?.meta?.activePlayerId || 'player';
@@ -213,7 +211,9 @@ export default function PlayPage() {
         const scaleX = SCENE_WIDTH / 1000;
         const scaleY = SCENE_HEIGHT / 1000;
 
-        const background_url = basePath + '/' + assets.background;
+        const background_url = assets.background
+            ? `${basePath}/${assets.background}`
+            : "/placeholder.svg";
 
         // 1. Ambience Layer
         const ambience: AssetManifest = {
