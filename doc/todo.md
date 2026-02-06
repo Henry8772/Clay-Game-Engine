@@ -1,5 +1,0 @@
-[] Modify the drag to take and place, so we can show user what are the possible place they can drop and not drop to, this will require the llm to give a quick logic to determind if the piece can be placed or not, no more leeting game refree do this task. So we can also incoporate some animation like take a piece and drop it
-
-[] Support game logic, as each piece will be given with possible actions in the game defintio, so we can show what each can do when user clicks on it
-
-[] Support runtime modding, the right side chat in /play will be log and chat, chat will allow user to modify the game state, scnee and asset during the run time, and the ideally the state will be preserved. How this work, is that we will take the current screeenshot of the game, send it as iamge to the scne generator with user prompt, and we redo the entire workflow again to create the new game from there.
