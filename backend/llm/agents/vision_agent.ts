@@ -28,8 +28,6 @@ export async function runVisionAgent(
     const expectedAssets = [
         ...design.player_team,
         ...design.enemy_team,
-        ...design.obstacles,
-        ...design.ui_elements
     ].join(", ");
 
     const prompt = `
@@ -42,15 +40,6 @@ export async function runVisionAgent(
     Return a bounding box [ymin, xmin, ymax, xmax] (0-1000) for every isolated item.
     Label them specifically based on the context list. e.g. "Knight", "Rock", "Card Hand".
     `;
-
-    // Note: The LLMClient might not support inlineData in generateJSON purely depending on version,
-    // but we can trust the caller or use the pattern below if we want to be safe.
-    // For now, let's stick to the user's request to "Use client directly" if possible,
-    // or fallback to the manual backend call if LLMClient doesn't support part array in inputData.
-    // Looking at LLMClient.generateJSON signature: (system, inputData, ...)
-    // inputData is passed to backend.generateJSON. 
-    // If backend.generateJSON takes array of parts, we are good.
-    // Assuming GeminiBackend supports it.
 
     const schema = {
         type: SchemaType.ARRAY,

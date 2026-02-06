@@ -1,6 +1,10 @@
 {
   "art_style": "16-bit Top-Down RPG Pixel Art. Vibrant colors, distinct tile boundaries, high contrast between safe zones (floor) and hazard zones (lava).",
   "grid_type": "Continuous NavMesh (Free Movement)",
+  "grid_shape": {
+    "rows": 11,
+    "cols": 20
+  },
   "player_team": [
     "Alchemist Hero"
   ],

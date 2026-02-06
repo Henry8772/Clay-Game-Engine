@@ -106,7 +106,7 @@ export default function PlayPage() {
             // Fallback or clear
             setNavMesh([]);
         }
-    }, [assets.navmesh]); // Only re-run if the URL changes
+    }, [assets.navmesh, selectedRunId]); // Re-run if URL or Run ID changes
 
     // 1. Derive Turn Status
     const activePlayer = currentGameState?.meta?.activePlayerId || 'player';

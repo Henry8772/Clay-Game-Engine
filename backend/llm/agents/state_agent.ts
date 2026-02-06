@@ -11,100 +11,110 @@ export async function runStateAgent(
     design: GameDesign,
     assetManifest: Record<string, string> = {}
 ): Promise<any> {
-    console.log("[StateAgent] Handing over State Architecture to LLM...");
+    console.log("[StateAgent] Architecting Game State...");
 
-    // 1. Prepare Context for the LLM
-    // We filter down the input to just what the LLM needs to make decisions.
+    // 1. Prepare Asset Paths
+    const formattedAssets = Object.values(assetManifest).map(filename => {
+        return filename.startsWith('extracted/') ? filename : `extracted/${filename}`;
+    });
+
+    // 2. Prepare Context
     const inputContext = {
-        detected_items: items.map((item, idx) => ({
+        detected_entities: items.map((item, idx) => ({
             id: `entity_${idx}`,
             label: item.label,
-            box_2d: item.box_2d
+            box: item.box_2d
         })),
-        available_assets: assetManifest,
-        design_goals: [
-            `Link Cards to their corresponding Miniatures via 'spawns' property.`,
-            `Assign 'team' based on: ${design.player_team.join(", ")} vs ${design.enemy_team.join(", ")}.`,
-            `Assign 'type' (unit, item, prop, ui).`,
-            `Rules Context: ${design.rules_summary}`
-        ]
+        design_brief: {
+            teams: { player: design.player_team, enemy: design.enemy_team },
+            mechanics: design.game_loop_mechanics,
+            rules: design.rules_summary,
+            art_style: design.art_style
+        },
+        file_system: {
+            available_sprites: formattedAssets,
+            default_background: "background.png",
+            default_navmesh: "navmesh.json"
+        }
     };
 
-    // 2. Define the Schema for the LLM Output
-    // This forces the LLM to return valid JSON matching our Game State structure.
+    // 3. Define Schema matching YOUR Target JSON
     const stateSchema = {
         type: SchemaType.OBJECT,
         properties: {
             blueprints: {
                 type: SchemaType.ARRAY,
-                description: "A list of game object definitions (templates).",
                 items: {
                     type: SchemaType.OBJECT,
                     properties: {
-                        id: { type: SchemaType.STRING, description: "Unique template ID (e.g., 'tpl_orc_warrior')" },
-                        type: { type: SchemaType.STRING, description: "Type of item: 'unit', 'item', 'prop', 'ui'" },
-                        label: { type: SchemaType.STRING, description: "Display name" },
-                        spawns: { type: SchemaType.STRING, description: "For cards: ID of the miniature it spawns", nullable: true },
-                        src: { type: SchemaType.STRING, description: "Asset filename from available_assets" }
+                        id: { type: SchemaType.STRING },
+                        type: { type: SchemaType.STRING, description: "'unit' or 'item'" },
+                        label: { type: SchemaType.STRING },
+                        spawns: { type: SchemaType.STRING, description: "ID of the blueprint this item spawns (e.g. Card spawns Unit)", nullable: true },
+                        src: { type: SchemaType.STRING, description: "Must be a valid path from file_system.available_sprites" }
                     },
                     required: ["id", "type", "label", "src"]
                 }
             },
             entities: {
                 type: SchemaType.ARRAY,
-                description: "The instances currently on the board.",
                 items: {
                     type: SchemaType.OBJECT,
                     properties: {
-                        id: { type: SchemaType.STRING, description: "Instance ID (must match input entity_0, etc.)" },
-                        t: { type: SchemaType.STRING, description: "Template ID from blueprints" },
-                        pixel_box: {
-                            type: SchemaType.ARRAY,
-                            items: { type: SchemaType.NUMBER }
-                        }
+                        id: { type: SchemaType.STRING },
+                        t: { type: SchemaType.STRING }, // templateId
+                        pixel_box: { type: SchemaType.ARRAY, items: { type: SchemaType.NUMBER } }
                     },
                     required: ["id", "t", "pixel_box"]
                 }
+            },
+            // We utilize this to populate meta.vars
+            global_vars: {
+                type: SchemaType.ARRAY,
+                items: {
+                    type: SchemaType.OBJECT,
+                    properties: {
+                        key: { type: SchemaType.STRING },
+                        value: { type: SchemaType.STRING }
+                    },
+                    required: ["key", "value"]
+                }
             }
         },
-        required: ["blueprints", "entities"]
+        required: ["blueprints", "entities", "global_vars"]
     };
 
     const systemPrompt = `
-    You are the Lead Game Designer and Data Architect.
-    Your job is to convert raw computer vision detection data into a structured Game State.
-
-    **INPUT DATA:**
-    1. A list of detected items (Entities on screen).
-    2. A manifest of asset filenames (images).
-
-    **YOUR TASKS:**
-    1. **Create Blueprints:** For every unique item, create a Template in the 'blueprints' list.
-       - 'id': Create a unique ID like 'tpl_orc_warrior'.
-       - If it is a CARD, find its matching MINIATURE. Set 'spawns' = templateId of the miniature.
-       - If it is a UNIT, give it stats (maxHp, attack, moveRange, range).
-       - Assign Teams/Factions via naming or labels if applicable.
-       - 'src': Use the exact path from the 'available_assets' map.
-
-    2. **Map Entities:** Map the detected items to instances in the 'entities' list.
-       - 'id': Must match the input ID (e.g., 'entity_0').
-       - 't': Must match a valid template 'id' from your blueprints list.
-       - 'pixel_box': Copy exactly from input.
-
-    **OUTPUT:**
-    Return a JSON object with 'blueprints' array and 'entities' array.
+    You are the Game Engine Architect.
+    
+    **Mission:** Map 'detected_entities' to 'file_system' assets.
+    
+    **Instructions:**
+    1. **Blueprints:** - If an item is a CARD, set 'type': 'item'. Find its matching MINIATURE in the asset list.
+       - Create a separate blueprint for the MINIATURE (even if not currently on screen) so the card has something to spawn.
+       - Link them: Set the card's 'spawns' field to the miniature's blueprint ID.
+       - If an item is a UNIT/MINIATURE, set 'type': 'unit'. 'spawns': null.
+    
+    2. **Assets:**
+       - Use EXACT paths from 'file_system.available_sprites'.
+       
+    3. **Global Vars:**
+       - Always return: [{key: "background", value: "background.png"}, {key: "navmesh", value: "navmesh.json"}]
     `;
 
-    // 3. Call the LLM
-    const result = await client.generateJSON<{ blueprints: any[], entities: any[] }>(
+    // 4. Generate
+    const result = await client.generateJSON<{
+        blueprints: any[],
+        entities: any[],
+        global_vars: { key: string, value: string }[]
+    }>(
         systemPrompt,
         JSON.stringify(inputContext, null, 2),
         stateSchema,
         "state_architect"
     );
 
-    // 4. Assemble Final State
-    // Convert arrays back to maps for the engine
+    // 5. Transform to Target Format
     const blueprintsMap: Record<string, any> = {};
     result.blueprints.forEach(bp => {
         blueprintsMap[bp.id] = bp;
@@ -115,35 +125,39 @@ export async function runStateAgent(
         entitiesMap[ent.id] = ent;
     });
 
-    const initialState = {
-        meta: {
-            turnCount: 1,
-            activePlayerId: "player",
-            phase: "main",
-            runId: runId,
-            version: "2.0",
-            vars: {
-                background: "background.png",
-                navmesh: "navmesh.json"
-            }
-        },
-        blueprints: blueprintsMap,
-        entities: entitiesMap,
-        grid: { rows: 6, cols: 6 },
-        navMesh: navMesh
-    };
+    const varsObj: Record<string, any> = {};
+    result.global_vars.forEach(kv => varsObj[kv.key] = kv.value);
 
-    // 5. Return Full Config
+    // Hardcoded tools matching your target
+    const ENGINE_TOOLS = [
+        "1. MOVE(entityId, toZoneId) -> Teleport a unit.",
+        "2. SPAWN(templateId, toZoneId, owner) -> Create a new unit from a card/template.",
+        "3. ATTACK(attackerId, targetId, damage) -> Deal damage and play animation.",
+        "4. DESTROY(entityId) -> Remove an entity (e.g. card used, unit dead).",
+        "5. NARRATE(message) -> Show text to the user."
+    ];
+
     return {
-        initialState,
-        rules: design.rules_summary,
-        engine_tools: [
-            "1. MOVE(entityId, toZoneId) -> Teleport a unit.",
-            "2. SPAWN(templateId, toZoneId, owner) -> Create a new unit from a card/template.",
-            "3. ATTACK(attackerId, targetId, damage) -> Deal damage and play animation.",
-            "4. DESTROY(entityId) -> Remove an entity (e.g. card used, unit dead).",
-            "5. NARRATE(message) -> Show text to the user."
-        ],
+        initialState: {
+            meta: {
+                turnCount: 1,
+                activePlayerId: "player",
+                phase: "main",
+                runId: runId,
+                version: "2.0",
+                vars: varsObj // <--- Populated from global_vars
+            },
+            blueprints: blueprintsMap,
+            entities: entitiesMap,
+            // Extract grid size from design or default
+            grid: {
+                rows: (design as any).grid_resolution || 0,
+                cols: (design as any).grid_resolution || 0
+            },
+            navMesh: navMesh
+        },
+        rules: design.rules_summary || "Standard Rules",
+        engine_tools: ENGINE_TOOLS,
         engine_logic: design.game_loop_mechanics
     };
 }

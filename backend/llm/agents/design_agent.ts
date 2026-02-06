@@ -13,6 +13,7 @@ export interface GameDesign {
 
     // Topology (NavMesh Agent)
     grid_type: string;      // e.g. "6x6 Grid", "Chess Board", "Free movement area"
+    grid_shape?: { rows: number, cols: number };
 
     // Assets (Vision Agent)
     player_team: string[];  // e.g. ["Knight", "Ranger"]

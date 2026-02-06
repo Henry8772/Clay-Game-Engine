@@ -1,0 +1,2268 @@
+{
+  "initialState": {
+    "meta": {
+      "turnCount": 1,
+      "activePlayerId": "player",
+      "phase": "main",
+      "runId": "state",
+      "version": "2.0",
+      "vars": {
+        "background": "background.png",
+        "navmesh": "navmesh.json"
+      }
+    },
+    "blueprints": {
+      "bp_alchemist_hero": {
+        "id": "bp_alchemist_hero",
+        "type": "unit",
+        "label": "Alchemist Hero",
+        "src": "extracted/alchemist_hero.png",
+        "spawns": null
+      },
+      "bp_treasure_chest": {
+        "id": "bp_treasure_chest",
+        "type": "unit",
+        "label": "Treasure Chest",
+        "src": "extracted/treasure_chest.png",
+        "spawns": null
+      }
+    },
+    "entities": {
+      "entity_0": {
+        "id": "entity_0",
+        "t": "bp_alchemist_hero",
+        "pixel_box": [
+          389,
+          234,
+          529,
+          297
+        ]
+      },
+      "entity_1": {
+        "id": "entity_1",
+        "t": "bp_treasure_chest",
+        "pixel_box": [
+          390,
+          705,
+          538,
+          794
+        ]
+      }
+    },
+    "grid": {
+      "rows": 0,
+      "cols": 0
+    },
+    "navMesh": [
+      {
+        "box_2d": [
+          0,
+          0,
+          90,
+          50
+        ],
+        "label": "tile_r0_c0",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          0,
+          50,
+          90,
+          100
+        ],
+        "label": "tile_r0_c1",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          0,
+          100,
+          90,
+          150
+        ],
+        "label": "tile_r0_c2",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          0,
+          150,
+          90,
+          200
+        ],
+        "label": "tile_r0_c3",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          0,
+          200,
+          90,
+          250
+        ],
+        "label": "tile_r0_c4",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          0,
+          250,
+          90,
+          300
+        ],
+        "label": "tile_r0_c5",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          0,
+          300,
+          90,
+          350
+        ],
+        "label": "tile_r0_c6",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          0,
+          350,
+          90,
+          400
+        ],
+        "label": "tile_r0_c7",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          0,
+          400,
+          90,
+          450
+        ],
+        "label": "tile_r0_c8",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          0,
+          450,
+          90,
+          500
+        ],
+        "label": "tile_r0_c9",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          0,
+          500,
+          90,
+          550
+        ],
+        "label": "tile_r0_c10",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          0,
+          550,
+          90,
+          600
+        ],
+        "label": "tile_r0_c11",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          0,
+          600,
+          90,
+          650
+        ],
+        "label": "tile_r0_c12",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          0,
+          650,
+          90,
+          700
+        ],
+        "label": "tile_r0_c13",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          0,
+          700,
+          90,
+          750
+        ],
+        "label": "tile_r0_c14",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          0,
+          750,
+          90,
+          800
+        ],
+        "label": "tile_r0_c15",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          0,
+          800,
+          90,
+          850
+        ],
+        "label": "tile_r0_c16",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          0,
+          850,
+          90,
+          900
+        ],
+        "label": "tile_r0_c17",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          0,
+          900,
+          90,
+          950
+        ],
+        "label": "tile_r0_c18",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          0,
+          950,
+          90,
+          1000
+        ],
+        "label": "tile_r0_c19",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          90,
+          0,
+          181,
+          50
+        ],
+        "label": "tile_r1_c0",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          90,
+          50,
+          181,
+          100
+        ],
+        "label": "tile_r1_c1",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          90,
+          100,
+          181,
+          150
+        ],
+        "label": "tile_r1_c2",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          90,
+          150,
+          181,
+          200
+        ],
+        "label": "tile_r1_c3",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          90,
+          200,
+          181,
+          250
+        ],
+        "label": "tile_r1_c4",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          90,
+          250,
+          181,
+          300
+        ],
+        "label": "tile_r1_c5",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          90,
+          300,
+          181,
+          350
+        ],
+        "label": "tile_r1_c6",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          90,
+          350,
+          181,
+          400
+        ],
+        "label": "tile_r1_c7",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          90,
+          400,
+          181,
+          450
+        ],
+        "label": "tile_r1_c8",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          90,
+          450,
+          181,
+          500
+        ],
+        "label": "tile_r1_c9",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          90,
+          500,
+          181,
+          550
+        ],
+        "label": "tile_r1_c10",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          90,
+          550,
+          181,
+          600
+        ],
+        "label": "tile_r1_c11",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          90,
+          600,
+          181,
+          650
+        ],
+        "label": "tile_r1_c12",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          90,
+          650,
+          181,
+          700
+        ],
+        "label": "tile_r1_c13",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          90,
+          700,
+          181,
+          750
+        ],
+        "label": "tile_r1_c14",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          90,
+          750,
+          181,
+          800
+        ],
+        "label": "tile_r1_c15",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          90,
+          800,
+          181,
+          850
+        ],
+        "label": "tile_r1_c16",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          90,
+          850,
+          181,
+          900
+        ],
+        "label": "tile_r1_c17",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          90,
+          900,
+          181,
+          950
+        ],
+        "label": "tile_r1_c18",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          90,
+          950,
+          181,
+          1000
+        ],
+        "label": "tile_r1_c19",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          181,
+          0,
+          272,
+          50
+        ],
+        "label": "tile_r2_c0",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          181,
+          50,
+          272,
+          100
+        ],
+        "label": "tile_r2_c1",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          181,
+          100,
+          272,
+          150
+        ],
+        "label": "tile_r2_c2",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          181,
+          150,
+          272,
+          200
+        ],
+        "label": "tile_r2_c3",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          181,
+          200,
+          272,
+          250
+        ],
+        "label": "tile_r2_c4",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          181,
+          250,
+          272,
+          300
+        ],
+        "label": "tile_r2_c5",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          181,
+          300,
+          272,
+          350
+        ],
+        "label": "tile_r2_c6",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          181,
+          350,
+          272,
+          400
+        ],
+        "label": "tile_r2_c7",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          181,
+          400,
+          272,
+          450
+        ],
+        "label": "tile_r2_c8",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          181,
+          450,
+          272,
+          500
+        ],
+        "label": "tile_r2_c9",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          181,
+          500,
+          272,
+          550
+        ],
+        "label": "tile_r2_c10",
+        "type": "hazard"
+      },
+      {
+        "box_2d": [
+          181,
+          550,
+          272,
+          600
+        ],
+        "label": "tile_r2_c11",
+        "type": "hazard"
+      },
+      {
+        "box_2d": [
+          181,
+          600,
+          272,
+          650
+        ],
+        "label": "tile_r2_c12",
+        "type": "hazard"
+      },
+      {
+        "box_2d": [
+          181,
+          650,
+          272,
+          700
+        ],
+        "label": "tile_r2_c13",
+        "type": "hazard"
+      },
+      {
+        "box_2d": [
+          181,
+          700,
+          272,
+          750
+        ],
+        "label": "tile_r2_c14",
+        "type": "hazard"
+      },
+      {
+        "box_2d": [
+          181,
+          750,
+          272,
+          800
+        ],
+        "label": "tile_r2_c15",
+        "type": "hazard"
+      },
+      {
+        "box_2d": [
+          181,
+          800,
+          272,
+          850
+        ],
+        "label": "tile_r2_c16",
+        "type": "hazard"
+      },
+      {
+        "box_2d": [
+          181,
+          850,
+          272,
+          900
+        ],
+        "label": "tile_r2_c17",
+        "type": "hazard"
+      },
+      {
+        "box_2d": [
+          181,
+          900,
+          272,
+          950
+        ],
+        "label": "tile_r2_c18",
+        "type": "hazard"
+      },
+      {
+        "box_2d": [
+          181,
+          950,
+          272,
+          1000
+        ],
+        "label": "tile_r2_c19",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          272,
+          0,
+          363,
+          50
+        ],
+        "label": "tile_r3_c0",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          272,
+          50,
+          363,
+          100
+        ],
+        "label": "tile_r3_c1",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          272,
+          100,
+          363,
+          150
+        ],
+        "label": "tile_r3_c2",
+        "type": "floor"
+      },
+      {
+        "box_2d": [
+          272,
+          150,
+          363,
+          200
+        ],
+        "label": "tile_r3_c3",
+        "type": "floor"
+      },
+      {
+        "box_2d": [
+          272,
+          200,
+          363,
+          250
+        ],
+        "label": "tile_r3_c4",
+        "type": "floor"
+      },
+      {
+        "box_2d": [
+          272,
+          250,
+          363,
+          300
+        ],
+        "label": "tile_r3_c5",
+        "type": "floor"
+      },
+      {
+        "box_2d": [
+          272,
+          300,
+          363,
+          350
+        ],
+        "label": "tile_r3_c6",
+        "type": "floor"
+      },
+      {
+        "box_2d": [
+          272,
+          350,
+          363,
+          400
+        ],
+        "label": "tile_r3_c7",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          272,
+          400,
+          363,
+          450
+        ],
+        "label": "tile_r3_c8",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          272,
+          450,
+          363,
+          500
+        ],
+        "label": "tile_r3_c9",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          272,
+          500,
+          363,
+          550
+        ],
+        "label": "tile_r3_c10",
+        "type": "hazard"
+      },
+      {
+        "box_2d": [
+          272,
+          550,
+          363,
+          600
+        ],
+        "label": "tile_r3_c11",
+        "type": "hazard"
+      },
+      {
+        "box_2d": [
+          272,
+          600,
+          363,
+          650
+        ],
+        "label": "tile_r3_c12",
+        "type": "floor"
+      },
+      {
+        "box_2d": [
+          272,
+          650,
+          363,
+          700
+        ],
+        "label": "tile_r3_c13",
+        "type": "floor"
+      },
+      {
+        "box_2d": [
+          272,
+          700,
+          363,
+          750
+        ],
+        "label": "tile_r3_c14",
+        "type": "floor"
+      },
+      {
+        "box_2d": [
+          272,
+          750,
+          363,
+          800
+        ],
+        "label": "tile_r3_c15",
+        "type": "floor"
+      },
+      {
+        "box_2d": [
+          272,
+          800,
+          363,
+          850
+        ],
+        "label": "tile_r3_c16",
+        "type": "floor"
+      },
+      {
+        "box_2d": [
+          272,
+          850,
+          363,
+          900
+        ],
+        "label": "tile_r3_c17",
+        "type": "hazard"
+      },
+      {
+        "box_2d": [
+          272,
+          900,
+          363,
+          950
+        ],
+        "label": "tile_r3_c18",
+        "type": "hazard"
+      },
+      {
+        "box_2d": [
+          272,
+          950,
+          363,
+          1000
+        ],
+        "label": "tile_r3_c19",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          363,
+          0,
+          454,
+          50
+        ],
+        "label": "tile_r4_c0",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          363,
+          50,
+          454,
+          100
+        ],
+        "label": "tile_r4_c1",
+        "type": "floor"
+      },
+      {
+        "box_2d": [
+          363,
+          100,
+          454,
+          150
+        ],
+        "label": "tile_r4_c2",
+        "type": "floor"
+      },
+      {
+        "box_2d": [
+          363,
+          150,
+          454,
+          200
+        ],
+        "label": "tile_r4_c3",
+        "type": "floor"
+      },
+      {
+        "box_2d": [
+          363,
+          200,
+          454,
+          250
+        ],
+        "label": "tile_r4_c4",
+        "type": "floor"
+      },
+      {
+        "box_2d": [
+          363,
+          250,
+          454,
+          300
+        ],
+        "label": "tile_r4_c5",
+        "type": "floor"
+      },
+      {
+        "box_2d": [
+          363,
+          300,
+          454,
+          350
+        ],
+        "label": "tile_r4_c6",
+        "type": "floor"
+      },
+      {
+        "box_2d": [
+          363,
+          350,
+          454,
+          400
+        ],
+        "label": "tile_r4_c7",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          363,
+          400,
+          454,
+          450
+        ],
+        "label": "tile_r4_c8",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          363,
+          450,
+          454,
+          500
+        ],
+        "label": "tile_r4_c9",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          363,
+          500,
+          454,
+          550
+        ],
+        "label": "tile_r4_c10",
+        "type": "hazard"
+      },
+      {
+        "box_2d": [
+          363,
+          550,
+          454,
+          600
+        ],
+        "label": "tile_r4_c11",
+        "type": "hazard"
+      },
+      {
+        "box_2d": [
+          363,
+          600,
+          454,
+          650
+        ],
+        "label": "tile_r4_c12",
+        "type": "floor"
+      },
+      {
+        "box_2d": [
+          363,
+          650,
+          454,
+          700
+        ],
+        "label": "tile_r4_c13",
+        "type": "floor"
+      },
+      {
+        "box_2d": [
+          363,
+          700,
+          454,
+          750
+        ],
+        "label": "tile_r4_c14",
+        "type": "floor"
+      },
+      {
+        "box_2d": [
+          363,
+          750,
+          454,
+          800
+        ],
+        "label": "tile_r4_c15",
+        "type": "floor"
+      },
+      {
+        "box_2d": [
+          363,
+          800,
+          454,
+          850
+        ],
+        "label": "tile_r4_c16",
+        "type": "floor"
+      },
+      {
+        "box_2d": [
+          363,
+          850,
+          454,
+          900
+        ],
+        "label": "tile_r4_c17",
+        "type": "hazard"
+      },
+      {
+        "box_2d": [
+          363,
+          900,
+          454,
+          950
+        ],
+        "label": "tile_r4_c18",
+        "type": "hazard"
+      },
+      {
+        "box_2d": [
+          363,
+          950,
+          454,
+          1000
+        ],
+        "label": "tile_r4_c19",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          454,
+          0,
+          545,
+          50
+        ],
+        "label": "tile_r5_c0",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          454,
+          50,
+          545,
+          100
+        ],
+        "label": "tile_r5_c1",
+        "type": "floor"
+      },
+      {
+        "box_2d": [
+          454,
+          100,
+          545,
+          150
+        ],
+        "label": "tile_r5_c2",
+        "type": "floor"
+      },
+      {
+        "box_2d": [
+          454,
+          150,
+          545,
+          200
+        ],
+        "label": "tile_r5_c3",
+        "type": "floor"
+      },
+      {
+        "box_2d": [
+          454,
+          200,
+          545,
+          250
+        ],
+        "label": "tile_r5_c4",
+        "type": "floor"
+      },
+      {
+        "box_2d": [
+          454,
+          250,
+          545,
+          300
+        ],
+        "label": "tile_r5_c5",
+        "type": "floor"
+      },
+      {
+        "box_2d": [
+          454,
+          300,
+          545,
+          350
+        ],
+        "label": "tile_r5_c6",
+        "type": "floor"
+      },
+      {
+        "box_2d": [
+          454,
+          350,
+          545,
+          400
+        ],
+        "label": "tile_r5_c7",
+        "type": "hazard"
+      },
+      {
+        "box_2d": [
+          454,
+          400,
+          545,
+          450
+        ],
+        "label": "tile_r5_c8",
+        "type": "hazard"
+      },
+      {
+        "box_2d": [
+          454,
+          450,
+          545,
+          500
+        ],
+        "label": "tile_r5_c9",
+        "type": "hazard"
+      },
+      {
+        "box_2d": [
+          454,
+          500,
+          545,
+          550
+        ],
+        "label": "tile_r5_c10",
+        "type": "hazard"
+      },
+      {
+        "box_2d": [
+          454,
+          550,
+          545,
+          600
+        ],
+        "label": "tile_r5_c11",
+        "type": "hazard"
+      },
+      {
+        "box_2d": [
+          454,
+          600,
+          545,
+          650
+        ],
+        "label": "tile_r5_c12",
+        "type": "floor"
+      },
+      {
+        "box_2d": [
+          454,
+          650,
+          545,
+          700
+        ],
+        "label": "tile_r5_c13",
+        "type": "floor"
+      },
+      {
+        "box_2d": [
+          454,
+          700,
+          545,
+          750
+        ],
+        "label": "tile_r5_c14",
+        "type": "floor"
+      },
+      {
+        "box_2d": [
+          454,
+          750,
+          545,
+          800
+        ],
+        "label": "tile_r5_c15",
+        "type": "floor"
+      },
+      {
+        "box_2d": [
+          454,
+          800,
+          545,
+          850
+        ],
+        "label": "tile_r5_c16",
+        "type": "floor"
+      },
+      {
+        "box_2d": [
+          454,
+          850,
+          545,
+          900
+        ],
+        "label": "tile_r5_c17",
+        "type": "hazard"
+      },
+      {
+        "box_2d": [
+          454,
+          900,
+          545,
+          950
+        ],
+        "label": "tile_r5_c18",
+        "type": "hazard"
+      },
+      {
+        "box_2d": [
+          454,
+          950,
+          545,
+          1000
+        ],
+        "label": "tile_r5_c19",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          545,
+          0,
+          636,
+          50
+        ],
+        "label": "tile_r6_c0",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          545,
+          50,
+          636,
+          100
+        ],
+        "label": "tile_r6_c1",
+        "type": "floor"
+      },
+      {
+        "box_2d": [
+          545,
+          100,
+          636,
+          150
+        ],
+        "label": "tile_r6_c2",
+        "type": "floor"
+      },
+      {
+        "box_2d": [
+          545,
+          150,
+          636,
+          200
+        ],
+        "label": "tile_r6_c3",
+        "type": "floor"
+      },
+      {
+        "box_2d": [
+          545,
+          200,
+          636,
+          250
+        ],
+        "label": "tile_r6_c4",
+        "type": "floor"
+      },
+      {
+        "box_2d": [
+          545,
+          250,
+          636,
+          300
+        ],
+        "label": "tile_r6_c5",
+        "type": "floor"
+      },
+      {
+        "box_2d": [
+          545,
+          300,
+          636,
+          350
+        ],
+        "label": "tile_r6_c6",
+        "type": "floor"
+      },
+      {
+        "box_2d": [
+          545,
+          350,
+          636,
+          400
+        ],
+        "label": "tile_r6_c7",
+        "type": "hazard"
+      },
+      {
+        "box_2d": [
+          545,
+          400,
+          636,
+          450
+        ],
+        "label": "tile_r6_c8",
+        "type": "hazard"
+      },
+      {
+        "box_2d": [
+          545,
+          450,
+          636,
+          500
+        ],
+        "label": "tile_r6_c9",
+        "type": "hazard"
+      },
+      {
+        "box_2d": [
+          545,
+          500,
+          636,
+          550
+        ],
+        "label": "tile_r6_c10",
+        "type": "hazard"
+      },
+      {
+        "box_2d": [
+          545,
+          550,
+          636,
+          600
+        ],
+        "label": "tile_r6_c11",
+        "type": "hazard"
+      },
+      {
+        "box_2d": [
+          545,
+          600,
+          636,
+          650
+        ],
+        "label": "tile_r6_c12",
+        "type": "floor"
+      },
+      {
+        "box_2d": [
+          545,
+          650,
+          636,
+          700
+        ],
+        "label": "tile_r6_c13",
+        "type": "floor"
+      },
+      {
+        "box_2d": [
+          545,
+          700,
+          636,
+          750
+        ],
+        "label": "tile_r6_c14",
+        "type": "floor"
+      },
+      {
+        "box_2d": [
+          545,
+          750,
+          636,
+          800
+        ],
+        "label": "tile_r6_c15",
+        "type": "floor"
+      },
+      {
+        "box_2d": [
+          545,
+          800,
+          636,
+          850
+        ],
+        "label": "tile_r6_c16",
+        "type": "floor"
+      },
+      {
+        "box_2d": [
+          545,
+          850,
+          636,
+          900
+        ],
+        "label": "tile_r6_c17",
+        "type": "hazard"
+      },
+      {
+        "box_2d": [
+          545,
+          900,
+          636,
+          950
+        ],
+        "label": "tile_r6_c18",
+        "type": "hazard"
+      },
+      {
+        "box_2d": [
+          545,
+          950,
+          636,
+          1000
+        ],
+        "label": "tile_r6_c19",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          636,
+          0,
+          727,
+          50
+        ],
+        "label": "tile_r7_c0",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          636,
+          50,
+          727,
+          100
+        ],
+        "label": "tile_r7_c1",
+        "type": "floor"
+      },
+      {
+        "box_2d": [
+          636,
+          100,
+          727,
+          150
+        ],
+        "label": "tile_r7_c2",
+        "type": "floor"
+      },
+      {
+        "box_2d": [
+          636,
+          150,
+          727,
+          200
+        ],
+        "label": "tile_r7_c3",
+        "type": "floor"
+      },
+      {
+        "box_2d": [
+          636,
+          200,
+          727,
+          250
+        ],
+        "label": "tile_r7_c4",
+        "type": "floor"
+      },
+      {
+        "box_2d": [
+          636,
+          250,
+          727,
+          300
+        ],
+        "label": "tile_r7_c5",
+        "type": "floor"
+      },
+      {
+        "box_2d": [
+          636,
+          300,
+          727,
+          350
+        ],
+        "label": "tile_r7_c6",
+        "type": "floor"
+      },
+      {
+        "box_2d": [
+          636,
+          350,
+          727,
+          400
+        ],
+        "label": "tile_r7_c7",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          636,
+          400,
+          727,
+          450
+        ],
+        "label": "tile_r7_c8",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          636,
+          450,
+          727,
+          500
+        ],
+        "label": "tile_r7_c9",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          636,
+          500,
+          727,
+          550
+        ],
+        "label": "tile_r7_c10",
+        "type": "hazard"
+      },
+      {
+        "box_2d": [
+          636,
+          550,
+          727,
+          600
+        ],
+        "label": "tile_r7_c11",
+        "type": "hazard"
+      },
+      {
+        "box_2d": [
+          636,
+          600,
+          727,
+          650
+        ],
+        "label": "tile_r7_c12",
+        "type": "floor"
+      },
+      {
+        "box_2d": [
+          636,
+          650,
+          727,
+          700
+        ],
+        "label": "tile_r7_c13",
+        "type": "floor"
+      },
+      {
+        "box_2d": [
+          636,
+          700,
+          727,
+          750
+        ],
+        "label": "tile_r7_c14",
+        "type": "floor"
+      },
+      {
+        "box_2d": [
+          636,
+          750,
+          727,
+          800
+        ],
+        "label": "tile_r7_c15",
+        "type": "floor"
+      },
+      {
+        "box_2d": [
+          636,
+          800,
+          727,
+          850
+        ],
+        "label": "tile_r7_c16",
+        "type": "floor"
+      },
+      {
+        "box_2d": [
+          636,
+          850,
+          727,
+          900
+        ],
+        "label": "tile_r7_c17",
+        "type": "hazard"
+      },
+      {
+        "box_2d": [
+          636,
+          900,
+          727,
+          950
+        ],
+        "label": "tile_r7_c18",
+        "type": "hazard"
+      },
+      {
+        "box_2d": [
+          636,
+          950,
+          727,
+          1000
+        ],
+        "label": "tile_r7_c19",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          727,
+          0,
+          818,
+          50
+        ],
+        "label": "tile_r8_c0",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          727,
+          50,
+          818,
+          100
+        ],
+        "label": "tile_r8_c1",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          727,
+          100,
+          818,
+          150
+        ],
+        "label": "tile_r8_c2",
+        "type": "floor"
+      },
+      {
+        "box_2d": [
+          727,
+          150,
+          818,
+          200
+        ],
+        "label": "tile_r8_c3",
+        "type": "floor"
+      },
+      {
+        "box_2d": [
+          727,
+          200,
+          818,
+          250
+        ],
+        "label": "tile_r8_c4",
+        "type": "floor"
+      },
+      {
+        "box_2d": [
+          727,
+          250,
+          818,
+          300
+        ],
+        "label": "tile_r8_c5",
+        "type": "floor"
+      },
+      {
+        "box_2d": [
+          727,
+          300,
+          818,
+          350
+        ],
+        "label": "tile_r8_c6",
+        "type": "floor"
+      },
+      {
+        "box_2d": [
+          727,
+          350,
+          818,
+          400
+        ],
+        "label": "tile_r8_c7",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          727,
+          400,
+          818,
+          450
+        ],
+        "label": "tile_r8_c8",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          727,
+          450,
+          818,
+          500
+        ],
+        "label": "tile_r8_c9",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          727,
+          500,
+          818,
+          550
+        ],
+        "label": "tile_r8_c10",
+        "type": "hazard"
+      },
+      {
+        "box_2d": [
+          727,
+          550,
+          818,
+          600
+        ],
+        "label": "tile_r8_c11",
+        "type": "hazard"
+      },
+      {
+        "box_2d": [
+          727,
+          600,
+          818,
+          650
+        ],
+        "label": "tile_r8_c12",
+        "type": "hazard"
+      },
+      {
+        "box_2d": [
+          727,
+          650,
+          818,
+          700
+        ],
+        "label": "tile_r8_c13",
+        "type": "hazard"
+      },
+      {
+        "box_2d": [
+          727,
+          700,
+          818,
+          750
+        ],
+        "label": "tile_r8_c14",
+        "type": "hazard"
+      },
+      {
+        "box_2d": [
+          727,
+          750,
+          818,
+          800
+        ],
+        "label": "tile_r8_c15",
+        "type": "hazard"
+      },
+      {
+        "box_2d": [
+          727,
+          800,
+          818,
+          850
+        ],
+        "label": "tile_r8_c16",
+        "type": "hazard"
+      },
+      {
+        "box_2d": [
+          727,
+          850,
+          818,
+          900
+        ],
+        "label": "tile_r8_c17",
+        "type": "hazard"
+      },
+      {
+        "box_2d": [
+          727,
+          900,
+          818,
+          950
+        ],
+        "label": "tile_r8_c18",
+        "type": "hazard"
+      },
+      {
+        "box_2d": [
+          727,
+          950,
+          818,
+          1000
+        ],
+        "label": "tile_r8_c19",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          818,
+          0,
+          909,
+          50
+        ],
+        "label": "tile_r9_c0",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          818,
+          50,
+          909,
+          100
+        ],
+        "label": "tile_r9_c1",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          818,
+          100,
+          909,
+          150
+        ],
+        "label": "tile_r9_c2",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          818,
+          150,
+          909,
+          200
+        ],
+        "label": "tile_r9_c3",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          818,
+          200,
+          909,
+          250
+        ],
+        "label": "tile_r9_c4",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          818,
+          250,
+          909,
+          300
+        ],
+        "label": "tile_r9_c5",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          818,
+          300,
+          909,
+          350
+        ],
+        "label": "tile_r9_c6",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          818,
+          350,
+          909,
+          400
+        ],
+        "label": "tile_r9_c7",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          818,
+          400,
+          909,
+          450
+        ],
+        "label": "tile_r9_c8",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          818,
+          450,
+          909,
+          500
+        ],
+        "label": "tile_r9_c9",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          818,
+          500,
+          909,
+          550
+        ],
+        "label": "tile_r9_c10",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          818,
+          550,
+          909,
+          600
+        ],
+        "label": "tile_r9_c11",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          818,
+          600,
+          909,
+          650
+        ],
+        "label": "tile_r9_c12",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          818,
+          650,
+          909,
+          700
+        ],
+        "label": "tile_r9_c13",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          818,
+          700,
+          909,
+          750
+        ],
+        "label": "tile_r9_c14",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          818,
+          750,
+          909,
+          800
+        ],
+        "label": "tile_r9_c15",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          818,
+          800,
+          909,
+          850
+        ],
+        "label": "tile_r9_c16",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          818,
+          850,
+          909,
+          900
+        ],
+        "label": "tile_r9_c17",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          818,
+          900,
+          909,
+          950
+        ],
+        "label": "tile_r9_c18",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          818,
+          950,
+          909,
+          1000
+        ],
+        "label": "tile_r9_c19",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          909,
+          0,
+          1000,
+          50
+        ],
+        "label": "tile_r10_c0",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          909,
+          50,
+          1000,
+          100
+        ],
+        "label": "tile_r10_c1",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          909,
+          100,
+          1000,
+          150
+        ],
+        "label": "tile_r10_c2",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          909,
+          150,
+          1000,
+          200
+        ],
+        "label": "tile_r10_c3",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          909,
+          200,
+          1000,
+          250
+        ],
+        "label": "tile_r10_c4",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          909,
+          250,
+          1000,
+          300
+        ],
+        "label": "tile_r10_c5",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          909,
+          300,
+          1000,
+          350
+        ],
+        "label": "tile_r10_c6",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          909,
+          350,
+          1000,
+          400
+        ],
+        "label": "tile_r10_c7",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          909,
+          400,
+          1000,
+          450
+        ],
+        "label": "tile_r10_c8",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          909,
+          450,
+          1000,
+          500
+        ],
+        "label": "tile_r10_c9",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          909,
+          500,
+          1000,
+          550
+        ],
+        "label": "tile_r10_c10",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          909,
+          550,
+          1000,
+          600
+        ],
+        "label": "tile_r10_c11",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          909,
+          600,
+          1000,
+          650
+        ],
+        "label": "tile_r10_c12",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          909,
+          650,
+          1000,
+          700
+        ],
+        "label": "tile_r10_c13",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          909,
+          700,
+          1000,
+          750
+        ],
+        "label": "tile_r10_c14",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          909,
+          750,
+          1000,
+          800
+        ],
+        "label": "tile_r10_c15",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          909,
+          800,
+          1000,
+          850
+        ],
+        "label": "tile_r10_c16",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          909,
+          850,
+          1000,
+          900
+        ],
+        "label": "tile_r10_c17",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          909,
+          900,
+          1000,
+          950
+        ],
+        "label": "tile_r10_c18",
+        "type": "wall"
+      },
+      {
+        "box_2d": [
+          909,
+          950,
+          1000,
+          1000
+        ],
+        "label": "tile_r10_c19",
+        "type": "wall"
+      }
+    ]
+  },
+  "rules": "A generative immersive sim puzzle. The player cannot cross the obstacle using standard movement. The objective is to use the 'Reality Editor' (text input) to chemically alter the obstacle (Lava -> Ice or Stone), changing its NavMesh properties from 'Blocked' to 'Walkable' to reach the chest.",
+  "engine_tools": [
+    "1. MOVE(entityId, toZoneId) -> Teleport a unit.",
+    "2. SPAWN(templateId, toZoneId, owner) -> Create a new unit from a card/template.",
+    "3. ATTACK(attackerId, targetId, damage) -> Deal damage and play animation.",
+    "4. DESTROY(entityId) -> Remove an entity (e.g. card used, unit dead).",
+    "5. NARRATE(message) -> Show text to the user."
+  ],
+  "engine_logic": "Player controls Hero via WASD. If Hero coordinates intersect with 'Hazard' mask (Lava) -> DESTROY Hero and RESPAWN at start. If Player submits command (e.g., 'Freeze Lava') -> TRIGGER VisionAgent to regenerate background with 'Ice' prompt -> TRIGGER NavigationAgent to re-bake Walkability Mask. If Hero coordinates intersect with 'Goal' (Chest) -> SPAWN Loot Item."
+}

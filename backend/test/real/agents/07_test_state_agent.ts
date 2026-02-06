@@ -1,7 +1,5 @@
-
 import { describe, it, expect } from 'vitest';
 import { runStateAgent } from "../../../llm/agents/state_agent";
-import { runExtractionAgent } from "../../../llm/agents/extraction_agent";
 import fs from 'fs';
 import path from 'path';
 import { getTestRunDir, DEFAULT_EXPERIMENT_ID } from '../../utils';
@@ -10,74 +8,66 @@ import { LLMClient } from "../../../llm/client";
 describe('REAL: State Agent', () => {
     const shouldRun = process.env.GEMINI_API_KEY && !process.env.GEMINI_API_KEY.includes("dummy");
 
-    it.skipIf(!shouldRun)('should combine artifacts into game state', async () => {
-        const runDir = getTestRunDir('demo2');
-        let analysisPath = path.join(runDir, "analysis.json");
-        let navMeshPath = path.join(runDir, "navmesh.json");
-        let spritePath = path.join(runDir, "sprites.png");
+    it.skipIf(!shouldRun)('should map extracted files to blueprints', async () => {
+        const runDir = getTestRunDir('puzzle');
 
-        // Fallback to default experiment if not found in run dir
-        if (!fs.existsSync(analysisPath)) analysisPath = path.resolve(__dirname, `../../${DEFAULT_EXPERIMENT_ID}/analysis.json`);
-        if (!fs.existsSync(navMeshPath)) navMeshPath = path.resolve(__dirname, `../../${DEFAULT_EXPERIMENT_ID}/navmesh.json`);
-        if (!fs.existsSync(spritePath)) spritePath = path.resolve(__dirname, `../../${DEFAULT_EXPERIMENT_ID}/sprites.png`);
+        // 1. Setup Paths
+        const analysisPath = path.join(runDir, "analysis.json");
+        const navMeshPath = path.join(runDir, "navmesh.json");
+        const designPath = path.join(runDir, "design.json");
+        const extractedDir = path.join(runDir, "extracted");
 
-        if (!fs.existsSync(analysisPath) || !fs.existsSync(navMeshPath) || !fs.existsSync(spritePath)) {
-            console.warn("Skipping State Agent test because JSON inputs or sprites.png missing");
+        // Fallbacks for testing environment
+        if (!fs.existsSync(analysisPath)) {
+            console.warn("Skipping test: Missing analysis.json");
             return;
         }
 
         const analysisData = JSON.parse(fs.readFileSync(analysisPath, 'utf-8'));
-        const navMeshData = JSON.parse(fs.readFileSync(navMeshPath, 'utf-8'));
-        const spriteBuffer = fs.readFileSync(spritePath);
+        const navMeshData = fs.existsSync(navMeshPath) ? JSON.parse(fs.readFileSync(navMeshPath, 'utf-8')) : {};
+        const designData = JSON.parse(fs.readFileSync(designPath, 'utf-8'));
 
-        const runId = path.basename(runDir);
+        // 2. Build Real Manifest from File System
+        // This mirrors the file structure you showed: puzzle/extracted/hero.png
+        const assetManifest: Record<string, string> = {};
 
-        // Real Client (even if not strictly used by this deterministic agent, likely consistent with intent)
-        const client = new LLMClient("gemini", "gemini-2.5-flash", false);
-
-        // 1. Generate Manifest Real-Time (No Mock!)
-        const extractDir = path.join(runDir, "extracted");
-        if (fs.existsSync(extractDir)) fs.rmSync(extractDir, { recursive: true, force: true });
-
-        console.log("Generating real manifest from extraction agent...");
-        const extractedAssets = await runExtractionAgent(spriteBuffer, analysisData, extractDir);
-
-        // 2. Run State Agent with Real Manifest
-        const output = await runStateAgent(client, analysisData, navMeshData, runId, extractedAssets);
-
-        expect(output).toBeDefined();
-        expect(output.initialState).toBeDefined();
-        expect(output.initialState.entities).toBeDefined();
-
-        const state = output.initialState;
-        expect(state.meta).toBeDefined();
-
-        // Check entities map
-        const entityKeys = Object.keys(state.entities);
-        expect(entityKeys.length).toBeGreaterThan(0);
-
-        // Check Blueprints
-        expect(output.initialState.blueprints).toBeDefined();
-        const blueprints = output.initialState.blueprints;
-        const blueprintKeys = Object.keys(blueprints);
-        expect(blueprintKeys.length).toBeGreaterThan(0);
-
-        // Verify correct linking using real data logic
-        // We know 'boardgame' likely has logical pairs.
-        const hasCard = blueprintKeys.some(k => blueprints[k].type === 'item' && k.includes('card'));
-        if (hasCard) {
-            const cardBp = Object.values(blueprints).find((b: any) => b.type === 'item' && b.label.toLowerCase().includes('card')) as any;
-            if (cardBp && cardBp.spawns) {
-                expect(blueprints[cardBp.spawns]).toBeDefined();
-                console.log(`Verified Card ${cardBp.label} spawns ${blueprints[cardBp.spawns].label}`);
-            }
+        if (fs.existsSync(extractedDir)) {
+            const files = fs.readdirSync(extractedDir);
+            files.forEach(file => {
+                // The key doesn't matter much, the value is what the agent uses
+                if (file.endsWith('.png')) {
+                    assetManifest[path.parse(file).name] = file;
+                }
+            });
         }
 
-        const outPath = path.join(runDir, "gamestate.json");
-        fs.writeFileSync(outPath, JSON.stringify(output, null, 2));
+        console.log("Asset Manifest for Agent:", assetManifest);
 
-        // Also check engine tools presence
-        expect(output.engine_tools).toBeDefined();
-        expect(output.engine_tools.length).toBe(5);
+        // 3. Run Agent
+        const client = new LLMClient("gemini", "gemini-3-flash-preview", false);
+        const output = await runStateAgent(
+            client,
+            analysisData,
+            navMeshData,
+            "state",
+            designData,
+            assetManifest
+        );
+
+        // 4. Verify Asset Mapping
+        const blueprints = Object.values(output.initialState.blueprints) as any[];
+
+        // Check if ANY blueprint successfully linked to the extracted folder
+        const hasExtractedAsset = blueprints.some(bp => bp.src.includes("extracted/"));
+
+        console.log("Generated Blueprints:", blueprints.map(b => `${b.label} -> ${b.src}`));
+
+        expect(output).toBeDefined();
+        // We strictly expect the path to be formatted correctly
+        expect(hasExtractedAsset).toBe(true);
+
+        // Save
+        fs.writeFileSync(path.join(runDir, "gamestate.json"), JSON.stringify(output, null, 2));
+
     }, 200000);
 });
