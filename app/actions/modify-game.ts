@@ -5,8 +5,10 @@ import { api } from "../../convex/_generated/api";
 import { LLMClient } from "../../backend/llm/client";
 import { processModification } from "../../backend/llm/agents/modification_agent";
 
-export async function modifyGameAction(gameId: string, userRequest: string) {
+export async function modifyGameAction(gameId: string, userRequest: string, username?: string) {
     console.log(`[ModifyGame] Request: ${userRequest} for Game: ${gameId}`);
+
+    if (!username) throw new Error("Username is required");
 
     // 1. Fetch Current State
     // Using fetchQuery to get state from Convex
@@ -18,12 +20,12 @@ export async function modifyGameAction(gameId: string, userRequest: string) {
 
     const runId = gameState.runId || "boardgame";
 
-    // 2. Init LLM
-    const client = await LLMClient.createWithConvexKey("gemini", undefined, false);
+    // 2. Init LLM with username
+    const client = await LLMClient.createWithConvexKey(username, "gemini", undefined, false);
 
     try {
         // 3. Run Agent
-        const result = await processModification(client, runId, currentState, userRequest);
+        const result = await processModification(client, runId, currentState, userRequest, username);
 
         await fetchMutation(api.games.applyModification, {
             gameId: gameId as any,

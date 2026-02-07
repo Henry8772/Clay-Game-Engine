@@ -58,8 +58,8 @@ export const MOCK_GENERATED_IMAGE = "http://mock-image/sushi.png";
 export const MOCK_FINAL_STATE = MOCK_INITIAL_STATE;
 
 export const MOCK_ASSET_MAP = {
-    "chef": "assets/chef.png",
-    "tuna": "assets/tuna.png"
+    "chef": "extracted/chef.png",
+    "tuna": "extracted/tuna.png"
 };
 
 export const MOCK_REACT_CODE = `
@@ -81,8 +81,8 @@ export const MOCK_DETECTED_REGIONS = [
 ];
 
 export const MOCK_RESTORED_ASSETS = [
-    { id: "chef", name: "Sushi Chef", description: "Pixel art chef", imagePath: "assets/chef.png" },
-    { id: "conveyor", name: "Conveyor Belt", description: "Industrial belt", imagePath: "assets/belt.png" }
+    { id: "chef", name: "Sushi Chef", description: "Pixel art chef", imagePath: "extracted/chef.png" },
+    { id: "conveyor", name: "Conveyor Belt", description: "Industrial belt", imagePath: "extracted/belt.png" }
 ];
 
 export const MOCK_VISION_ANALYSIS = [

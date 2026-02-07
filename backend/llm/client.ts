@@ -31,27 +31,33 @@ export class LLMClient {
 
     /**
      * Factory function to create LLMClient with automatic API key fetching from Convex
+     * Pass the username to fetch the stored API key
      * Only use from Next.js server actions/API routes
      */
     static async createWithConvexKey(
+        username: string,
         manufacturer: "gemini" = "gemini",
         model?: string,
         debugMode?: boolean
     ): Promise<LLMClient> {
-        let apiKey = process.env.GEMINI_API_KEY;
+        let apiKey: string | null = null;
 
-        // Try to fetch from Convex if available
+        // Try to fetch from Convex using username
         try {
             const { fetchQuery } = await import("convex/nextjs");
             const { api } = await import("../../convex/_generated/api");
-            const userKey = await fetchQuery(api.apiKeys.getLatestKey, {});
-            if (userKey) {
-                apiKey = userKey;
-                console.log("[LLMClient] Using user-configured API key from Convex");
+
+            apiKey = await fetchQuery(api.apiKeys.getKeyForCurrentUser, { username });
+
+            if (apiKey) {
+                console.log(`[LLMClient] Using API key for user '${username}' from Convex`);
             }
         } catch (err) {
-            // Fallback to env variable if Convex fetch fails
-            console.log("[LLMClient] Could not fetch from Convex, falling back to env");
+            console.log("[LLMClient] Could not fetch API key from Convex:", err);
+        }
+
+        if (!apiKey) {
+            throw new Error("No API key configured. Please set up your API key first.");
         }
 
         return new LLMClient(manufacturer, model, debugMode, apiKey);

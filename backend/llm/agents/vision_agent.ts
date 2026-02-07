@@ -1,5 +1,4 @@
 
-import { GeminiBackend } from '../backend'; // Adjust import based on location
 import { LLMClient } from "../client"; // We might need LLMClient or GeminiBackend directly
 import { MOCK_VISION_ANALYSIS } from '../graph/mocks';
 
@@ -35,19 +34,6 @@ export async function runVisionAgent(client: LLMClient, spriteBuffer: Buffer): P
         return MOCK_VISION_ANALYSIS as unknown as DetectedItem[];
     }
 
-    const key = process.env.GEMINI_API_KEY;
-    if (!key) throw new Error("GEMINI_API_KEY not set for Vision Agent");
-
-    const backend = new GeminiBackend(key);
-
-    const config = {
-        temperature: 0.7,
-        responseMimeType: "application/json",
-        thinkingConfig: {
-            thinkingLevel: 'HIGH' as const,
-        },
-    };
-
     const imagePart = {
         inlineData: {
             data: spriteBuffer.toString('base64'),
@@ -55,10 +41,18 @@ export async function runVisionAgent(client: LLMClient, spriteBuffer: Buffer): P
         }
     };
 
-    const responseText = await backend.generateContent(
+    const responseText = await client.generateContent(
         [{ role: "user", parts: [{ text: ANALYSIS_PROMPT }, imagePart] }],
         "gemini-3-flash-preview", // Hardcoded per experiment
-        { config: config }
+        {
+            config: {
+                temperature: 0.7,
+                responseMimeType: "application/json",
+                thinkingConfig: {
+                    thinkingLevel: 'HIGH' as const,
+                },
+            }
+        }
     );
 
     try {

@@ -13,6 +13,7 @@
     "test:real": "vitest run -t 'REAL:'"
   },
   "dependencies": {
+    "@convex-dev/auth": "github:get-convex/convex-auth",
     "@google/genai": "^1.38.0",
     "@google/generative-ai": "^0.24.1",
     "@imgly/background-removal-node": "^1.4.5",

@@ -21,24 +21,38 @@ const FALLBACK_GAMESTATE = {
 export default function PlayPage() {
     const [prompt, setPrompt] = useState("");
     const [isGenerating, setIsGenerating] = useState(false);
+    const [username, setUsername] = useState<string>("");
 
-    // Convex State Management
-    const gameStateFromConvex = useQuery(api.games.get, {});
+    // Load username from localStorage on mount
+    useEffect(() => {
+        const storedUsername = typeof window !== 'undefined' ? localStorage.getItem('gemini_username') : null;
+        if (storedUsername) {
+            setUsername(storedUsername);
+        }
+    }, []);
+
+    // Convex State Management - with username filter
+    const gameStateFromConvex = useQuery(api.games.get, { username: username || undefined });
 
     // Derived State
     const convexState = gameStateFromConvex?.state;
 
-    // Run Management
-    const [availableRuns, setAvailableRuns] = useState<string[]>([]);
+    // Run Management - store run objects with name and path
+    const [availableRuns, setAvailableRuns] = useState<{ name: string; path: string }[]>([]);
     const [isLoadingRuns, setIsLoadingRuns] = useState(true);
-    const [selectedRunId, setSelectedRunId] = useState<string>("boardgame"); // Default to empty, will be set by effect
+    const [selectedRunId, setSelectedRunId] = useState<string>("");
+    const [selectedRunPath, setSelectedRunPath] = useState<string>("");
 
     const [navMesh, setNavMesh] = useState<any[]>([]);
 
     // 1. Fetch Available Runs on Mount
     useEffect(() => {
         setIsLoadingRuns(true);
-        fetch('/api/runs')
+        const params = new URLSearchParams();
+        if (username) {
+            params.append('username', username);
+        }
+        fetch(`/api/runs?${params.toString()}`)
             .then(res => res.json())
             .then(data => {
                 if (data.runs && Array.isArray(data.runs)) {
@@ -46,37 +60,31 @@ export default function PlayPage() {
 
                     // Priority Logic:
                     // 1. LocalStorage (User preference)
-                    // 2. Hardcoded specific runs (Dev preference)
-                    // 3. First available alpha-sorted
+                    // 2. First available (alphabetically sorted)
 
-                    let targetRun = "";
+                    let targetRun = null;
                     const savedRun = localStorage.getItem('gemini_selected_run');
 
-                    if (savedRun && data.runs.includes(savedRun)) {
-                        targetRun = savedRun;
-                    } else {
-                        // Priority: run_test_real_agents -> run_test_real_workflow -> experiment-3 -> First available
-                        if (data.runs.includes('run_test_real_agents')) {
-                            targetRun = 'run_test_real_agents';
-                        } else if (data.runs.includes('run_test_real_workflow')) {
-                            targetRun = 'run_test_real_workflow';
-                        } else if (data.runs.includes('experiment-3')) {
-                            targetRun = 'experiment-3';
-                        } else {
-                            targetRun = data.runs[0];
-                        }
+                    // Check if saved run exists in available runs
+                    if (savedRun) {
+                        targetRun = data.runs.find((r: any) => r.name === savedRun);
                     }
 
-                    // Only update if differnt/empty to avoid unnecessary re-renders or overrides if state was already set (though on mount it shouldn't be)
-                    // We check !selectedRunId to allow for default state if needed, but here we want to enforce the determined logic
+                    // Fall back to first available run
+                    if (!targetRun && data.runs.length > 0) {
+                        targetRun = data.runs[0];
+                    }
+
+                    // Set both the name and path
                     if (targetRun) {
-                        setSelectedRunId(targetRun);
+                        setSelectedRunId(targetRun.name);
+                        setSelectedRunPath(targetRun.path);
                     }
                 }
             })
             .catch(err => console.error("Failed to fetch runs:", err))
             .finally(() => setIsLoadingRuns(false));
-    }, []);
+    }, [username]);
 
     // Persist selection
     useEffect(() => {
@@ -90,12 +98,13 @@ export default function PlayPage() {
     const assets = currentGameState?.meta?.vars || {};
 
     useEffect(() => {
-        if (!selectedRunId || !assets.navmesh) {
+        if (!selectedRunId || !assets.navmesh || !selectedRunPath) {
             setNavMesh([]);
             return;
         }
 
-        const basePath = `/api/asset-proxy/runs/${selectedRunId}`;
+        // Use the path returned from API
+        const basePath = `/api/asset-proxy/runs/${selectedRunPath}`;
         const navMeshUrl = `${basePath}/${assets.navmesh}`;
 
         console.log("Loading NavMesh from State:", navMeshUrl);
@@ -104,7 +113,7 @@ export default function PlayPage() {
             .then(res => res.json())
             .then(data => setNavMesh(data))
             .catch(err => console.error("Failed to load navmesh:", err));
-    }, [assets.navmesh, selectedRunId]); // Only re-run if the URL changes
+    }, [assets.navmesh, selectedRunPath]); // Only re-run if the URL changes
 
     // 1. Derive Turn Status
     const activePlayer = currentGameState?.meta?.activePlayerId || 'player';
@@ -158,10 +167,11 @@ export default function PlayPage() {
     };
 
     const load_test = async () => {
-        if (!selectedRunId) return;
+        if (!selectedRunId || !selectedRunPath) return;
         setIsGenerating(true);
         try {
-            const basePath = `/api/asset-proxy/runs/${selectedRunId}`;
+            // Use the path returned from API
+            const basePath = `/api/asset-proxy/runs/${selectedRunPath}`;
             const res = await fetch(`${basePath}/gamestate.json`);
             if (!res.ok) throw new Error("Gamestate missing");
             const data = await res.json();
@@ -180,7 +190,8 @@ export default function PlayPage() {
                 rules: data.rules || "Standard game rules",
                 runId: selectedRunId,
                 engine_tools: data.engine_tools,
-                engine_logic: data.engine_logic
+                engine_logic: data.engine_logic,
+                username: username
             });
 
             // Reset local UI state
@@ -204,8 +215,8 @@ export default function PlayPage() {
         const SCENE_WIDTH = 1408;
         const SCENE_HEIGHT = 736;
 
-        // Dynamic Source Base Path
-        const basePath = `/api/asset-proxy/runs/${selectedRunId}`;
+        // Use the path returned from API
+        const basePath = `/api/asset-proxy/runs/${selectedRunPath}`;
 
         // Scale factors (Input is 1000x1000 normalized)
         const scaleX = SCENE_WIDTH / 1000;
@@ -306,7 +317,7 @@ export default function PlayPage() {
             // Construct src with proxy path if needed
             let finalSrc = entity.src || '/placeholder.png';
             if (finalSrc && !finalSrc.startsWith('http') && !finalSrc.startsWith('/')) {
-                // If relative path (e.g. "extracted/archer.png"), prepend proxy base
+                // If relative path (e.g. "images/orc.png", "extracted/archer.png"), prepend proxy base
                 finalSrc = `${basePath}/${finalSrc}`;
             }
 
@@ -344,7 +355,7 @@ export default function PlayPage() {
                 zones: []
             }
         };
-    }, [currentGameState, navMesh, reachableTiles, selectedRunId, assets.background]);
+    }, [currentGameState, navMesh, reachableTiles, selectedRunPath, assets.background]);
 
     // Chat Coordination State
     const [chatOptimisticMessage, setChatOptimisticMessage] = useState<string | null>(null);
@@ -396,7 +407,7 @@ export default function PlayPage() {
                 try {
                     // 2. Call Server Action (The Brain)
                     const { processGameMoveAction } = await import("../actions/game-move");
-                    const result = await processGameMoveAction(currentGameState, rules as string, commandOrEvent, navMesh);
+                    const result = await processGameMoveAction(currentGameState, rules as string, commandOrEvent, navMesh, username);
 
                     if (result.success) {
                         result.logs?.forEach((log: any) => console.log("GAME LOG:", log));
@@ -422,6 +433,10 @@ export default function PlayPage() {
 
         setIsGenerating(true);
         try {
+            // Get username from localStorage or state
+            const currentUsername = username || (typeof window !== 'undefined' ? localStorage.getItem('gemini_username') : null);
+            if (!currentUsername) throw new Error("Username not found. Please reconfigure your API key.");
+
             // 1. Create a placeholder game entry in Convex (using reset to clear old games)
             // We use a temporary ID or just let reset generate one.
             // But createGameAction needs a gameId.
@@ -430,13 +445,14 @@ export default function PlayPage() {
                 initialState: { entities: [] },
                 rules: "Generating...",
                 status: "generating",
-                progress: "Starting..."
+                progress: "Starting...",
+                username: currentUsername
             });
 
             if (!newGameId) throw new Error("Failed to create game");
 
-            // 2. Fire the Server Action
-            await createGameAction(prompt, newGameId);
+            // 2. Fire the Server Action with username
+            await createGameAction(prompt, newGameId, currentUsername);
 
             setPrompt("");
 
@@ -500,12 +516,20 @@ export default function PlayPage() {
                     <select
                         className="px-2 py-1.5 text-xs bg-black text-neutral-400 border border-neutral-800 rounded hover:border-neutral-600 outline-none"
                         value={selectedRunId}
-                        onChange={(e) => setSelectedRunId(e.target.value)}
+                        onChange={(e) => {
+                            const runName = e.target.value;
+                            setSelectedRunId(runName);
+                            // Find the matching run and set its path
+                            const selectedRun = availableRuns.find(r => r.name === runName);
+                            if (selectedRun) {
+                                setSelectedRunPath(selectedRun.path);
+                            }
+                        }}
                     >
                         {isLoadingRuns && <option value="">Loading runs...</option>}
                         {!isLoadingRuns && availableRuns.length === 0 && <option value="">No runs found</option>}
                         {availableRuns.map(run => (
-                            <option key={run} value={run}>{run}</option>
+                            <option key={run.name} value={run.name}>{run.name}</option>
                         ))}
                     </select>
 

@@ -54,13 +54,17 @@ export const Chat = ({ gameId, currentGameState, gameRules, className, navMesh, 
 
         try {
             let result;
+            // Get username from localStorage
+            const username = typeof window !== 'undefined' ? localStorage.getItem('gemini_username') : null;
+            if (!username) throw new Error("Username not found. Please reconfigure your API key.");
+
             if (isEditMode) {
                 // GOD MODE ACTION
                 if (!gameId) throw new Error("Game ID unknown");
-                result = await modifyGameAction(gameId, input);
+                result = await modifyGameAction(gameId, input, username);
             } else {
                 // STANDARD GAME MOVE
-                result = await processGameMoveAction(currentGameState, gameRules, command, navMesh);
+                result = await processGameMoveAction(currentGameState, gameRules, command, navMesh, username);
             }
 
             if (!result.success) {

@@ -9,7 +9,8 @@ export async function processModification(
     client: LLMClient,
     runId: string,
     currentState: UniversalState,
-    userRequest: string
+    userRequest: string,
+    username?: string
 ): Promise<{ newState: UniversalState; message: string; shouldRegenerate?: boolean; newPrompt?: string }> {
 
     console.log(`[ModificationAgent] Processing request: ${runId}, ${currentState}, ${userRequest}`);
@@ -105,7 +106,7 @@ export async function processModification(
             }
 
             const filename = `bg_${Date.now()}.png`;
-            const assetPath = await saveAsset(runId, newBgBuffer, filename);
+            const assetPath = await saveAsset(runId, newBgBuffer, filename, username);
 
             // Update State
             if (!currentState.meta.vars) currentState.meta.vars = {};
@@ -144,7 +145,7 @@ export async function processModification(
             }
 
             const filename = `spawn_${Date.now()}.png`;
-            assetPath = await saveAsset(runId, spriteBuffer, filename);
+            assetPath = await saveAsset(runId, spriteBuffer, filename, username);
 
             for (let i = 0; i < count; i++) {
                 const newId = `ent_${Date.now()}_${i}`;
@@ -193,7 +194,7 @@ export async function processModification(
                 }
 
                 const filename = `restyle_${Date.now()}.png`;
-                const assetPath = await saveAsset(runId, newStyleBuffer, filename);
+                const assetPath = await saveAsset(runId, newStyleBuffer, filename, username);
 
                 targets.forEach((e: Entity) => {
                     (e as any).src = assetPath;

@@ -19,6 +19,7 @@ export function compileGenerationGraph() {
     const graphState: StateGraphArgs<GraphState>["channels"] = {
         userInput: { value: (x, y) => y ?? x, default: () => "" },
         runId: { value: (x, y) => y ?? x, default: () => "" },
+        username: { value: (x, y) => y ?? x, default: () => "" },
 
         // New Image Workflow artifacts
 

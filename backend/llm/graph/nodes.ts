@@ -11,13 +11,13 @@ import { runStateAgent } from "../agents/state_agent";
 import * as Mocks from "./mocks";
 
 // Helper to save artifacts
-const saveRunArtifact = async (runId: string | undefined, filename: string, content: string | Buffer) => {
+const saveRunArtifact = async (runId: string | undefined, filename: string, content: string | Buffer, username?: string) => {
     if (!runId) return;
     try {
         const fs = await import("fs");
         const path = await import("path");
-        const { DATA_RUNS_DIR } = await import("../utils/paths");
-        const runDir = path.resolve(DATA_RUNS_DIR, runId);
+        const { getRunDir } = await import("../utils/paths");
+        const runDir = getRunDir(runId, username);
         if (!fs.existsSync(runDir)) {
             fs.mkdirSync(runDir, { recursive: true });
         }
@@ -42,7 +42,7 @@ export const nodeSceneGenerator = async (state: GraphState, config?: { configura
     if (onProgress) await onProgress("Generating Scene...");
 
     const sceneImage = await runSceneAgent(client, state.userInput);
-    await saveRunArtifact(state.runId, "scene.png", sceneImage);
+    await saveRunArtifact(state.runId, "scene.png", sceneImage, state.username);
 
     return { sceneImage };
 };
@@ -56,7 +56,7 @@ export const nodeBackgroundExtractor = async (state: GraphState, config?: { conf
     if (onProgress) await onProgress("Extracting Background...");
 
     const backgroundImage = await runBackgroundAgent(client, state.sceneImage);
-    await saveRunArtifact(state.runId, "background.png", backgroundImage);
+    await saveRunArtifact(state.runId, "background.png", backgroundImage, state.username);
 
     return { backgroundImage };
 };
@@ -73,12 +73,12 @@ export const nodeSpriteIsolator = async (state: GraphState, config?: { configura
     let runDir = undefined;
     if (state.runId) {
         const path = await import("path");
-        const { DATA_RUNS_DIR } = await import("../utils/paths");
-        runDir = path.resolve(DATA_RUNS_DIR, state.runId);
+        const { getRunDir } = await import("../utils/paths");
+        runDir = getRunDir(state.runId, state.username);
     }
 
     const spriteImage = await runSpriteAgent(client, state.sceneImage, runDir);
-    await saveRunArtifact(state.runId, "sprites.png", spriteImage);
+    await saveRunArtifact(state.runId, "sprites.png", spriteImage, state.username);
 
     return { spriteImage };
 };
@@ -92,7 +92,7 @@ export const nodeVisionAnalyzer = async (state: GraphState, config?: { configura
     if (onProgress) await onProgress("Analyzing Sprites...");
 
     const analysisJson = await runVisionAgent(client, state.spriteImage);
-    await saveRunArtifact(state.runId, "analysis.json", JSON.stringify(analysisJson, null, 2));
+    await saveRunArtifact(state.runId, "analysis.json", JSON.stringify(analysisJson, null, 2), state.username);
 
     return { analysisJson };
 };
@@ -108,8 +108,8 @@ export const nodeAssetExtractor = async (state: GraphState, config?: { configura
     // Determine output directory based on runId
     const runId = state.runId || "debug_run";
     const path = await import("path");
-    const { DATA_RUNS_DIR } = await import("../utils/paths");
-    const outputDir = path.resolve(DATA_RUNS_DIR, runId, "extracted");
+    const { getRunDir } = await import("../utils/paths");
+    const outputDir = path.resolve(getRunDir(runId, state.username), "extracted");
 
     const extractedAssets = await runExtractionAgent(state.spriteImage, state.analysisJson, outputDir);
     // Assets are saved by the agent directly to the outputDir
@@ -126,7 +126,7 @@ export const nodeNavMeshGenerator = async (state: GraphState, config?: { configu
     if (onProgress) await onProgress("Generating NavMesh...");
 
     const navMesh = await runNavMeshAgent(client, state.backgroundImage);
-    await saveRunArtifact(state.runId, "navmesh.json", JSON.stringify(navMesh, null, 2));
+    await saveRunArtifact(state.runId, "navmesh.json", JSON.stringify(navMesh, null, 2), state.username);
 
     return { navMesh };
 };
@@ -141,8 +141,10 @@ export const nodeStateGenerator = async (state: GraphState, config?: { configura
 
     if (onProgress) await onProgress("Generating Game State...");
 
-    const finalGameState = await runStateAgent(client, state.analysisJson, state.navMesh, state.runId);
-    await saveRunArtifact(state.runId, "gamestate.json", JSON.stringify(finalGameState, null, 2));
+    // Use the extracted assets manifest from the asset extractor
+    const assetManifest = state.extractedAssets || {};
+    const finalGameState = await runStateAgent(client, state.analysisJson, state.navMesh, state.runId, assetManifest);
+    await saveRunArtifact(state.runId, "gamestate.json", JSON.stringify(finalGameState, null, 2), state.username);
 
     return { finalGameState };
 };

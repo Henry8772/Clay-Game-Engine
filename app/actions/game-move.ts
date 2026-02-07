@@ -6,11 +6,13 @@ import { api } from "../../convex/_generated/api";
 import { GameEngine } from "../engine/game_engine";
 
 
-export async function processGameMoveAction(currentState: any, rules: string, command: string, navMesh?: any[]) {
+export async function processGameMoveAction(currentState: any, rules: string, command: string, navMesh?: any[], username?: string) {
     console.log("Processing game move:", command);
     try {
+        if (!username) throw new Error("Username is required");
+
         // 1. Get current active game ID if not passed (optional, for safety)
-        const activeGame = await fetchQuery(api.games.get, {});
+        const activeGame = await fetchQuery(api.games.get, { username });
         if (!activeGame) throw new Error("No active game found in DB");
 
         // 1. Validate Turn (Security check)
@@ -21,7 +23,7 @@ export async function processGameMoveAction(currentState: any, rules: string, co
         // }
 
         // 2. Setup Engine with automatic API key fetching
-        const client = await LLMClient.createWithConvexKey();
+        const client = await LLMClient.createWithConvexKey(username);
 
         // console.log("rules", rules);
         // console.log("currentState", currentState);

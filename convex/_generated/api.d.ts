@@ -9,6 +9,7 @@
  */
 
 import type * as apiKeys from "../apiKeys.js";
+import type * as auth from "../auth.js";
 import type * as gameStates from "../gameStates.js";
 import type * as games from "../games.js";
 import type * as logs from "../logs.js";
@@ -22,6 +23,7 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   apiKeys: typeof apiKeys;
+  auth: typeof auth;
   gameStates: typeof gameStates;
   games: typeof games;
   logs: typeof logs;

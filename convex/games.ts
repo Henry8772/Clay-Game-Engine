@@ -4,17 +4,22 @@ import { v } from "convex/values";
 // Get the current active game (single singleton game for now)
 // Get the current active game (single singleton game for now)
 export const get = query({
-    args: { id: v.optional(v.id("games")) },
+    args: { id: v.optional(v.id("games")), username: v.optional(v.string()) },
     handler: async (ctx, args) => {
         if (args.id) {
             return await ctx.db.get(args.id);
         }
-        // Return the most recently updated active game, or null
-        const game = await ctx.db.query("games")
-            .filter(q => q.eq(q.field("isActive"), true))
-            .order("desc") // default order by creation usually suffices or add index
-            .first();
-        return game;
+        // Return the most recently updated active game for the user
+        const query = ctx.db.query("games")
+            .filter(q => q.eq(q.field("isActive"), true));
+
+        // Filter by username if provided
+        if (args.username) {
+            const filteredQuery = query.filter(q => q.eq(q.field("username"), args.username));
+            return await filteredQuery.order("desc").first();
+        }
+
+        return await query.order("desc").first();
     },
 });
 
@@ -27,7 +32,8 @@ export const reset = mutation({
         engine_tools: v.optional(v.any()), // <--- NEW
         engine_logic: v.optional(v.string()), // <--- NEW
         status: v.optional(v.string()), // <--- NEW
-        progress: v.optional(v.string()) // <--- NEW
+        progress: v.optional(v.string()), // <--- NEW
+        username: v.optional(v.string()), // <--- NEW: Store username
     },
     handler: async (ctx, args) => {
         console.log(`[GAME RESET] Loading run: ${args.runId}`);
@@ -37,8 +43,17 @@ export const reset = mutation({
         console.log(`[GAME RESET] Content check: ${entityCount} entities loaded from state.`);
 
 
-        // Deactivate all old games
-        const oldGames = await ctx.db.query("games").filter(q => q.eq(q.field("isActive"), true)).collect();
+        // Deactivate all old games (for this user)
+        const oldGames = await ctx.db.query("games")
+            .filter(q => {
+                const isActive = q.eq(q.field("isActive"), true);
+                if (args.username) {
+                    const isSameUser = q.eq(q.field("username"), args.username);
+                    return q.and(isActive, isSameUser);
+                }
+                return isActive;
+            })
+            .collect();
         for (const game of oldGames) {
             await ctx.db.patch(game._id, { isActive: false });
         }
@@ -53,6 +68,7 @@ export const reset = mutation({
             engine_logic: args.engine_logic,
             status: args.status || "playing", // Default to playing if not specified (legacy resets)
             progress: args.progress,
+            username: args.username, // <--- NEW
         });
 
         // No initial history needed for now, or could insert a system message

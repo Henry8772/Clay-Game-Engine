@@ -5,15 +5,15 @@ import { api } from "../../convex/_generated/api";
 import { compileGenerationGraph } from "../../backend/llm/graph/workflow";
 import { LLMClient } from "../../backend/llm/client";
 
-export async function createGameAction(prompt: string, gameId: string) {
+export async function createGameAction(prompt: string, gameId: string, username?: string) {
     if (!prompt) throw new Error("Prompt is required");
     if (!gameId) throw new Error("Game ID is required");
+    if (!username) throw new Error("Username is required");
 
     console.log(`[createGameAction] Starting generation for game: ${gameId} with prompt: ${prompt}`);
 
-    // 1. Setup Client
-    // Pass false as 3rd arg to disable debug/mock mode
-    const client = await LLMClient.createWithConvexKey("gemini", undefined, false);
+    // 1. Setup Client with username
+    const client = await LLMClient.createWithConvexKey(username, "gemini", undefined, false);
     const runId = `run_${Date.now()}_${crypto.randomUUID().slice(0, 8)}`;
 
     // 2. Setup Callback to report progress to Convex
@@ -36,10 +36,11 @@ export async function createGameAction(prompt: string, gameId: string) {
         // 3. Run the Graph
         const app = compileGenerationGraph();
 
-        // The graph expects { userInput, runId }
+        // The graph expects { userInput, runId, username }
         const inputs = {
             userInput: prompt,
-            runId: runId
+            runId: runId,
+            username: username
         };
 
         const config = {

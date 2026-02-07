@@ -6,7 +6,7 @@ import path from 'path';
 // Force dynamic to ensure we check disk every time
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+export async function GET(request: Request) {
     try {
         const RUNS_BASE_DIR = path.join(process.cwd(), 'backend', 'data', 'runs');
 
@@ -14,13 +14,44 @@ export async function GET() {
             return NextResponse.json({ runs: [] });
         }
 
-        const entries = fs.readdirSync(RUNS_BASE_DIR, { withFileTypes: true });
+        // Get username from query parameter
+        const { searchParams } = new URL(request.url);
+        const username = searchParams.get('username');
 
-        const runs = entries
-            .filter(dirent => dirent.isDirectory())
-            .map(dirent => dirent.name)
-            // Optional: Sort by creation time if we wanted, but alpha sort is default and fine for IDs like "run_timestamp"
-            .sort((a, b) => b.localeCompare(a)); // Newest first usually
+        let runs: { name: string; path: string }[] = [];
+
+        // Always include public runs for all users
+        const publicDir = path.join(RUNS_BASE_DIR, 'public');
+        if (fs.existsSync(publicDir)) {
+            const publicEntries = fs.readdirSync(publicDir, { withFileTypes: true });
+            runs = runs.concat(
+                publicEntries
+                    .filter(dirent => dirent.isDirectory())
+                    .map(dirent => ({
+                        name: dirent.name,
+                        path: `public/${dirent.name}`
+                    }))
+            );
+        }
+
+        // If username is provided, include user-specific runs
+        if (username) {
+            const userDir = path.join(RUNS_BASE_DIR, username);
+            if (fs.existsSync(userDir)) {
+                const userEntries = fs.readdirSync(userDir, { withFileTypes: true });
+                runs = runs.concat(
+                    userEntries
+                        .filter(dirent => dirent.isDirectory())
+                        .map(dirent => ({
+                            name: dirent.name,
+                            path: `${username}/${dirent.name}`
+                        }))
+                );
+            }
+        }
+
+        // Sort by newest first (by name)
+        runs.sort((a, b) => b.name.localeCompare(a.name));
 
         return NextResponse.json({ runs });
     } catch (e) {

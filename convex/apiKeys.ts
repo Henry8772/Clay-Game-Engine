@@ -1,64 +1,96 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
+import { getAuthUserId } from "./auth";
 
-// Store API key
+// Store user with API key
 export const storeKey = mutation({
     args: {
+        username: v.string(),
         apiKey: v.string(),
     },
     handler: async (ctx, args) => {
-        // Check if this key already exists
-        const existing = await ctx.db
-            .query("apiKeys")
-            .filter(q => q.eq(q.field("key"), args.apiKey))
-            .first();
-
-        if (existing) {
-            // Update last used time
-            await ctx.db.patch(existing._id, {
-                lastUsedAt: Date.now(),
-            });
-            return { success: true, id: existing._id };
+        // Validate inputs
+        if (!args.username.trim()) {
+            throw new Error("Username is required");
+        }
+        if (!args.apiKey.startsWith("AIza")) {
+            throw new Error("Invalid API key format");
         }
 
-        // Store new key
-        const id = await ctx.db.insert("apiKeys", {
-            key: args.apiKey,
-            keyHash: "", // deprecated, keeping for schema compatibility
+        // Check if username is already taken
+        const existingByUsername = await ctx.db
+            .query("users")
+            .withIndex("by_username", q => q.eq("username", args.username))
+            .first();
+
+        if (existingByUsername) {
+            throw new Error(`Username '${args.username}' is already taken. Please choose a different username.`);
+        }
+
+        // Store new user with API key
+        const id = await ctx.db.insert("users", {
+            username: args.username,
+            apiKey: args.apiKey,
+            authId: "", // No auth required for now
             createdAt: Date.now(),
             lastUsedAt: Date.now(),
             isActive: true,
         });
 
-        return { success: true, id };
+        return { success: true, id, username: args.username };
     },
 });
 
-// Get the most recently used API key
-export const getLatestKey = query({
-    handler: async (ctx) => {
-        const key = await ctx.db
-            .query("apiKeys")
-            .filter(q => q.eq(q.field("isActive"), true))
-            .order("desc") // Most recent first
-            .first();
-
-        return key ? key.key : null;
-    },
-});
-
-// Get key validation status (doesn't expose the actual key)
-export const getKeyStatus = query({
+// Get API key for a user by username
+export const getKeyForCurrentUser = query({
     args: {
-        key: v.string(),
+        username: v.string(),
     },
     handler: async (ctx, args) => {
-        const entry = await ctx.db
-            .query("apiKeys")
-            .filter(q => q.eq(q.field("key"), args.key))
+        const user = await ctx.db
+            .query("users")
+            .withIndex("by_username", q => q.eq("username", args.username))
             .first();
 
-        return entry ? { isValid: true, createdAt: entry.createdAt } : { isValid: false };
+        if (!user || !user.isActive) {
+            return null;
+        }
+
+        return user.apiKey;
+    },
+});
+
+// Get API key by username (for reference)
+export const getKeyByUsername = query({
+    args: {
+        username: v.string(),
+    },
+    handler: async (ctx, args) => {
+        const user = await ctx.db
+            .query("users")
+            .withIndex("by_username", q => q.eq("username", args.username))
+            .first();
+
+        if (!user || !user.isActive) {
+            return null;
+        }
+
+        return user.apiKey;
+    },
+});
+
+// Check if username exists
+export const checkUsernameExists = query({
+    args: {
+        username: v.string(),
+    },
+    handler: async (ctx, args) => {
+        const user = await ctx.db
+            .query("users")
+            .withIndex("by_username", q => q.eq("username", args.username))
+            .first();
+
+        return !!user;
     },
 });
 

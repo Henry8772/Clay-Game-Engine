@@ -23,9 +23,8 @@ export async function GET(
     const RUNS_BASE_DIR = path.join(process.cwd(), 'backend', 'data', 'runs');
 
     // Construct the full path
-    // IMPORTANT: Client must prefix runs with special segment or we heuristically check?
-    // Let's assume the client sends /api/asset-proxy/runs/{runId}/...
-    // If path starts with "runs", map to RUNS_BASE_DIR, else map to TEST_BASE_DIR (backwards compat)
+    // Client sends /api/asset-proxy/runs/{runId}/... or /api/asset-proxy/runs/{username}/{runId}/...
+    // We'll try the path as-is first, then fall back to boardgame if it's not found
 
     let potentialPath: string;
 
@@ -56,12 +55,28 @@ export async function GET(
         return new NextResponse('Forbidden: Invalid file type', { status: 403 });
     }
 
-    if (!fs.existsSync(potentialPath)) {
+    let finalPath = potentialPath;
+
+    // If this is a runs path, prioritize public folder first
+    if (filePathArray[0] === 'runs') {
+        // First, try to find in public folder
+        const publicPath = path.join(RUNS_BASE_DIR, 'public', ...filePathArray.slice(1));
+        if (fs.existsSync(publicPath) && publicPath.startsWith(RUNS_BASE_DIR)) {
+            finalPath = publicPath;
+        } else if (!fs.existsSync(potentialPath)) {
+            // If public doesn't exist and user path doesn't exist, try public as fallback
+            if (fs.existsSync(publicPath) && publicPath.startsWith(RUNS_BASE_DIR)) {
+                finalPath = publicPath;
+            }
+        }
+    }
+
+    if (!fs.existsSync(finalPath)) {
         return new NextResponse('Not Found', { status: 404 });
     }
 
     try {
-        const fileBuffer = fs.readFileSync(potentialPath);
+        const fileBuffer = fs.readFileSync(finalPath);
 
         // Determine mime type
         let contentType = 'application/octet-stream';

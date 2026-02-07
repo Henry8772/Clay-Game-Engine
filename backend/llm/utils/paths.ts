@@ -21,10 +21,18 @@ export const DATA_RUNS_DIR = path.join(BACKEND_ROOT, 'data/runs');
 console.log(`[Paths] Backend Root resolved to: ${BACKEND_ROOT}`);
 console.log(`[Paths] Data Runs Dir resolved to: ${DATA_RUNS_DIR}`);
 
-export const getRunDir = (runId: string) => path.join(DATA_RUNS_DIR, runId);
+export const getRunDir = (runId: string, username?: string) => {
+    // If username is provided and not "boardgame", organize by username
+    // "boardgame" is a special case for public games
+    if (username && username !== "boardgame") {
+        return path.join(DATA_RUNS_DIR, username, runId);
+    }
+    // Default or boardgame path (public)
+    return path.join(DATA_RUNS_DIR, runId);
+};
 
-export const saveAsset = async (runId: string, buffer: Buffer, filename: string) => {
-    const runDir = getRunDir(runId);
+export const saveAsset = async (runId: string, buffer: Buffer, filename: string, username?: string) => {
+    const runDir = getRunDir(runId, username);
     if (!fs.existsSync(runDir)) {
         await fs.promises.mkdir(runDir, { recursive: true });
     }

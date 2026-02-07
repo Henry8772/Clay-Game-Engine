@@ -1,5 +1,4 @@
 
-import { GeminiBackend } from '../backend';
 import { LLMClient } from "../client";
 import { MOCK_NAVMESH } from '../graph/mocks';
 
@@ -30,19 +29,6 @@ export async function runNavMeshAgent(client: LLMClient, backgroundBuffer: Buffe
         ]
     `;
 
-    const key = process.env.GEMINI_API_KEY;
-    if (!key) throw new Error("GEMINI_API_KEY not set for NavMesh Agent");
-
-    const backend = new GeminiBackend(key);
-
-    const config = {
-        temperature: 0.5,
-        responseMimeType: "application/json",
-        thinkingConfig: {
-            thinkingLevel: 'HIGH' as const,
-        },
-    };
-
     const imagePart = {
         inlineData: {
             data: backgroundBuffer.toString('base64'),
@@ -50,10 +36,18 @@ export async function runNavMeshAgent(client: LLMClient, backgroundBuffer: Buffe
         }
     };
 
-    const responseText = await backend.generateContent(
+    const responseText = await client.generateContent(
         [{ role: "user", parts: [{ text: NAVMESH_PROMPT }, imagePart] }],
         "gemini-3-flash-preview",
-        { config: config }
+        {
+            config: {
+                temperature: 0.5,
+                responseMimeType: "application/json",
+                thinkingConfig: {
+                    thinkingLevel: 'HIGH' as const,
+                },
+            }
+        }
     );
 
     try {

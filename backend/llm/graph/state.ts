@@ -7,6 +7,7 @@ export interface GraphState {
     // 1. Input
     userInput: string;
     runId?: string;
+    username?: string;
 
     // --- NEW IMAGE WORKFLOW STATE ---
 

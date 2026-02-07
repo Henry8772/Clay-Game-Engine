@@ -18,7 +18,11 @@ export function useGameEngine() {
         try {
             let command = action;
 
-            const result = await processGameMoveAction(currentState, rules, command, navMesh);
+            // Get username from localStorage
+            const username = typeof window !== 'undefined' ? localStorage.getItem('gemini_username') : null;
+            if (!username) throw new Error("Username not found. Please reconfigure your API key.");
+
+            const result = await processGameMoveAction(currentState, rules, command, navMesh, username);
 
             if (!result.success) {
                 setError(result.error || "Unknown error");

@@ -12,7 +12,8 @@ export default defineSchema({
         runId: v.optional(v.string()), // <--- NEW: Link to backend/data/runs/{runId}
         status: v.string(), // "idle" | "generating" | "playing" | "failed"
         progress: v.optional(v.string()), // e.g., "Generating Sprites..."
-    }),
+        username: v.optional(v.string()), // Username of the user who created this game
+    }).index("by_username_active", ["username", "isActive"]),
     messages: defineTable({
         gameId: v.id("games"),
         role: v.string(), // "user", "agent", "system"
@@ -21,11 +22,13 @@ export default defineSchema({
         timestamp: v.number(),
         data: v.optional(v.any()), // Extra data for specialized logs (e.g. relatedEntityId)
     }).index("by_gameId", ["gameId"]),
-    apiKeys: defineTable({
-        key: v.optional(v.string()), // The actual API key (stored server-side)
-        keyHash: v.string(), // Hash of the API key (for verification)
+    users: defineTable({
+        username: v.string(),
+        apiKey: v.string(), // The actual API key (stored server-side)
+        authId: v.string(), // Link to authenticated user identity (from convex-auth)
         createdAt: v.number(),
         lastUsedAt: v.optional(v.number()),
         isActive: v.boolean(),
-    }).index("by_keyHash", ["keyHash"]),
+    }).index("by_username", ["username"])
+        .index("by_authId", ["authId"]),
 });
