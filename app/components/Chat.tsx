@@ -16,9 +16,24 @@ interface ChatProps {
     // External Control Props
     externalOptimisticMessage?: string | null;
     externalIsProcessing?: boolean;
+    // Turn Control Props
+    isPlayerTurn?: boolean;
+    onEndTurn?: () => void;
+    isInteractionLocked?: boolean;
 }
 
-export const Chat = ({ gameId, currentGameState, gameRules, className, navMesh, externalOptimisticMessage, externalIsProcessing }: ChatProps) => {
+export const Chat = ({
+    gameId,
+    currentGameState,
+    gameRules,
+    className,
+    navMesh,
+    externalOptimisticMessage,
+    externalIsProcessing,
+    isPlayerTurn = false,
+    onEndTurn,
+    isInteractionLocked = false
+}: ChatProps) => {
     // 1. Data Fetching - Only one list now
     const messages = useQuery(api.messages.list, gameId ? { gameId: gameId as any } : "skip");
 
@@ -210,6 +225,27 @@ export const Chat = ({ gameId, currentGameState, gameRules, className, navMesh, 
                         </div>
                     </div>
                 )}
+            </div>
+
+            {/* Turn Controls - Integrated */}
+            <div className="h-12 border-t border-neutral-800 bg-neutral-900/30 flex items-center justify-between px-4 shrink-0">
+                <div className="flex items-center gap-2">
+                    <div className={`w-1.5 h-1.5 rounded-full animate-pulse ${isPlayerTurn ? "bg-green-500" : "bg-red-500"}`} />
+                    <span className="text-[10px] font-mono text-white font-bold uppercase tracking-wider">
+                        {isPlayerTurn ? "YOUR TURN" : "ENEMY TURN"}
+                    </span>
+                </div>
+
+                <button
+                    onClick={onEndTurn}
+                    disabled={isInteractionLocked || !isPlayerTurn}
+                    className={`px-3 py-1 text-xs font-bold rounded border transition-all ${isInteractionLocked || !isPlayerTurn
+                        ? "bg-neutral-900 text-neutral-600 border-neutral-800 cursor-not-allowed"
+                        : "bg-neutral-100 text-black border-white hover:bg-neutral-200 active:scale-95"
+                        }`}
+                >
+                    {isInteractionLocked && isPlayerTurn ? "..." : "End Turn"}
+                </button>
             </div>
 
             {/* Input Area */}

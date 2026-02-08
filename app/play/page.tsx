@@ -498,7 +498,6 @@ export default function PlayPage() {
                     </div>
                     <div className="flex items-baseline gap-2">
                         <h1 className="text-sm font-semibold tracking-tight">Gemini Engine</h1>
-                        <span className="text-xs text-neutral-500 font-mono">VISUAL MODE</span>
                     </div>
                 </div>
 
@@ -583,33 +582,7 @@ export default function PlayPage() {
 
 
 
-                    {/* Toolbar for Game Panel */}
-                    <div className="h-10 border-b border-neutral-800 bg-black flex items-center px-4 justify-between">
-                        <div className="flex items-center gap-4">
-                            {/* Turn Indicator */}
-                            <div className="flex items-center gap-2">
-                                <div className={`w-1.5 h-1.5 rounded-full animate-pulse ${isPlayerTurn ? "bg-green-500" : "bg-red-500"}`} />
-                                <span className="text-[10px] font-mono text-white font-bold uppercase tracking-wider">
-                                    {isPlayerTurn ? "YOUR TURN" : "ENEMY TURN"}
-                                </span>
-                            </div>
 
-                            {/* End Turn Button */}
-                            <button
-                                onClick={() => handleAction("ACTION: END_TURN")}
-                                disabled={isInteractionLocked || !isPlayerTurn}
-                                className={`px-3 py-1 text-xs font-bold rounded border transition-all ${isInteractionLocked || !isPlayerTurn
-                                    ? "bg-neutral-900 text-neutral-600 border-neutral-800 cursor-not-allowed"
-                                    : "bg-neutral-100 text-black border-white hover:bg-neutral-200 active:scale-95"
-                                    }`}
-                            >
-                                {isProcessingAction ? "..." : "End Turn"}
-                            </button>
-                        </div>
-                        <div className="text-[10px] font-mono text-neutral-600">
-                            RUN: {selectedRunId}
-                        </div>
-                    </div>
 
 
 
@@ -642,15 +615,21 @@ export default function PlayPage() {
                     </div>
                 </section >
 
-                <Chat
-                    gameId={gameId}
-                    currentGameState={currentGameState}
-                    gameRules={rules}
-                    navMesh={navMesh}
-                    className="w-96 border-l border-neutral-800"
-                    externalOptimisticMessage={chatOptimisticMessage}
-                    externalIsProcessing={chatIsProcessing}
-                />
+                <div className="w-96 border-l border-neutral-800 flex flex-col bg-black">
+                    <Chat
+                        gameId={gameId}
+                        currentGameState={currentGameState}
+                        gameRules={rules}
+                        navMesh={navMesh}
+                        className="flex-1 border-none"
+                        externalOptimisticMessage={chatOptimisticMessage}
+                        externalIsProcessing={chatIsProcessing}
+                        // Turn Controls
+                        isPlayerTurn={isPlayerTurn}
+                        onEndTurn={() => handleAction("ACTION: END_TURN")}
+                        isInteractionLocked={isInteractionLocked}
+                    />
+                </div>
             </main >
 
             <GameDataEditor
