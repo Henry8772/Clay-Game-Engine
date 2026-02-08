@@ -486,6 +486,8 @@ export default function PlayPage() {
 
 
 
+
+
     const [showDebug, setShowDebug] = useState(false);
 
     return (
@@ -494,10 +496,10 @@ export default function PlayPage() {
             <header className="flex items-center justify-between px-6 py-4 border-b border-neutral-800 bg-black sticky top-0 z-10 w-full">
                 <div className="flex items-center gap-3">
                     <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center">
-                        <span className="font-bold text-black text-xs">G</span>
+                        <span className="font-bold text-black text-xs">C</span>
                     </div>
                     <div className="flex items-baseline gap-2">
-                        <h1 className="text-sm font-semibold tracking-tight">Gemini Engine</h1>
+                        <h1 className="text-sm font-semibold tracking-tight">Clay Engine</h1>
                     </div>
                 </div>
 
@@ -570,6 +572,8 @@ export default function PlayPage() {
                         >
                             Edit State
                         </button>
+
+
                     </div>
                 </div>
             </header>

@@ -138,6 +138,19 @@ export class LLMClient {
         }
     }
 
+    private async withTimeout<T>(promise: Promise<T>, timeoutMs: number, label: string): Promise<T> {
+        let timeoutHandle: NodeJS.Timeout;
+        const timeoutPromise = new Promise<T>((_, reject) => {
+            timeoutHandle = setTimeout(() => {
+                reject(new Error(`[${label}] Timed out after ${timeoutMs}ms`));
+            }, timeoutMs);
+        });
+
+        return Promise.race([promise, timeoutPromise]).finally(() => {
+            clearTimeout(timeoutHandle!);
+        });
+    }
+
     public async generateJSON<T>(
         system: string,
         inputData: any,
@@ -163,11 +176,23 @@ export class LLMClient {
 
         // 2. Live Call
         const startTime = performance.now();
-        const result = await this.backend.generateJSON<T>(system, inputData, this.model, schema, config);
-        const elapsed = performance.now() - startTime;
-        console.log(`⏱️  [${label}] Completed in: ${elapsed.toFixed(2)}ms`);
+        const { timeout: timeoutOverride, ...apiConfig } = config || {};
+        const timeoutMs = timeoutOverride || 60000; // Default 60s timeout for JSON
 
-        return result;
+        try {
+            const result = await this.withTimeout(
+                this.backend.generateJSON<T>(system, inputData, this.model, schema, apiConfig),
+                timeoutMs,
+                label
+            );
+            const elapsed = performance.now() - startTime;
+            console.log(`⏱️  [${label}] Completed in: ${elapsed.toFixed(2)}ms`);
+            return result;
+        } catch (e) {
+            const elapsed = performance.now() - startTime;
+            console.error(`❌ [${label}] Failed after ${elapsed.toFixed(2)}ms:`, e);
+            throw e;
+        }
     }
 
     public async generateContent(
@@ -177,19 +202,28 @@ export class LLMClient {
             systemInstruction?: string;
             config?: any;
             label?: string; // For mocking
+            timeout?: number;
         }
     ): Promise<string> {
+        const label = options?.label || 'generate_content';
         if (this.debugMode) {
-            console.log(`DEBUG: Generating mock content for label: ${options?.label || 'unknown'}`);
+            console.log(`DEBUG: Generating mock content for label: ${label}`);
             return "MOCK_CONTENT";
         }
-        return this.backend.generateContent(prompt, model, options);
+
+        const timeoutMs = options?.timeout || 60000; // Default 60s
+
+        return this.withTimeout(
+            this.backend.generateContent(prompt, model, options),
+            timeoutMs,
+            label
+        );
     }
 
     public async generateImage(
         prompt: string,
         model: string = "gemini-2.5-flash-image",
-        options?: { imageConfig?: any, config?: any }
+        options?: { imageConfig?: any, config?: any, timeout?: number }
     ): Promise<Buffer> {
         if (this.debugMode) {
             console.log(`DEBUG: Generating mock image for prompt: ${prompt}`);
@@ -197,21 +231,33 @@ export class LLMClient {
             const mockPng = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==";
             return Buffer.from(mockPng, 'base64');
         }
-        return this.backend.generateImage(prompt, model, options);
+
+        const timeoutMs = options?.timeout || 60000;
+        return this.withTimeout(
+            this.backend.generateImage(prompt, model, options),
+            timeoutMs,
+            "generate_image"
+        );
     }
 
     public async editImage(
         prompt: string,
         image: Buffer | Buffer[],
         model: string = "gemini-2.5-flash-image",
-        options?: { imageConfig?: any, config?: any }
+        options?: { imageConfig?: any, config?: any, timeout?: number }
     ): Promise<Buffer> {
         if (this.debugMode) {
             console.log(`DEBUG: Editing mock image for prompt: ${prompt}`);
             const mockPng = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==";
             return Buffer.from(mockPng, 'base64');
         }
-        return this.backend.editImage(prompt, image, model, options);
+
+        const timeoutMs = options?.timeout || 60000;
+        return this.withTimeout(
+            this.backend.editImage(prompt, image, model, options),
+            timeoutMs,
+            "edit_image"
+        );
     }
 
     public async segmentImage(image: Buffer, labels: string[], model: string = "gemini-2.5-flash"): Promise<any[]> {
@@ -220,6 +266,11 @@ export class LLMClient {
             const mockRegions = await this.tryGetMock("scene_decomposer");
             return mockRegions?.detectedRegions || [];
         }
-        return this.backend.segmentImage(image, labels, model);
+        // Segmentation usually fast, but let's give it 30s
+        return this.withTimeout(
+            this.backend.segmentImage(image, labels, model),
+            30000,
+            "segment_image"
+        );
     }
 }

@@ -17,22 +17,21 @@ export async function runSpriteAgent(
     inputBuffer: Buffer,
     runDir: string,
     config: SpriteAgentConfig = {},
-    design: GameDesign
+    design?: GameDesign
 ): Promise<Buffer> {
     const mode = config.mode || 'extract_from_scene';
 
     console.log(`[SpriteAgent] Running in mode: ${mode}`);
 
-    const entitiesToKeep = [
-        ...design.player_team,
-        ...design.enemy_team,
-        ...design.interactable_objects,
-        // ...design.obstacles // Exclude terrain features
-    ].join(", ");
-
     // 1. Determine Prompt based on Mode
     let whitePrompt = "";
     if (mode === 'extract_from_scene') {
+        const entitiesToKeep = [
+            ...(design?.player_team || []),
+            ...(design?.enemy_team || []),
+            ...(design?.interactable_objects || []),
+            // ...design.obstacles // Exclude terrain features
+        ].join(", ");
         whitePrompt = `Keep only [${entitiesToKeep}] in exact screen coordinates in the photo in a solid white background`;
     } else {
         whitePrompt = `Redraw this sprite sheet in the style of: ${config.styleDescription || 'standard'}. Maintain the exact position, scale, and silhouette of every element. Do not add or remove objects. Keep the white background.`;
@@ -50,10 +49,10 @@ export async function runSpriteAgent(
     console.log(path.join(runDir, `sprites_${mode}_white.png`));
 
     // debug
-    const whiteBuffer = fs.readFileSync(path.join(runDir, `sprites_${mode}_white.png`));
-    // const whiteBuffer = await client.editImage(whitePrompt, inputBuffer, undefined, {
-    //     config: { temperature: temperature, aspectRatio: "16:9" }
-    // });
+    // const whiteBuffer = fs.readFileSync(path.join(runDir, `sprites_${mode}_white.png`));
+    const whiteBuffer = await client.editImage(whitePrompt, inputBuffer, undefined, {
+        config: { temperature: temperature, aspectRatio: "16:9" }
+    });
 
     // 3. Generate Black Background Layer (for Alpha)
     console.log("[SpriteAgent] Generating Black Layer (for Alpha)...");

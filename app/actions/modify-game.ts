@@ -19,7 +19,7 @@ export async function modifyGameAction(gameId: string, userRequest: string) {
     const runId = gameState.runId || "boardgame";
 
     // 2. Init LLM
-    const client = new LLMClient("gemini", "gemini-2.5-flash", false);
+    const client = new LLMClient("gemini", "gemini-3-flash-preview", false);
 
     try {
         // 3. Run Agent

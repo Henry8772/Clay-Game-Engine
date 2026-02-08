@@ -33,7 +33,7 @@ describe('REAL: Sprite Agent', () => {
 
         const buffer = await runSpriteAgent(client, spriteBuffer, runDir, {
             mode: 'restyle_existing',
-            styleDescription: "8-bit pixel art"
+            styleDescription: "cyberpunk futuristic style"
         });
 
         expect(buffer).toBeDefined();

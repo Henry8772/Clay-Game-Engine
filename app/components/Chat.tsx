@@ -43,6 +43,7 @@ export const Chat = ({
     const [localIsProcessing, setLocalIsProcessing] = useState(false);
     const [localOptimisticMessage, setLocalOptimisticMessage] = useState<string | null>(null);
     const scrollRef = useRef<HTMLDivElement>(null);
+    const textareaRef = useRef<HTMLTextAreaElement>(null);
 
     // Derived State
     const isProcessing = localIsProcessing || externalIsProcessing;
@@ -54,6 +55,15 @@ export const Chat = ({
             scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
         }
     }, [messages, isProcessing, optimisticMessage]);
+
+    // Auto-resize textarea
+    useEffect(() => {
+        const textarea = textareaRef.current;
+        if (textarea) {
+            textarea.style.height = 'auto'; // Reset to auto to get correct scrollHeight
+            textarea.style.height = `${Math.min(textarea.scrollHeight, 150)}px`; // Grow up to 150px
+        }
+    }, [input]);
 
     // 4. Handlers
     const handleSubmit = async () => {
@@ -145,13 +155,14 @@ export const Chat = ({
                         const subType = msg.data?.subType || 'LOG';
                         const isError = subType === 'error';
                         const isWarning = subType === 'warning';
+                        const isModification = subType === 'modification_log';
 
                         return (
                             <div key={msg._id} className="flex gap-3 py-1 pl-2 group transition-opacity select-none">
                                 <div className="flex-1 font-mono">
                                     <div className="flex items-baseline gap-2">
-                                        <span className={`text-[10px] font-bold uppercase tracking-wider ${isError ? "text-red-400" : isWarning ? "text-yellow-400" : "text-neutral-500"} w-8 shrink-0 select-none`}>
-                                            {subType}
+                                        <span className={`text-[10px] font-bold uppercase tracking-wider ${isError ? "text-red-400" : isWarning ? "text-yellow-400" : isModification ? "text-indigo-400" : "text-neutral-500"} w-8 shrink-0 select-none`}>
+                                            {isModification ? "MOD" : subType}
                                         </span>
                                         <span className="text-xs text-neutral-300 leading-relaxed whitespace-pre-wrap font-medium">
                                             {msg.content}
@@ -280,16 +291,23 @@ export const Chat = ({
                     relative transition-all duration-300
                     ${isEditMode ? 'p-[1px] bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-md' : ''}
                 `}>
-                    <div className="flex items-center gap-2 px-3 py-2 bg-neutral-900 border border-neutral-800 rounded focus-within:border-neutral-600 focus-within:ring-0 transition-colors h-full w-full">
-                        <span className={`text-xs ${isEditMode ? 'text-indigo-400' : 'text-neutral-500'}`}>
+                    <div className="flex items-start gap-2 px-3 py-2 bg-neutral-900 border border-neutral-800 rounded focus-within:border-neutral-600 focus-within:ring-0 transition-colors w-full">
+                        <span className={`text-xs mt-0.5 ${isEditMode ? 'text-indigo-400' : 'text-neutral-500'}`}>
                             {isEditMode ? '✎' : '$'}
                         </span>
-                        <input
-                            className="flex-1 bg-transparent border-none outline-none text-xs text-white placeholder-neutral-600 font-mono p-0"
+                        <textarea
+                            ref={textareaRef}
+                            rows={1}
+                            className="flex-1 bg-transparent border-none outline-none text-xs text-white placeholder-neutral-600 font-mono p-0 resize-none overflow-y-auto min-h-[1.5em]"
                             placeholder={isEditMode ? "Describe changes to the game state..." : "Enter command..."}
                             value={input}
                             onChange={e => setInput(e.target.value)}
-                            onKeyDown={e => e.key === 'Enter' && handleSubmit()}
+                            onKeyDown={e => {
+                                if (e.key === 'Enter' && !e.shiftKey) {
+                                    e.preventDefault();
+                                    handleSubmit();
+                                }
+                            }}
                             disabled={isProcessing}
                             autoFocus
                         />
