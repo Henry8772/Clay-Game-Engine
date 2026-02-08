@@ -9,7 +9,15 @@
       "vars": {
         "background": "background.png",
         "navmesh": "navmesh.json"
-      }
+      },
+      "activePlayerIndex": 0,
+      "players": [
+        {
+          "id": "human_p1",
+          "type": "human",
+          "team": "blue"
+        }
+      ]
     },
     "blueprints": {
       "bp_alchemist_hero": {
