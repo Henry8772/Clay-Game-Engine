@@ -551,7 +551,7 @@ export default function PlayPage() {
                             : "text-neutral-400 hover:text-white border-neutral-800 hover:border-neutral-600"}`}
                         onClick={() => setShowDebug(!showDebug)}
                     >
-                        {showDebug ? "Hide NavMesh" : "Show NavMesh"}
+                        {showDebug ? "NavMesh" : "NavMesh"}
                     </button>
 
                     <div className="flex items-center gap-2">
@@ -561,20 +561,6 @@ export default function PlayPage() {
                             disabled={isGenerating}
                         >
                             Load
-                        </button>
-                        <button
-                            className="px-3 py-1.5 text-xs font-medium text-neutral-400 hover:text-white border border-neutral-800 hover:border-neutral-600 rounded transition-colors"
-                            onClick={async () => {
-                                const { resetGameAction } = await import("../actions/reset");
-                                await resetGameAction();
-                                // Reset local UI state
-                                setReachableTiles(new Set());
-                                setChatOptimisticMessage(null);
-                                // window.location.reload();
-                            }}
-                            disabled={isGenerating}
-                        >
-                            Reset
                         </button>
                         <button
                             className={`px-3 py-1.5 text-xs font-medium border rounded transition-colors ${isEditorOpen
