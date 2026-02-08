@@ -105,12 +105,63 @@ export async function processGameMoveAction(
             const currentTurn = result.newState.meta.turnCount;
             let aiCommand = "End turn."; // Default fallback
 
-            if (currentTurn === 2) {
-                // Move Knight (entity_10) roughly to the middle
-                aiCommand = "Move entity entity_10 to tile_r3_c1. End turn.";
+            // 1. Aggressive Attack Logic (Check for adjacency)
+            // Parse grid coordinates
+            const getCoords = (loc: string) => {
+                const match = loc.match(/tile_r(\d+)_c(\d+)/);
+                return match ? { r: parseInt(match[1]), c: parseInt(match[2]) } : null;
+            };
+
+            console.log("result.newState.entities", result.newState.entities);
+
+            const entities = Object.values(result.newState.entities) as any[];
+
+            console.log("entities", entities);
+
+            const aiUnits = entities.filter(e => e.team === 'red');
+
+            console.log("aiUnits", aiUnits);
+
+            const playerUnits = entities.filter(e => e.team === 'blue');
+
+            console.log("playerUnits", playerUnits);
+
+            let attackCommand = null;
+
+            for (const ai of aiUnits) {
+                if (!ai.location) continue;
+                const aiPos = getCoords(ai.location);
+                if (!aiPos) continue;
+
+                for (const player of playerUnits) {
+                    if (!player.location) continue;
+                    const pPos = getCoords(player.location);
+
+
+
+                    if (!pPos) continue;
+
+                    // Manhattan Distance
+                    const dist = Math.abs(aiPos.r - pPos.r) + Math.abs(aiPos.c - pPos.c);
+                    console.log("pPos, aiPos, dist", pPos, aiPos, dist);
+                    // If adjacent (dist === 1), ATTACK!
+                    if (dist === 1) {
+                        attackCommand = `Entity ${ai.id} attacks ${player.id}. End turn.`;
+                        break;
+                    }
+                }
+                if (attackCommand) break;
+            }
+
+            if (attackCommand) {
+                aiCommand = attackCommand;
+            } else if (currentTurn === 2) {
+                // Move Zombie (entity_8) forward
+                // Ensure it doesn't move on top of someone unless it's an attack (which we caught above)
+                aiCommand = "Move entity entity_8 to tile_r2_c4. End turn.";
             } else if (currentTurn === 4) {
-                // Move Ranger (entity_11)
-                aiCommand = "Move entity entity_11 to tile_r3_c3. End turn.";
+                // Move Orc (entity_9) forward
+                aiCommand = "Move entity entity_9 to tile_r2_c5. End turn.";
             } else {
                 // Random fallback or just pass
                 aiCommand = "End turn.";
@@ -150,6 +201,9 @@ export async function processGameMoveAction(
                 role: "assistant",
                 command: aiCommand
             });
+            // Merge AI tools into the response so the frontend sees them
+            // @ts-ignore
+            result.tools = [...result.tools, ...aiResult.tools];
         }
 
         return {

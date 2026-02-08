@@ -217,6 +217,44 @@ export class GameEngine {
                     break;
                 }
 
+                case "ATTACK": {
+                    const { attackerId, targetId } = tool.args as any;
+
+                    // @ts-ignore
+                    const target = this.state.entities[targetId];
+                    // @ts-ignore
+                    const attacker = this.state.entities[attackerId];
+
+                    if (target && attacker) {
+                        const targetLocation = target.location;
+                        const targetBox = target.pixel_box;
+
+                        // 1. Destroy Target
+                        // @ts-ignore
+                        delete this.state.entities[targetId];
+                        logs.push(`${attackerId} attacked and destroyed ${targetId}`);
+
+                        // 2. Move Attacker to Target's Position (Conquest/Chess style)
+                        // We reuse the exact logic from MOVE regarding box calculation if needed, 
+                        // but since we have the target's EXACT box, we can just snap to it?
+                        // Actually, let's keep it safe and just set location, relying on frontend or 
+                        // a "re-snap" if we wanted to be precise. 
+                        // But for now, let's just update location and box.
+                        attacker.location = targetLocation;
+
+                        // Optional: Snap to target's box (since they occupied a valid tile)
+                        // This might be better than recalculating if the target was already well-placed.
+                        if (targetBox) {
+                            attacker.pixel_box = [...targetBox];
+                        }
+
+                        logs.push(`${attackerId} moved to ${targetLocation}`);
+                    } else {
+                        logs.push(`Attack failed: ${attackerId} -> ${targetId} (Entity missing)`);
+                    }
+                    break;
+                }
+
                 case "END_TURN": {
                     // 1. Get current meta
                     const meta = this.state.meta;

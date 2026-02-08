@@ -220,6 +220,7 @@
       "entity_5": {
         "id": "entity_5",
         "t": "tpl_skeleton_miniature",
+        "team": "red",
         "pixel_box": [
           296,
           350,
@@ -230,6 +231,7 @@
       "entity_6": {
         "id": "entity_6",
         "t": "tpl_ghost_miniature",
+        "team": "red",
         "pixel_box": [
           292,
           416,
@@ -240,6 +242,7 @@
       "entity_7": {
         "id": "entity_7",
         "t": "tpl_vampire_miniature",
+        "team": "red",
         "pixel_box": [
           299,
           481,
@@ -250,6 +253,7 @@
       "entity_8": {
         "id": "entity_8",
         "t": "tpl_zombie_miniature",
+        "team": "red",
         "pixel_box": [
           298,
           640,
@@ -260,6 +264,7 @@
       "entity_9": {
         "id": "entity_9",
         "t": "tpl_orc_miniature",
+        "team": "red",
         "pixel_box": [
           289,
           740,
@@ -270,6 +275,7 @@
       "entity_10": {
         "id": "entity_10",
         "t": "tpl_knight_miniature",
+        "team": "blue",
         "pixel_box": [
           556,
           345,
@@ -280,6 +286,7 @@
       "entity_11": {
         "id": "entity_11",
         "t": "tpl_ranger_miniature",
+        "team": "blue",
         "pixel_box": [
           521,
           409,
@@ -290,6 +297,7 @@
       "entity_12": {
         "id": "entity_12",
         "t": "tpl_templar_miniature",
+        "team": "blue",
         "pixel_box": [
           559,
           469,
@@ -300,6 +308,7 @@
       "entity_13": {
         "id": "entity_13",
         "t": "tpl_healer_miniature",
+        "team": "blue",
         "pixel_box": [
           520,
           544,
@@ -310,6 +319,7 @@
       "entity_14": {
         "id": "entity_14",
         "t": "tpl_odin_miniature",
+        "team": "blue",
         "pixel_box": [
           538,
           607,
