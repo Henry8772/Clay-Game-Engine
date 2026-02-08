@@ -252,9 +252,9 @@
         "t": "tpl_zombie_miniature",
         "pixel_box": [
           298,
-          545,
+          640,
           400,
-          584
+          679
         ]
       },
       "entity_9": {
@@ -262,9 +262,9 @@
         "t": "tpl_orc_miniature",
         "pixel_box": [
           289,
-          604,
+          740,
           400,
-          653
+          789
         ]
       },
       "entity_10": {

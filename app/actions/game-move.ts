@@ -99,14 +99,42 @@ export async function processGameMoveAction(
         console.log(result.turnChanged, activePlayer.type === 'ai');
         if (result.turnChanged && activePlayer.type === 'ai') {
 
-            console.log("--> Triggering AI Turn...");
-            // Use result.newState as the latest state
-            const aiMoveResult = await generateEnemyMove(client, result.newState, rules, navMesh || [], activePlayer);
-            const aiCommand = aiMoveResult.command;
+            console.log("--> Triggering AI Turn (FAKE/DEMO MODE)...");
+
+            // FAKE AI LOGIC FOR DEMO
+            const currentTurn = result.newState.meta.turnCount;
+            let aiCommand = "End turn."; // Default fallback
+
+            if (currentTurn === 2) {
+                // Move Knight (entity_10) roughly to the middle
+                aiCommand = "Move entity entity_10 to tile_r3_c1. End turn.";
+            } else if (currentTurn === 4) {
+                // Move Ranger (entity_11)
+                aiCommand = "Move entity entity_11 to tile_r3_c3. End turn.";
+            } else {
+                // Random fallback or just pass
+                aiCommand = "End turn.";
+            }
+
+            // const aiMoveResult = await generateEnemyMove(client, result.newState, rules, navMesh || [], activePlayer);
+            // const aiCommand = aiMoveResult.command;
 
             console.log(`[AI] Command decided: "${aiCommand}"`);
 
-            const aiResult = await engine.processCommand(aiCommand);
+            // Create a new engine instance for the AI using the FRESH state
+            // This ensures the LLM knows exactly who the active player is right now
+            const aiEngine = new GameEngine(
+                result.newState,
+                rules,
+                client,
+                navMesh,
+                false,
+                [...activeGame.engine_tools, "6. END_TURN() -> Pass play to the opponent."],
+                activeGame.engine_logic
+            );
+
+            // Execute on the NEW aiEngine, not the old 'engine'
+            const aiResult = await aiEngine.processCommand(aiCommand);
 
             // Update final state to return to client
             // @ts-ignore

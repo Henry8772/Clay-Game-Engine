@@ -80,6 +80,7 @@ export class GameEngine {
     }
 
     public async processCommand(command: string): Promise<any> {
+        this.turnChanged = false; // Reset the flag before processing a new command
         console.log(`[GameEngine] Processing Raw Command: "${command}"`);
         const tools = await resolveGameAction(
             this.llmClient,
