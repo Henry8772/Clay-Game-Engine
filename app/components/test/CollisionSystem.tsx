@@ -139,29 +139,37 @@ export const DropZone = ({ id, x, y, width, height, debugColor = 0x222222, cellS
             g.drawRect(0, 0, width, height);
             g.endFill();
         } else {
-            g.beginFill(debugColor, 0.5); // Semi-transparent
+            // --- MINIMALIST STYLE ---
+
+            // 1. Clean, Consistent Fill
+            g.beginFill(debugColor, 0.1);
             g.drawRect(0, 0, width, height);
             g.endFill();
-            g.lineStyle(2, 0xFFFFFF, 0.3);
+
+            // 2. Simple, Elegant Border
+            g.lineStyle(1, debugColor, 0.6);
             g.drawRect(0, 0, width, height);
+
+            // 3. (Optional) Highlight top edge for subtle 3D feel
+            g.lineStyle(2, debugColor, 0.8);
+            g.moveTo(0, 0);
+            g.lineTo(width, 0);
         }
         container.addChild(g);
 
-        // Draw Grid Lines (Visual Aid only) - Only in normal mode
-        if (cellSize && displayMode === 'normal') {
-            g.lineStyle(1, 0xFFFFFF, 0.1);
-            for (let ix = 0; ix <= width; ix += cellSize) {
-                g.moveTo(ix, 0); g.lineTo(ix, height);
-            }
-            for (let iy = 0; iy <= height; iy += cellSize) {
-                g.moveTo(0, iy); g.lineTo(width, iy);
-            }
-        }
 
         if (label && displayMode === 'normal') {
-            const text = new PIXI.Text(label, { fill: 'gray', fontSize: 16 });
-            text.x = 10;
-            text.y = 10;
+            // Clean Label
+            const text = new PIXI.Text(label, {
+                fontFamily: 'Arial',
+                fill: debugColor,
+                fontSize: 10,
+                fontWeight: 'normal', // Lighter weight
+                letterSpacing: 0.5
+            });
+            text.x = 5;
+            text.y = 5;
+            text.alpha = 0.9;
             container.addChild(text);
         }
 
@@ -197,7 +205,7 @@ export const DropZone = ({ id, x, y, width, height, debugColor = 0x222222, cellS
             stage.removeChild(container);
             container.destroy({ children: true });
         };
-    }, [app, stage, x, y, width, height, cellSize, id, registerZone, unregisterZone, displayMode, visible]);
+    }, [app, stage, x, y, width, height, cellSize, id, registerZone, unregisterZone, displayMode, visible, debugColor, label]);
 
     return null;
 };

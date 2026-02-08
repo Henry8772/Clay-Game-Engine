@@ -73,21 +73,21 @@ export const updateState = mutation({
         const game = await ctx.db.get(args.gameId);
         if (!game) throw new Error("Game not found");
 
-        // Insert user command into messages table
+        // Insert user/agent command into messages table
         if (args.command) {
             await ctx.db.insert("messages", {
                 gameId: args.gameId,
-                role: "user",
+                role: args.role, // Use the passed role (user or assistant)
                 content: args.command,
                 type: "chat",
                 timestamp: Date.now() - 1 // ensure slightly before agent
             });
         }
 
-        // Insert agent summary into messages table
+        // Insert system summary into messages table
         await ctx.db.insert("messages", {
             gameId: args.gameId,
-            role: "agent",
+            role: "system", // Use 'system' for game logs
             content: args.summary,
             type: "chat",
             timestamp: Date.now()

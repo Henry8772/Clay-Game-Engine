@@ -256,7 +256,7 @@ export default function PlayPage() {
             return {
                 id: zone.label,
                 role: 'ZONE',
-                color: isReachable ? '#00FFFF' : '#00FF00', // Cyan if reachable
+                color: isReachable ? '#00FFFF' : '#38bdf8', // Cyan if reachable, Sky 400 otherwise
                 config: {
                     width: w * scaleX,
                     height: h * scaleY,

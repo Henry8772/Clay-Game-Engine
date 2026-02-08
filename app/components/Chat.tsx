@@ -60,7 +60,12 @@ export const Chat = ({ gameId, currentGameState, gameRules, className, navMesh, 
                 result = await modifyGameAction(gameId, input);
             } else {
                 // STANDARD GAME MOVE
-                result = await processGameMoveAction(currentGameState, gameRules, command, navMesh);
+                // STANDARD GAME MOVE
+                result = await processGameMoveAction(currentGameState, gameRules, {
+                    type: 'CHAT',
+                    description: command,
+                    payload: { text: command }
+                }, navMesh);
             }
 
             if (!result.success) {
@@ -94,15 +99,20 @@ export const Chat = ({ gameId, currentGameState, gameRules, className, navMesh, 
                 )}
 
                 {messages?.map((msg) => {
+                    // Refined Role Checks
                     const isSystem = msg.role === 'system' || msg.type === 'system';
                     const isBattle = msg.type === 'battle';
                     const isUser = msg.role === 'user';
+                    const isAI = msg.role === 'assistant' || msg.role === 'agent';
 
                     if (isBattle) {
                         return (
-                            <div key={msg._id} className="flex gap-3 px-2 py-2 hover:bg-neutral-900 rounded transition-colors group border-l-2 border-red-900/50">
-                                <span className="text-[10px] text-red-500 font-bold uppercase tracking-wider w-8 shrink-0 py-0.5">Fight</span>
-                                <div className="flex-1">
+                            <div key={msg._id} className="flex gap-4 px-2 py-3 hover:bg-neutral-900/50 rounded transition-colors group border-l-2 border-red-900/50 pl-4 relative overflow-hidden">
+                                <div className="absolute inset-0 bg-red-950/10 z-0" />
+                                <div className="z-10 flex flex-col items-center gap-1 pt-1 min-w-[30px]">
+                                    <span className="text-[9px] text-red-500 font-bold uppercase tracking-wider">Fight</span>
+                                </div>
+                                <div className="flex-1 z-10">
                                     <div className="text-xs text-neutral-300 font-mono leading-snug">
                                         {msg.content}
                                     </div>
@@ -116,42 +126,67 @@ export const Chat = ({ gameId, currentGameState, gameRules, className, navMesh, 
                     }
 
                     if (isSystem) {
-                        const subType = msg.data?.subType || 'INFO';
-                        const colorClass = subType === 'error' ? 'text-red-500' : subType === 'warning' ? 'text-yellow-500' : 'text-blue-500';
+                        // System logs (Game Engine Outputs) - Terminal Style
+                        const subType = msg.data?.subType || 'LOG';
+                        const isError = subType === 'error';
+                        const isWarning = subType === 'warning';
 
                         return (
-                            <div key={msg._id} className="flex flex-col py-1 opacity-80 hover:opacity-100 transition-opacity">
-                                <div className="flex items-baseline gap-2">
-                                    <span className={`text-[9px] font-bold uppercase tracking-wider ${colorClass} w-8 shrink-0`}>
-                                        {subType}
-                                    </span>
-                                    <span className="text-xs text-neutral-400 font-mono leading-relaxed">
-                                        {msg.content}
-                                    </span>
+                            <div key={msg._id} className="flex gap-3 py-1 pl-2 group transition-opacity select-none">
+                                <div className="flex-1 font-mono">
+                                    <div className="flex items-baseline gap-2">
+                                        <span className={`text-[10px] font-bold uppercase tracking-wider ${isError ? "text-red-400" : isWarning ? "text-yellow-400" : "text-neutral-500"} w-8 shrink-0 select-none`}>
+                                            {subType}
+                                        </span>
+                                        <span className="text-xs text-neutral-300 leading-relaxed whitespace-pre-wrap font-medium">
+                                            {msg.content}
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
                         );
                     }
 
-                    // Chat (User or Agent)
-                    return (
-                        <div key={msg._id} className={`flex flex-col ${isUser ? 'items-end' : 'items-start'}`}>
-                            <span className="text-[9px] text-neutral-600 mb-1 uppercase tracking-wider">
-                                {isUser ? 'usr' : 'sys'}
-                            </span>
-                            <div
-                                className={`
-                                    max-w-[95%] px-3 py-2 text-xs leading-relaxed whitespace-pre-wrap rounded border
-                                    ${isUser
-                                        ? 'bg-white text-black border-white'
-                                        : 'bg-neutral-900 text-neutral-300 border-neutral-800'
-                                    }
-                                `}
-                            >
-                                {msg.content}
+                    // User Message - Right side, High Contrast
+                    if (isUser) {
+                        return (
+                            <div key={msg._id} className="flex flex-col items-end mt-6 mb-2 pl-12">
+                                <div className="flex items-center gap-2 mb-1 mr-1">
+                                    <span className="text-[10px] text-neutral-400 font-medium tracking-wider uppercase">You</span>
+                                </div>
+                                <div className="relative max-w-full">
+                                    <div className="px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap rounded-2xl rounded-tr-none bg-neutral-100 text-neutral-900 font-medium shadow-sm border border-white">
+                                        {msg.content}
+                                    </div>
+                                    <div className="absolute top-0 -right-2 w-0 h-0 border-t-[10px] border-l-[10px] border-t-neutral-100 border-l-transparent transform -scale-x-100" />
+                                </div>
                             </div>
-                        </div>
-                    );
+                        );
+                    }
+
+                    // AI Message - Left side, High Contrast
+                    if (isAI) {
+                        return (
+                            <div key={msg._id} className="flex flex-col items-start mt-6 mb-2 pr-12">
+                                <div className="flex items-center gap-2 mb-1 ml-1">
+                                    <span className="text-[10px] text-indigo-400 font-bold tracking-wider uppercase drop-shadow-[0_0_3px_rgba(99,102,241,0.8)]">AI Opponent</span>
+                                </div>
+                                <div className="relative max-w-full">
+                                    <div className="px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap rounded-2xl rounded-tl-none bg-indigo-900/80 text-white font-medium border border-indigo-500/30 shadow-[0_0_15px_rgba(99,102,241,0.15)] backdrop-blur-sm">
+                                        {msg.content}
+                                    </div>
+                                    {/* Tech details decoration */}
+                                    <div className="absolute -bottom-4 left-2 flex gap-2 opacity-50">
+                                        <div className="h-0.5 w-2 bg-indigo-500/50 rounded-full" />
+                                        <div className="h-0.5 w-4 bg-indigo-500/50 rounded-full" />
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    }
+
+                    // Fallback
+                    return <div key={msg._id} className="text-xs text-red-500">Unknown message type: {msg.role}</div>;
                 })}
 
                 {/* Optimistic User Message */}
