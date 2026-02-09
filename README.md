@@ -1,4 +1,4 @@
-# Gemini AI Game Engine
+# Clay Game Engine
 
 > **The first game engine driven entirely by Gemini.**
 >
