@@ -36,7 +36,7 @@ export class GameEngine {
         return this.state;
     }
 
-    public async processAction(action: GameAction): Promise<GameTool[]> {
+    public async processAction(action: GameAction): Promise<any> {
         // 1. Translate Action to Natural Language
         const command = this.translateActionToCommand(action);
         console.log(`[GameEngine] Processing Action: ${action.type} -> "${command}"`);
@@ -52,9 +52,16 @@ export class GameEngine {
         );
 
         // 3. Apply Tools
-        this.applyTools(tools);
+        const { newState, logs, turnChanged } = this.applyTools(tools);
 
-        return tools;
+        return {
+            tools,
+            newState,
+            logs,
+            turnChanged,
+            isValid: true,
+            summary: logs.join(". ") // Add specific field for test compatibility
+        };
     }
 
     private translateActionToCommand(action: GameAction): string {
@@ -223,7 +230,7 @@ export class GameEngine {
 
                     // 2. Calculate Next Index (Cyclic)
                     // (0 -> 1 -> 0) OR (0 -> 0 for puzzles)
-                    const nextIndex = (meta.activePlayerIndex + 1) % players.length;
+                    const nextIndex = ((meta.activePlayerIndex || 0) + 1) % players.length;
 
                     // 3. Update State
                     meta.activePlayerIndex = nextIndex;

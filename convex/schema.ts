@@ -10,7 +10,7 @@ export default defineSchema({
         history: v.optional(v.array(v.object({ role: v.string(), content: v.string() }))), // Deprecated
         isActive: v.boolean(),
         runId: v.optional(v.string()), // <--- NEW: Link to backend/data/runs/{runId}
-        status: v.string(), // "idle" | "generating" | "playing" | "failed"
+        status: v.optional(v.string()), // "idle" | "generating" | "playing" | "failed"
         progress: v.optional(v.string()), // e.g., "Generating Sprites..."
     }),
     messages: defineTable({

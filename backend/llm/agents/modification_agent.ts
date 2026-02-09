@@ -10,6 +10,29 @@ import { createTransparencyMask, drawBoundingBoxes } from "../utils/image_proces
 import { runVisionAgent } from "./vision_agent";
 import { runSpriteAgent } from "./sprite_agent";
 import { reclassifyMap } from "./navmesh_agent";
+import { GameDesign } from "./design_agent";
+
+function buildDesignFromState(state: UniversalState): GameDesign {
+    const interactables: string[] = [];
+    if (state.blueprints) {
+        Object.values(state.blueprints).forEach(bp => {
+            if (bp.label || bp.name) interactables.push(bp.label || bp.name);
+        });
+    }
+    return {
+        art_style: (state.meta.vars as any)?.art_style || "unknown",
+        perspective: "unknown",
+        background_theme: "unknown",
+        grid_type: "unknown",
+        player_team: [],
+        enemy_team: [],
+        interactable_objects: interactables,
+        obstacles: [],
+        ui_elements: [],
+        rules_summary: "",
+        game_loop_mechanics: ""
+    };
+}
 
 
 export async function processModification(
@@ -87,6 +110,9 @@ export async function processModification(
     // const args = { styleDescription: "cyberpunk" };
 
     console.log(`[ModificationAgent] Tool: ${tool}`, args);
+
+    // Build design context for agents
+    const designContext = buildDesignFromState(currentState);
 
     let message = "Modification complete.";
     let shouldRegenerate = false;
@@ -220,7 +246,7 @@ export async function processModification(
             const newSheetBuffer = await runSpriteAgent(client, inputBuffer, path.join(process.cwd(), 'backend', 'data', 'runs', runId), {
                 mode: 'restyle_existing',
                 styleDescription: style
-            });
+            }, designContext);
 
             // Debug code to load analysis_modified.json as newSheetBuffer
             // const newSheetBuffer = await fs.readFile(path.join(process.cwd(), 'backend', 'data', 'runs', runId, 'sprites_restyle_1770278685817.png'));
@@ -232,7 +258,7 @@ export async function processModification(
 
             // 3. Run Vision Agent (Uses the transparent buffer)
             console.log(`[ModAgent] Running vision agent to detect items...`);
-            const detectedItems = await runVisionAgent(client, newSheetBuffer);
+            const detectedItems = await runVisionAgent(client, newSheetBuffer, designContext);
 
             // --- Generate Debug Segmentation Image ---
             try {

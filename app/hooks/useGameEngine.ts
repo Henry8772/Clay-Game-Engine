@@ -7,7 +7,7 @@ export function useGameEngine() {
     const [isProcessing, setIsProcessing] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    const gameStateFromConvex = useQuery(api.games.get);
+    const gameStateFromConvex = useQuery(api.games.get, {});
     const currentState = gameStateFromConvex?.state;
     const rules = gameStateFromConvex?.rules || "";
 
@@ -18,7 +18,11 @@ export function useGameEngine() {
         try {
             let command = action;
 
-            const result = await processGameMoveAction(currentState, rules, command, navMesh);
+            const result = await processGameMoveAction(currentState, rules, {
+                type: "CHAT",
+                description: command,
+                payload: { text: command }
+            }, navMesh);
 
             if (!result.success) {
                 setError(result.error || "Unknown error");

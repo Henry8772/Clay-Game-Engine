@@ -1,4 +1,11 @@
-import { GameStateList } from "../../models/game_state";
+export interface GameStateList {
+    states: {
+        name: string;
+        description: string;
+        type: string;
+        initialValue: any;
+    }[];
+}
 
 export const mockGameStateExtraction = (): GameStateList => ({
     states: [

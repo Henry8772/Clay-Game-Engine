@@ -92,7 +92,9 @@ export const nodeSpriteIsolator = async (state: GraphState, config?: { configura
         runDir = path.resolve(DATA_RUNS_DIR, state.runId);
     }
 
-    const spriteImage = await runSpriteAgent(client, state.sceneImage, runDir || "");
+    if (!state.gameDesign) throw new Error("Game Design missing");
+
+    const spriteImage = await runSpriteAgent(client, state.sceneImage, runDir || "", {}, state.gameDesign);
     await saveRunArtifact(state.runId, "sprites.png", spriteImage);
 
     return { spriteImage };

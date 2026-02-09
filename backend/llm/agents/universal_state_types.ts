@@ -13,8 +13,17 @@ export interface Zone {
 export interface Entity {
     t: string;            // Template ID (Refers to static rules/assets)
     loc: string;          // Current Zone ID (e.g., "board", "hand_p1")
+    location?: string;    // Alias for loc (used in GameEngine)
     pos?: string | number | null; // Specific position in zone (e.g., "c3", index 0)
-    owner: string;        // Who controls this?
+    owner?: string;        // Who controls this? (Optional in some contexts)
+
+    // UI/Engine props
+    id?: string;
+    label?: string;
+    type?: string;        // e.g. 'unit', 'item'
+    team?: string;        // e.g. 'blue', 'red'
+    src?: string;         // Image source path
+    pixel_box?: number[]; // [ymin, xmin, ymax, xmax]
 
     // Dynamic State: ONLY changes go here.
     // Static stats (MaxHP, Cost) stay in the Reference Library, not State.
@@ -28,10 +37,15 @@ export interface UniversalState {
         activePlayerId: string; // e.g., "p1"
         phase: string;          // e.g., "upkeep", "combat", "end"
         vars: Record<string, any>; // Generic globals: { "p1_score": 10, "weather": "rain" }
+
+        // Engine specific
+        players?: { id: string, type: string }[];
+        activePlayerIndex?: number;
     };
     zones: Record<string, Zone>;
     entities: Record<string, Entity>;
     blueprints?: Record<string, Blueprint>;
+    navMesh?: any[]; // Optional, for hybrid logic
 }
 
 // BLUEPRINTS (Manifest)
@@ -59,6 +73,7 @@ export interface ActionCapability {
 export interface Blueprint {
     id: string;             // Matches entities[x].t
     name: string;           // Display name
+    label?: string;         // Alias for name (used in agents)
     renderType: "ASSET" | "COMPONENT";
     visualPrompt?: string;  // For image generation (if ASSET)
     description?: string;   // Functional description
@@ -68,6 +83,7 @@ export interface Blueprint {
     capabilities?: ActionCapability[];
 
     baseStats?: Record<string, any>; // Static rules/stats (e.g., max_hp)
+    src?: string; // Image path (used in spawned entities)
 }
 
 

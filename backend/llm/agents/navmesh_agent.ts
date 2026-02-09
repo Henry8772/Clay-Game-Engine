@@ -174,7 +174,7 @@ export async function runNavMeshAgent(
         }
     };
 
-    const sparseResult = await client.generateJSON(
+    const sparseResult = await client.generateJSON<any[]>(
         prompt,
         [{ inlineData: { data: backgroundBuffer.toString('base64'), mimeType: "image/png" } }],
         schema,

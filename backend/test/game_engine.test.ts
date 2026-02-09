@@ -7,7 +7,16 @@ import { UniversalState, GameAction } from '../llm/agents/universal_state_types'
 // Mock LLMClient (we won't use it deeply because we use useMock: true)
 const mockClient = {
     streamJson: vi.fn(),
-    generateContent: vi.fn()
+    generateContent: vi.fn(),
+    generateJSON: vi.fn().mockResolvedValue({
+        toolCalls: [
+            {
+                name: "NARRATE",
+                args: { message: "Mock: Move processed" }
+            }
+        ]
+    }),
+    isDebug: true
 } as unknown as LLMClient;
 
 const INITIAL_STATE: UniversalState = {
@@ -30,7 +39,7 @@ const INITIAL_STATE: UniversalState = {
 
 const RULES = "Standard Test Rules";
 
-describe('GameEngine', () => {
+describe('MOCK: GameEngine', () => {
     let engine: GameEngine;
 
     beforeEach(() => {

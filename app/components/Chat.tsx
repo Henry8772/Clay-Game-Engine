@@ -60,7 +60,11 @@ export const Chat = ({ gameId, currentGameState, gameRules, className, navMesh, 
                 result = await modifyGameAction(gameId, input);
             } else {
                 // STANDARD GAME MOVE
-                result = await processGameMoveAction(currentGameState, gameRules, command, navMesh);
+                result = await processGameMoveAction(currentGameState, gameRules, {
+                    type: "CHAT",
+                    description: command,
+                    payload: { text: command }
+                }, navMesh);
             }
 
             if (!result.success) {
