@@ -15,7 +15,7 @@ We built a "Liquid" Game Engine. By treating the entire game state—from the sp
 For a deep dive into the architecture and workflows, please visit our [Technical Documentation](docs/README.md).
 
 ## Gallery
-TODO: add game galleries to show game we created.
+![alt text](assets/gallery/gallery.png)
 
 Check out our [Demo Showcase](docs/demo.md) to see the engine in action:
 *   **[Demo 1: The Tactical Boardgame](docs/demo.md#demo-1-the-tactical-boardgame-standard-generation)** - A complete generated RPG.
