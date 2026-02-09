@@ -67,30 +67,34 @@ export const updateState = mutation({
         newState: v.any(),
         summary: v.string(),
         role: v.string(), // "user" or "agent"
-        command: v.string() // The text causing this update
+        command: v.string(), // The text causing this update
+        logs: v.optional(v.any()) // Structured logs
     },
     handler: async (ctx, args) => {
         const game = await ctx.db.get(args.gameId);
         if (!game) throw new Error("Game not found");
 
-        // Insert user command into messages table
+        // Insert user/agent command into messages table
         if (args.command) {
             await ctx.db.insert("messages", {
                 gameId: args.gameId,
-                role: "user",
+                role: args.role, // Use the passed role (user or assistant)
                 content: args.command,
                 type: "chat",
                 timestamp: Date.now() - 1 // ensure slightly before agent
             });
         }
 
-        // Insert agent summary into messages table
+        // Insert system summary into messages table
         await ctx.db.insert("messages", {
             gameId: args.gameId,
-            role: "agent",
+            role: "system", // Use 'system' for game logs
             content: args.summary,
             type: "chat",
-            timestamp: Date.now()
+            timestamp: Date.now(),
+            data: {
+                logs: args.logs
+            }
         });
 
         await ctx.db.patch(args.gameId, {

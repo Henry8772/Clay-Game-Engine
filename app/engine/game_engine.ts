@@ -3,6 +3,12 @@ import { resolveGameAction } from "../../backend/llm/agents/game_logic";
 import { GameTool } from "../../backend/llm/agents/game_tools";
 import { LLMClient } from "../../backend/llm/client";
 
+export interface LogEntry {
+    message: string;
+    type: 'info' | 'danger' | 'success' | 'warning' | 'modification';
+    entityId?: string;
+}
+
 export class GameEngine {
     private state: UniversalState;
     private rules: string;
@@ -87,6 +93,7 @@ export class GameEngine {
     }
 
     public async processCommand(command: string): Promise<any> {
+        this.turnChanged = false; // Reset the flag before processing a new command
         console.log(`[GameEngine] Processing Raw Command: "${command}"`);
         const tools = await resolveGameAction(
             this.llmClient,
@@ -110,7 +117,7 @@ export class GameEngine {
     }
 
     public applyTools(tools: GameTool[]) {
-        const logs: string[] = [];
+        const logs: LogEntry[] = [];
 
         tools.forEach(tool => {
             console.log(`[Engine] Executing: ${tool.name}`, tool.args);
@@ -148,7 +155,11 @@ export class GameEngine {
                             entity.pixel_box = this.getZoneCoords(toZoneId);
                         }
 
-                        logs.push(`Moved ${entity.label || entityId} to ${toZoneId}`);
+                        logs.push({
+                            message: `Moved ${entity.label || entityId} to ${toZoneId}`,
+                            type: 'info',
+                            entityId
+                        });
                     }
                     break;
                 }
@@ -161,7 +172,11 @@ export class GameEngine {
                         // @ts-ignore
                         delete this.state.entities[entityId];
                     }
-                    logs.push(`Destroyed ${entityId}`);
+                    logs.push({
+                        message: `Destroyed ${entityId}`,
+                        type: 'danger',
+                        entityId
+                    });
                     break;
                 }
 
@@ -213,13 +228,71 @@ export class GameEngine {
                         location: toZoneId
                     };
 
-                    logs.push(`Spawned ${bp?.label || templateId} at ${toZoneId}`);
+                    logs.push({
+                        message: `Spawned ${bp?.label || templateId} at ${toZoneId}`,
+                        type: 'info',
+                        entityId: newId
+                    });
                     break;
                 }
 
                 case "NARRATE": {
                     const { message } = tool.args as any;
-                    logs.push(`Narrator: ${message}`);
+                    // Check for danger keywords to style better?
+                    const isDanger = message.toLowerCase().includes("danger") || message.toLowerCase().includes("died");
+                    logs.push({
+                        message: `Narrator: ${message}`,
+                        type: isDanger ? 'danger' : 'info'
+                    });
+                    break;
+                }
+
+                case "ATTACK": {
+                    const { attackerId, targetId } = tool.args as any;
+
+                    // @ts-ignore
+                    const target = this.state.entities[targetId];
+                    // @ts-ignore
+                    const attacker = this.state.entities[attackerId];
+
+                    if (target && attacker) {
+                        const targetLocation = target.location;
+                        const targetBox = target.pixel_box;
+
+                        // 1. Destroy Target
+                        // @ts-ignore
+                        delete this.state.entities[targetId];
+                        logs.push({
+                            message: `${attackerId} attacked and destroyed ${targetId}`,
+                            type: 'danger',
+                            entityId: targetId
+                        });
+
+                        // 2. Move Attacker to Target's Position (Conquest/Chess style)
+                        // We reuse the exact logic from MOVE regarding box calculation if needed, 
+                        // but since we have the target's EXACT box, we can just snap to it?
+                        // Actually, let's keep it safe and just set location, relying on frontend or 
+                        // a "re-snap" if we wanted to be precise. 
+                        // But for now, let's just update location and box.
+                        attacker.location = targetLocation;
+
+                        // Optional: Snap to target's box (since they occupied a valid tile)
+                        // This might be better than recalculating if the target was already well-placed.
+                        if (targetBox) {
+                            attacker.pixel_box = [...targetBox];
+                        }
+
+                        logs.push({
+                            message: `${attackerId} moved to ${targetLocation}`,
+                            type: 'info',
+                            entityId: attackerId
+                        });
+                    } else {
+                        logs.push({
+                            message: `Attack failed: ${attackerId} -> ${targetId} (Entity missing)`,
+                            type: 'warning'
+                        });
+                    }
                     break;
                 }
 
@@ -239,7 +312,10 @@ export class GameEngine {
 
                     // 4. Log it
                     const nextPlayer = players[nextIndex];
-                    logs.push(`Turn passed to ${nextPlayer.id} (${nextPlayer.type})`);
+                    logs.push({
+                        message: `Turn passed to ${nextPlayer.id} (${nextPlayer.type})`,
+                        type: 'info'
+                    });
 
                     this.turnChanged = true;
                     break;

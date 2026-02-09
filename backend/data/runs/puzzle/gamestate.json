@@ -570,7 +570,7 @@
           550
         ],
         "label": "tile_r2_c10",
-        "type": "hazard"
+        "type": "lava"
       },
       {
         "box_2d": [
@@ -580,7 +580,7 @@
           600
         ],
         "label": "tile_r2_c11",
-        "type": "hazard"
+        "type": "lava"
       },
       {
         "box_2d": [
@@ -590,7 +590,7 @@
           650
         ],
         "label": "tile_r2_c12",
-        "type": "hazard"
+        "type": "lava"
       },
       {
         "box_2d": [
@@ -600,7 +600,7 @@
           700
         ],
         "label": "tile_r2_c13",
-        "type": "hazard"
+        "type": "lava"
       },
       {
         "box_2d": [
@@ -610,7 +610,7 @@
           750
         ],
         "label": "tile_r2_c14",
-        "type": "hazard"
+        "type": "lava"
       },
       {
         "box_2d": [
@@ -620,7 +620,7 @@
           800
         ],
         "label": "tile_r2_c15",
-        "type": "hazard"
+        "type": "lava"
       },
       {
         "box_2d": [
@@ -630,7 +630,7 @@
           850
         ],
         "label": "tile_r2_c16",
-        "type": "hazard"
+        "type": "lava"
       },
       {
         "box_2d": [
@@ -640,7 +640,7 @@
           900
         ],
         "label": "tile_r2_c17",
-        "type": "hazard"
+        "type": "lava"
       },
       {
         "box_2d": [
@@ -650,7 +650,7 @@
           950
         ],
         "label": "tile_r2_c18",
-        "type": "hazard"
+        "type": "lava"
       },
       {
         "box_2d": [
@@ -770,7 +770,7 @@
           550
         ],
         "label": "tile_r3_c10",
-        "type": "hazard"
+        "type": "lava"
       },
       {
         "box_2d": [
@@ -780,7 +780,7 @@
           600
         ],
         "label": "tile_r3_c11",
-        "type": "hazard"
+        "type": "lava"
       },
       {
         "box_2d": [
@@ -840,7 +840,7 @@
           900
         ],
         "label": "tile_r3_c17",
-        "type": "hazard"
+        "type": "lava"
       },
       {
         "box_2d": [
@@ -850,7 +850,7 @@
           950
         ],
         "label": "tile_r3_c18",
-        "type": "hazard"
+        "type": "lava"
       },
       {
         "box_2d": [
@@ -970,7 +970,7 @@
           550
         ],
         "label": "tile_r4_c10",
-        "type": "hazard"
+        "type": "lava"
       },
       {
         "box_2d": [
@@ -980,7 +980,7 @@
           600
         ],
         "label": "tile_r4_c11",
-        "type": "hazard"
+        "type": "lava"
       },
       {
         "box_2d": [
@@ -1040,7 +1040,7 @@
           900
         ],
         "label": "tile_r4_c17",
-        "type": "hazard"
+        "type": "lava"
       },
       {
         "box_2d": [
@@ -1050,7 +1050,7 @@
           950
         ],
         "label": "tile_r4_c18",
-        "type": "hazard"
+        "type": "lava"
       },
       {
         "box_2d": [
@@ -1130,7 +1130,7 @@
           350
         ],
         "label": "tile_r5_c6",
-        "type": "hazard"
+        "type": "lava"
       },
       {
         "box_2d": [
@@ -1140,7 +1140,7 @@
           400
         ],
         "label": "tile_r5_c7",
-        "type": "hazard"
+        "type": "lava"
       },
       {
         "box_2d": [
@@ -1150,7 +1150,7 @@
           450
         ],
         "label": "tile_r5_c8",
-        "type": "hazard"
+        "type": "lava"
       },
       {
         "box_2d": [
@@ -1160,7 +1160,7 @@
           500
         ],
         "label": "tile_r5_c9",
-        "type": "hazard"
+        "type": "lava"
       },
       {
         "box_2d": [
@@ -1170,7 +1170,7 @@
           550
         ],
         "label": "tile_r5_c10",
-        "type": "hazard"
+        "type": "lava"
       },
       {
         "box_2d": [
@@ -1180,7 +1180,7 @@
           600
         ],
         "label": "tile_r5_c11",
-        "type": "hazard"
+        "type": "lava"
       },
       {
         "box_2d": [
@@ -1240,7 +1240,7 @@
           900
         ],
         "label": "tile_r5_c17",
-        "type": "hazard"
+        "type": "lava"
       },
       {
         "box_2d": [
@@ -1250,7 +1250,7 @@
           950
         ],
         "label": "tile_r5_c18",
-        "type": "hazard"
+        "type": "lava"
       },
       {
         "box_2d": [
@@ -1330,7 +1330,7 @@
           350
         ],
         "label": "tile_r6_c6",
-        "type": "hazard"
+        "type": "lava"
       },
       {
         "box_2d": [
@@ -1340,7 +1340,7 @@
           400
         ],
         "label": "tile_r6_c7",
-        "type": "hazard"
+        "type": "lava"
       },
       {
         "box_2d": [
@@ -1350,7 +1350,7 @@
           450
         ],
         "label": "tile_r6_c8",
-        "type": "hazard"
+        "type": "lava"
       },
       {
         "box_2d": [
@@ -1360,7 +1360,7 @@
           500
         ],
         "label": "tile_r6_c9",
-        "type": "hazard"
+        "type": "lava"
       },
       {
         "box_2d": [
@@ -1370,7 +1370,7 @@
           550
         ],
         "label": "tile_r6_c10",
-        "type": "hazard"
+        "type": "lava"
       },
       {
         "box_2d": [
@@ -1380,7 +1380,7 @@
           600
         ],
         "label": "tile_r6_c11",
-        "type": "hazard"
+        "type": "lava"
       },
       {
         "box_2d": [
@@ -1440,7 +1440,7 @@
           900
         ],
         "label": "tile_r6_c17",
-        "type": "hazard"
+        "type": "lava"
       },
       {
         "box_2d": [
@@ -1450,7 +1450,7 @@
           950
         ],
         "label": "tile_r6_c18",
-        "type": "hazard"
+        "type": "lava"
       },
       {
         "box_2d": [
@@ -1570,7 +1570,7 @@
           550
         ],
         "label": "tile_r7_c10",
-        "type": "hazard"
+        "type": "lava"
       },
       {
         "box_2d": [
@@ -1580,7 +1580,7 @@
           600
         ],
         "label": "tile_r7_c11",
-        "type": "hazard"
+        "type": "lava"
       },
       {
         "box_2d": [
@@ -1640,7 +1640,7 @@
           900
         ],
         "label": "tile_r7_c17",
-        "type": "hazard"
+        "type": "lava"
       },
       {
         "box_2d": [
@@ -1650,7 +1650,7 @@
           950
         ],
         "label": "tile_r7_c18",
-        "type": "hazard"
+        "type": "lava"
       },
       {
         "box_2d": [
@@ -1770,7 +1770,7 @@
           550
         ],
         "label": "tile_r8_c10",
-        "type": "hazard"
+        "type": "lava"
       },
       {
         "box_2d": [
@@ -1780,7 +1780,7 @@
           600
         ],
         "label": "tile_r8_c11",
-        "type": "hazard"
+        "type": "lava"
       },
       {
         "box_2d": [
@@ -1790,7 +1790,7 @@
           650
         ],
         "label": "tile_r8_c12",
-        "type": "hazard"
+        "type": "lava"
       },
       {
         "box_2d": [
@@ -1800,7 +1800,7 @@
           700
         ],
         "label": "tile_r8_c13",
-        "type": "hazard"
+        "type": "lava"
       },
       {
         "box_2d": [
@@ -1810,7 +1810,7 @@
           750
         ],
         "label": "tile_r8_c14",
-        "type": "hazard"
+        "type": "lava"
       },
       {
         "box_2d": [
@@ -1820,7 +1820,7 @@
           800
         ],
         "label": "tile_r8_c15",
-        "type": "hazard"
+        "type": "lava"
       },
       {
         "box_2d": [
@@ -1830,7 +1830,7 @@
           850
         ],
         "label": "tile_r8_c16",
-        "type": "hazard"
+        "type": "lava"
       },
       {
         "box_2d": [
@@ -1840,7 +1840,7 @@
           900
         ],
         "label": "tile_r8_c17",
-        "type": "hazard"
+        "type": "lava"
       },
       {
         "box_2d": [
@@ -1850,7 +1850,7 @@
           950
         ],
         "label": "tile_r8_c18",
-        "type": "hazard"
+        "type": "lava"
       },
       {
         "box_2d": [
@@ -2272,5 +2272,5 @@
     "4. DESTROY(entityId) -> Remove an entity (e.g. card used, unit dead).",
     "5. NARRATE(message) -> Show text to the user."
   ],
-  "engine_logic": "Player controls Hero via WASD. If Hero coordinates intersect with 'Hazard' mask (Lava) -> DESTROY Hero and RESPAWN at start. If Player submits command (e.g., 'Freeze Lava') -> TRIGGER VisionAgent to regenerate background with 'Ice' prompt -> TRIGGER NavigationAgent to re-bake Walkability Mask. If Hero coordinates intersect with 'Goal' (Chest) -> SPAWN Loot Item."
+  "engine_logic": "Player controls Hero via WASD. If Hero coordinates intersect with 'lava' mask (Lava) -> DESTROY Hero and RESPAWN at start. If Player submits command (e.g., 'Freeze Lava') -> TRIGGER VisionAgent to regenerate background with 'Ice' prompt -> TRIGGER NavigationAgent to re-bake Walkability Mask. If Hero coordinates intersect with 'Goal' (Chest) -> SPAWN Loot Item."
 }

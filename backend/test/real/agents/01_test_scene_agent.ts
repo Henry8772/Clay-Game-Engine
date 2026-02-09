@@ -15,7 +15,7 @@ describe('REAL: Scene Agent', () => {
         const client = new LLMClient("gemini", "gemini-3-pro-image-preview", false);
 
         // Load the Design from Test 00
-        const runDir = getTestRunDir('puzzle');
+        const runDir = getTestRunDir('demo2');
         const designPath = path.join(runDir, "design.json");
 
         if (!fs.existsSync(designPath)) {

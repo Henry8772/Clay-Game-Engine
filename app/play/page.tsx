@@ -259,7 +259,7 @@ export default function PlayPage() {
             return {
                 id: zone.label,
                 role: 'ZONE',
-                color: isReachable ? '#00FFFF' : '#00FF00', // Cyan if reachable
+                color: isReachable ? '#00FFFF' : '#38bdf8', // Cyan if reachable, Sky 400 otherwise
                 config: {
                     width: w * scaleX,
                     height: h * scaleY,
@@ -489,6 +489,8 @@ export default function PlayPage() {
 
 
 
+
+
     const [showDebug, setShowDebug] = useState(false);
 
     return (
@@ -497,11 +499,10 @@ export default function PlayPage() {
             <header className="flex items-center justify-between px-6 py-4 border-b border-neutral-800 bg-black sticky top-0 z-10 w-full">
                 <div className="flex items-center gap-3">
                     <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center">
-                        <span className="font-bold text-black text-xs">G</span>
+                        <span className="font-bold text-black text-xs">C</span>
                     </div>
                     <div className="flex items-baseline gap-2">
-                        <h1 className="text-sm font-semibold tracking-tight">Gemini Engine</h1>
-                        <span className="text-xs text-neutral-500 font-mono">VISUAL MODE</span>
+                        <h1 className="text-sm font-semibold tracking-tight">Clay Engine</h1>
                     </div>
                 </div>
 
@@ -554,7 +555,7 @@ export default function PlayPage() {
                             : "text-neutral-400 hover:text-white border-neutral-800 hover:border-neutral-600"}`}
                         onClick={() => setShowDebug(!showDebug)}
                     >
-                        {showDebug ? "Hide NavMesh" : "Show NavMesh"}
+                        {showDebug ? "NavMesh" : "NavMesh"}
                     </button>
 
                     <div className="flex items-center gap-2">
@@ -566,20 +567,6 @@ export default function PlayPage() {
                             Load
                         </button>
                         <button
-                            className="px-3 py-1.5 text-xs font-medium text-neutral-400 hover:text-white border border-neutral-800 hover:border-neutral-600 rounded transition-colors"
-                            onClick={async () => {
-                                const { resetGameAction } = await import("../actions/reset");
-                                await resetGameAction();
-                                // Reset local UI state
-                                setReachableTiles(new Set());
-                                setChatOptimisticMessage(null);
-                                // window.location.reload();
-                            }}
-                            disabled={isGenerating}
-                        >
-                            Reset
-                        </button>
-                        <button
                             className={`px-3 py-1.5 text-xs font-medium border rounded transition-colors ${isEditorOpen
                                 ? "bg-white text-black border-white"
                                 : "text-neutral-400 hover:text-white border-neutral-800 hover:border-neutral-600"}`}
@@ -588,6 +575,8 @@ export default function PlayPage() {
                         >
                             Edit State
                         </button>
+
+
                     </div>
                 </div>
             </header>
@@ -600,33 +589,7 @@ export default function PlayPage() {
 
 
 
-                    {/* Toolbar for Game Panel */}
-                    <div className="h-10 border-b border-neutral-800 bg-black flex items-center px-4 justify-between">
-                        <div className="flex items-center gap-4">
-                            {/* Turn Indicator */}
-                            <div className="flex items-center gap-2">
-                                <div className={`w-1.5 h-1.5 rounded-full animate-pulse ${isPlayerTurn ? "bg-green-500" : "bg-red-500"}`} />
-                                <span className="text-[10px] font-mono text-white font-bold uppercase tracking-wider">
-                                    {isPlayerTurn ? "YOUR TURN" : "ENEMY TURN"}
-                                </span>
-                            </div>
 
-                            {/* End Turn Button */}
-                            <button
-                                onClick={() => handleAction("ACTION: END_TURN")}
-                                disabled={isInteractionLocked || !isPlayerTurn}
-                                className={`px-3 py-1 text-xs font-bold rounded border transition-all ${isInteractionLocked || !isPlayerTurn
-                                    ? "bg-neutral-900 text-neutral-600 border-neutral-800 cursor-not-allowed"
-                                    : "bg-neutral-100 text-black border-white hover:bg-neutral-200 active:scale-95"
-                                    }`}
-                            >
-                                {isProcessingAction ? "..." : "End Turn"}
-                            </button>
-                        </div>
-                        <div className="text-[10px] font-mono text-neutral-600">
-                            RUN: {selectedRunId}
-                        </div>
-                    </div>
 
 
 
@@ -659,15 +622,21 @@ export default function PlayPage() {
                     </div>
                 </section >
 
-                <Chat
-                    gameId={gameId}
-                    currentGameState={currentGameState}
-                    gameRules={rules}
-                    navMesh={navMesh}
-                    className="w-96 border-l border-neutral-800"
-                    externalOptimisticMessage={chatOptimisticMessage}
-                    externalIsProcessing={chatIsProcessing}
-                />
+                <div className="w-96 border-l border-neutral-800 flex flex-col bg-black">
+                    <Chat
+                        gameId={gameId}
+                        currentGameState={currentGameState}
+                        gameRules={rules}
+                        navMesh={navMesh}
+                        className="flex-1 border-none"
+                        externalOptimisticMessage={chatOptimisticMessage}
+                        externalIsProcessing={chatIsProcessing}
+                        // Turn Controls
+                        isPlayerTurn={isPlayerTurn}
+                        onEndTurn={() => handleAction("ACTION: END_TURN")}
+                        isInteractionLocked={isInteractionLocked}
+                    />
+                </div>
             </main >
 
             <GameDataEditor

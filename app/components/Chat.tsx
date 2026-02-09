@@ -16,9 +16,24 @@ interface ChatProps {
     // External Control Props
     externalOptimisticMessage?: string | null;
     externalIsProcessing?: boolean;
+    // Turn Control Props
+    isPlayerTurn?: boolean;
+    onEndTurn?: () => void;
+    isInteractionLocked?: boolean;
 }
 
-export const Chat = ({ gameId, currentGameState, gameRules, className, navMesh, externalOptimisticMessage, externalIsProcessing }: ChatProps) => {
+export const Chat = ({
+    gameId,
+    currentGameState,
+    gameRules,
+    className,
+    navMesh,
+    externalOptimisticMessage,
+    externalIsProcessing,
+    isPlayerTurn = false,
+    onEndTurn,
+    isInteractionLocked = false
+}: ChatProps) => {
     // 1. Data Fetching - Only one list now
     const messages = useQuery(api.messages.list, gameId ? { gameId: gameId as any } : "skip");
 
@@ -28,6 +43,7 @@ export const Chat = ({ gameId, currentGameState, gameRules, className, navMesh, 
     const [localIsProcessing, setLocalIsProcessing] = useState(false);
     const [localOptimisticMessage, setLocalOptimisticMessage] = useState<string | null>(null);
     const scrollRef = useRef<HTMLDivElement>(null);
+    const textareaRef = useRef<HTMLTextAreaElement>(null);
 
     // Derived State
     const isProcessing = localIsProcessing || externalIsProcessing;
@@ -39,6 +55,15 @@ export const Chat = ({ gameId, currentGameState, gameRules, className, navMesh, 
             scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
         }
     }, [messages, isProcessing, optimisticMessage]);
+
+    // Auto-resize textarea
+    useEffect(() => {
+        const textarea = textareaRef.current;
+        if (textarea) {
+            textarea.style.height = 'auto'; // Reset to auto to get correct scrollHeight
+            textarea.style.height = `${Math.min(textarea.scrollHeight, 150)}px`; // Grow up to 150px
+        }
+    }, [input]);
 
     // 4. Handlers
     const handleSubmit = async () => {
@@ -79,7 +104,7 @@ export const Chat = ({ gameId, currentGameState, gameRules, className, navMesh, 
     };
 
     return (
-        <aside className={`flex flex-col border-l border-neutral-800 bg-black ${className}`}>
+        <aside className={`flex flex-col border-l border-neutral-800 bg-black min-h-0 ${className}`}>
             <div className="flex border-b border-neutral-800 bg-neutral-900/50 p-2 items-center justify-between">
                 <span className="text-xs font-semibold text-neutral-400 uppercase tracking-wider pl-2">Game Log</span>
                 <div className="flex items-center gap-2">
@@ -98,15 +123,20 @@ export const Chat = ({ gameId, currentGameState, gameRules, className, navMesh, 
                 )}
 
                 {messages?.map((msg) => {
+                    // Refined Role Checks
                     const isSystem = msg.role === 'system' || msg.type === 'system';
                     const isBattle = msg.type === 'battle';
                     const isUser = msg.role === 'user';
+                    const isAI = msg.role === 'assistant' || msg.role === 'agent';
 
                     if (isBattle) {
                         return (
-                            <div key={msg._id} className="flex gap-3 px-2 py-2 hover:bg-neutral-900 rounded transition-colors group border-l-2 border-red-900/50">
-                                <span className="text-[10px] text-red-500 font-bold uppercase tracking-wider w-8 shrink-0 py-0.5">Fight</span>
-                                <div className="flex-1">
+                            <div key={msg._id} className="flex gap-4 px-2 py-3 hover:bg-neutral-900/50 rounded transition-colors group border-l-2 border-red-900/50 pl-4 relative overflow-hidden">
+                                <div className="absolute inset-0 bg-red-950/10 z-0" />
+                                <div className="z-10 flex flex-col items-center gap-1 pt-1 min-w-[30px]">
+                                    <span className="text-[9px] text-red-500 font-bold uppercase tracking-wider">Fight</span>
+                                </div>
+                                <div className="flex-1 z-10">
                                     <div className="text-xs text-neutral-300 font-mono leading-snug">
                                         {msg.content}
                                     </div>
@@ -120,49 +150,99 @@ export const Chat = ({ gameId, currentGameState, gameRules, className, navMesh, 
                     }
 
                     if (isSystem) {
-                        const subType = msg.data?.subType || 'INFO';
-                        const colorClass = subType === 'error' ? 'text-red-500' : subType === 'warning' ? 'text-yellow-500' : 'text-blue-500';
+                        // System logs (Game Engine Outputs) - Structured or Legacy
+                        const subType = msg.data?.subType || 'LOG';
+                        const logs = msg.data?.logs; // Check for structured logs
+
+                        if (logs && Array.isArray(logs)) {
+                            return (
+                                <div key={msg._id} className="flex flex-col gap-1 py-2 pl-2 group transition-opacity select-none border-l-2 border-transparent hover:border-neutral-800">
+                                    {logs.map((log: any, idx: number) => {
+                                        const isDanger = log.type === 'danger';
+                                        const isWarning = log.type === 'warning';
+                                        const isSuccess = log.type === 'success';
+                                        const isInfo = log.type === 'info';
+                                        const isMod = log.type === 'modification';
+
+                                        return (
+                                            <div key={idx} className="flex-1 font-mono">
+                                                <div className="flex items-baseline gap-2">
+                                                    <span className={`text-[10px] font-bold uppercase tracking-wider w-8 shrink-0 select-none
+                                                        ${isDanger ? "text-red-500" : isWarning ? "text-yellow-500" : isSuccess ? "text-green-500" : isMod ? "text-indigo-400" : "text-neutral-600"}
+                                                    `}>
+                                                        {isDanger ? "DEAD" : isWarning ? "WARN" : isSuccess ? "WIN" : isMod ? "MOD" : "LOG"}
+                                                    </span>
+                                                    <span className={`text-[10px] leading-relaxed whitespace-pre-wrap font-medium
+                                                        ${isDanger ? "text-red-400" : isWarning ? "text-yellow-200" : isSuccess ? "text-green-300" : "text-neutral-400"}
+                                                    `}>
+                                                        {log.message}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            );
+                        }
+
+                        // Fallback to legacy string content
+                        const isError = subType === 'error';
+                        const isWarning = subType === 'warning';
+                        const isModification = subType === 'modification_log';
 
                         return (
-                            <div key={msg._id} className="flex flex-col py-1 opacity-80 hover:opacity-100 transition-opacity">
-                                <div className="flex items-baseline gap-2">
-                                    <span className={`text-[9px] font-bold uppercase tracking-wider ${colorClass} w-8 shrink-0`}>
-                                        {subType}
-                                    </span>
-                                    <span className="text-xs text-neutral-400 font-mono leading-relaxed">
-                                        {msg.content}
-                                    </span>
+                            <div key={msg._id} className="flex gap-3 py-1 pl-2 group transition-opacity select-none">
+                                <div className="flex-1 font-mono">
+                                    <div className="flex items-baseline gap-2">
+                                        <span className={`text-[10px] font-bold uppercase tracking-wider ${isError ? "text-red-400" : isWarning ? "text-yellow-400" : isModification ? "text-indigo-400" : "text-neutral-500"} w-8 shrink-0 select-none`}>
+                                            {isModification ? "MOD" : subType}
+                                        </span>
+                                        <span className="text-xs text-neutral-300 leading-relaxed whitespace-pre-wrap font-medium">
+                                            {msg.content}
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
                         );
                     }
 
-                    // Chat (User or Agent)
-                    return (
-                        <div key={msg._id} className={`flex flex-col ${isUser ? 'items-end' : 'items-start'}`}>
-                            <span className="text-[9px] text-neutral-600 mb-1 uppercase tracking-wider">
-                                {isUser ? 'usr' : 'sys'}
-                            </span>
-                            <div
-                                className={`
-                                    max-w-[95%] px-3 py-2 text-xs leading-relaxed whitespace-pre-wrap rounded border
-                                    ${isUser
-                                        ? 'bg-white text-black border-white'
-                                        : 'bg-neutral-900 text-neutral-300 border-neutral-800'
-                                    }
-                                `}
-                            >
-                                {msg.content}
+                    // User Message - Right side, High Contrast, Rectangle
+                    if (isUser) {
+                        return (
+                            <div key={msg._id} className="flex flex-col items-end mt-4 mb-2 pl-12">
+                                <div className="flex items-center gap-2 mb-1 mr-1">
+                                    <span className="text-[10px] text-neutral-400 font-medium tracking-wider uppercase">You</span>
+                                </div>
+                                <div className="max-w-full px-3 py-2 text-xs leading-relaxed whitespace-pre-wrap rounded border bg-neutral-100 text-neutral-900 border-white font-medium shadow-sm">
+                                    {msg.content}
+                                </div>
                             </div>
-                        </div>
-                    );
+                        );
+                    }
+
+                    // AI Message - Left side, High Contrast, Rectangle
+                    if (isAI) {
+                        return (
+                            <div key={msg._id} className="flex flex-col items-start mt-4 mb-2 pr-12">
+                                <div className="flex items-center gap-2 mb-1 ml-1">
+                                    <span className="text-[10px] text-indigo-400 font-bold tracking-wider uppercase drop-shadow-[0_0_3px_rgba(99,102,241,0.8)]">AI Opponent</span>
+                                </div>
+                                <div className="max-w-full px-3 py-2 text-xs leading-relaxed whitespace-pre-wrap rounded border bg-indigo-900/40 text-neutral-100 border-indigo-500/30 shadow-[0_0_10px_rgba(99,102,241,0.1)] backdrop-blur-sm">
+                                    {msg.content}
+                                </div>
+                            </div>
+                        );
+                    }
+
+                    // Fallback
+                    return <div key={msg._id} className="text-xs text-red-500">Unknown message type: {msg.role}</div>;
                 })}
 
                 {/* Optimistic User Message */}
                 {optimisticMessage && (
-                    <div className="flex flex-col items-end opacity-70">
+                    <div className="flex flex-col items-end opacity-70 mt-4 mb-2 pl-12">
                         <span className="text-[9px] text-neutral-600 mb-1 uppercase tracking-wider">usr (sending)</span>
-                        <div className="max-w-[95%] px-3 py-2 text-xs leading-relaxed whitespace-pre-wrap rounded border bg-white text-black border-white">
+                        <div className="max-w-full px-3 py-2 text-xs leading-relaxed whitespace-pre-wrap rounded border bg-neutral-100 text-neutral-900 border-white font-medium">
                             {optimisticMessage}
                         </div>
                     </div>
@@ -181,8 +261,29 @@ export const Chat = ({ gameId, currentGameState, gameRules, className, navMesh, 
                 )}
             </div>
 
+            {/* Turn Controls - Integrated */}
+            <div className="h-12 border-t border-neutral-800 bg-neutral-900/30 flex items-center justify-between px-4 shrink-0">
+                <div className="flex items-center gap-2">
+                    <div className={`w-1.5 h-1.5 rounded-full animate-pulse ${isPlayerTurn ? "bg-green-500" : "bg-red-500"}`} />
+                    <span className="text-[10px] font-mono text-white font-bold uppercase tracking-wider">
+                        {isPlayerTurn ? "YOUR TURN" : "ENEMY TURN"}
+                    </span>
+                </div>
+
+                <button
+                    onClick={onEndTurn}
+                    disabled={isInteractionLocked || !isPlayerTurn}
+                    className={`px-3 py-1 text-xs font-bold rounded border transition-all ${isInteractionLocked || !isPlayerTurn
+                        ? "bg-neutral-900 text-neutral-600 border-neutral-800 cursor-not-allowed"
+                        : "bg-neutral-100 text-black border-white hover:bg-neutral-200 active:scale-95"
+                        }`}
+                >
+                    {isInteractionLocked && isPlayerTurn ? "..." : "End Turn"}
+                </button>
+            </div>
+
             {/* Input Area */}
-            <div className="p-3 border-t border-neutral-800 bg-black space-y-2">
+            <div className="p-3 border-t border-neutral-800 bg-black space-y-2 shrink-0">
 
                 {/* Edit Game Toggle */}
                 <div className="flex items-center justify-between px-1">
@@ -213,16 +314,23 @@ export const Chat = ({ gameId, currentGameState, gameRules, className, navMesh, 
                     relative transition-all duration-300
                     ${isEditMode ? 'p-[1px] bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-md' : ''}
                 `}>
-                    <div className="flex items-center gap-2 px-3 py-2 bg-neutral-900 border border-neutral-800 rounded focus-within:border-neutral-600 focus-within:ring-0 transition-colors h-full w-full">
-                        <span className={`text-xs ${isEditMode ? 'text-indigo-400' : 'text-neutral-500'}`}>
+                    <div className="flex items-start gap-2 px-3 py-2 bg-neutral-900 border border-neutral-800 rounded focus-within:border-neutral-600 focus-within:ring-0 transition-colors w-full">
+                        <span className={`text-xs mt-0.5 ${isEditMode ? 'text-indigo-400' : 'text-neutral-500'}`}>
                             {isEditMode ? '✎' : '$'}
                         </span>
-                        <input
-                            className="flex-1 bg-transparent border-none outline-none text-xs text-white placeholder-neutral-600 font-mono p-0"
+                        <textarea
+                            ref={textareaRef}
+                            rows={1}
+                            className="flex-1 bg-transparent border-none outline-none text-xs text-white placeholder-neutral-600 font-mono p-0 resize-none overflow-y-auto min-h-[1.5em]"
                             placeholder={isEditMode ? "Describe changes to the game state..." : "Enter command..."}
                             value={input}
                             onChange={e => setInput(e.target.value)}
-                            onKeyDown={e => e.key === 'Enter' && handleSubmit()}
+                            onKeyDown={e => {
+                                if (e.key === 'Enter' && !e.shiftKey) {
+                                    e.preventDefault();
+                                    handleSubmit();
+                                }
+                            }}
                             disabled={isProcessing}
                             autoFocus
                         />

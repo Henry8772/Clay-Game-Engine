@@ -22,8 +22,9 @@ export async function generateEnemyMove(
             id: e.id,
             label: e.label,
             // Normalize ownership for the AI to understand "Mine" vs "Enemy"
-            // If the entity has an explicit owner, check ID. Otherwise check Team.
-            relation: (e.owner === playerProfile.id || e.team === playerProfile.team) ? 'MY_UNIT' : 'ENEMY',
+            // fix: if sidebar (cards), treat as mine so I can spawn them. 
+            // Default to ENEMY if unknown
+            relation: (e.owner === playerProfile.id || e.team === playerProfile.team || (e.location === 'sidebar' && e.type === 'item')) ? 'MY_UNIT' : 'ENEMY',
             location: e.location,
             type: e.type
         })),
@@ -31,6 +32,7 @@ export async function generateEnemyMove(
     };
 
     // 3. Dynamic System Prompt
+    console.log(`[EnemyAI] Tactical State Trace:\n${JSON.stringify(tacticalState, null, 2)}`);
     const systemPrompt = `You are a Tactical AI Player named "${playerProfile.id}".
     
 **OBJECTIVE:**
@@ -51,6 +53,7 @@ Defend your units labeled 'MY_UNIT'.
 **AVAILABLE ACTIONS:**
 - "Move {my_unit_label} to {tile_id}"
 - "Attack {enemy_label} with {my_unit_label}"
+- "Spawn {card_label} at {tile_id}"
 - "End turn"
 `;
 

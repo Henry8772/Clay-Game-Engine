@@ -162,11 +162,27 @@ export class GeminiBackend implements LLMBackend {
         const response = result.response;
         const text = response.text();
 
+        // Clean the text: remove markdown code blocks if present
+        let cleanText = text.trim();
+        // Remove ```json ... ``` or ``` ... ```
+        if (cleanText.startsWith("```")) {
+            cleanText = cleanText.replace(/^```(?:json)?\s*/, "").replace(/\s*```$/, "");
+        }
+
+        // Aggressive extraction: find first { and last }
+        const firstOpen = cleanText.indexOf('{');
+        const lastClose = cleanText.lastIndexOf('}');
+        if (firstOpen !== -1 && lastClose !== -1 && lastClose > firstOpen) {
+            cleanText = cleanText.substring(firstOpen, lastClose + 1);
+        }
+
         try {
-            return JSON.parse(text) as T;
+            return JSON.parse(cleanText) as T;
         } catch (e) {
-            console.error("Failed to parse JSON from backend:", text);
-            throw new Error("Backend response was not valid JSON");
+            console.error("Failed to parse JSON from backend. Raw:", text);
+            console.error("Cleaned:", cleanText);
+            console.error("Parse Error:", e);
+            throw new Error(`Backend response was not valid JSON: ${e} \nContent: ${cleanText.substring(0, 200)}...`);
         }
     }
 

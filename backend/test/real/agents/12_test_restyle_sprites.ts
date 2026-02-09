@@ -33,19 +33,7 @@ describe('REAL: Sprite Agent', () => {
 
         const buffer = await runSpriteAgent(client, spriteBuffer, runDir, {
             mode: 'restyle_existing',
-            styleDescription: "8-bit pixel art"
-        }, {
-            art_style: "Pixel Art",
-            perspective: "Top Down",
-            background_theme: "Dungeon",
-            grid_type: "Grid",
-            player_team: [],
-            enemy_team: [],
-            interactable_objects: [],
-            obstacles: [],
-            ui_elements: [],
-            rules_summary: "",
-            game_loop_mechanics: ""
+            styleDescription: "cyberpunk futuristic style"
         });
 
         expect(buffer).toBeDefined();
