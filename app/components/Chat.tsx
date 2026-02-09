@@ -105,7 +105,7 @@ export const Chat = ({
     };
 
     return (
-        <aside className={`flex flex-col border-l border-neutral-800 bg-black ${className}`}>
+        <aside className={`flex flex-col border-l border-neutral-800 bg-black min-h-0 ${className}`}>
             <div className="flex border-b border-neutral-800 bg-neutral-900/50 p-2 items-center justify-between">
                 <span className="text-xs font-semibold text-neutral-400 uppercase tracking-wider pl-2">Game Log</span>
                 <div className="flex items-center gap-2">
@@ -260,7 +260,7 @@ export const Chat = ({
             </div>
 
             {/* Input Area */}
-            <div className="p-3 border-t border-neutral-800 bg-black space-y-2">
+            <div className="p-3 border-t border-neutral-800 bg-black space-y-2 shrink-0">
 
                 {/* Edit Game Toggle */}
                 <div className="flex items-center justify-between px-1">
