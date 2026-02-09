@@ -3,6 +3,12 @@ import { resolveGameAction } from "../../backend/llm/agents/game_logic";
 import { GameTool } from "../../backend/llm/agents/game_tools";
 import { LLMClient } from "../../backend/llm/client";
 
+export interface LogEntry {
+    message: string;
+    type: 'info' | 'danger' | 'success' | 'warning' | 'modification';
+    entityId?: string;
+}
+
 export class GameEngine {
     private state: UniversalState;
     private rules: string;
@@ -104,7 +110,7 @@ export class GameEngine {
     }
 
     public applyTools(tools: GameTool[]) {
-        const logs: string[] = [];
+        const logs: LogEntry[] = [];
 
         tools.forEach(tool => {
             console.log(`[Engine] Executing: ${tool.name}`, tool.args);
@@ -142,7 +148,11 @@ export class GameEngine {
                             entity.pixel_box = this.getZoneCoords(toZoneId);
                         }
 
-                        logs.push(`Moved ${entity.label || entityId} to ${toZoneId}`);
+                        logs.push({
+                            message: `Moved ${entity.label || entityId} to ${toZoneId}`,
+                            type: 'info',
+                            entityId
+                        });
                     }
                     break;
                 }
@@ -155,7 +165,11 @@ export class GameEngine {
                         // @ts-ignore
                         delete this.state.entities[entityId];
                     }
-                    logs.push(`Destroyed ${entityId}`);
+                    logs.push({
+                        message: `Destroyed ${entityId}`,
+                        type: 'danger',
+                        entityId
+                    });
                     break;
                 }
 
@@ -207,13 +221,22 @@ export class GameEngine {
                         location: toZoneId
                     };
 
-                    logs.push(`Spawned ${bp?.label || templateId} at ${toZoneId}`);
+                    logs.push({
+                        message: `Spawned ${bp?.label || templateId} at ${toZoneId}`,
+                        type: 'info',
+                        entityId: newId
+                    });
                     break;
                 }
 
                 case "NARRATE": {
                     const { message } = tool.args as any;
-                    logs.push(`Narrator: ${message}`);
+                    // Check for danger keywords to style better?
+                    const isDanger = message.toLowerCase().includes("danger") || message.toLowerCase().includes("died");
+                    logs.push({
+                        message: `Narrator: ${message}`,
+                        type: isDanger ? 'danger' : 'info'
+                    });
                     break;
                 }
 
@@ -232,7 +255,11 @@ export class GameEngine {
                         // 1. Destroy Target
                         // @ts-ignore
                         delete this.state.entities[targetId];
-                        logs.push(`${attackerId} attacked and destroyed ${targetId}`);
+                        logs.push({
+                            message: `${attackerId} attacked and destroyed ${targetId}`,
+                            type: 'danger',
+                            entityId: targetId
+                        });
 
                         // 2. Move Attacker to Target's Position (Conquest/Chess style)
                         // We reuse the exact logic from MOVE regarding box calculation if needed, 
@@ -248,9 +275,16 @@ export class GameEngine {
                             attacker.pixel_box = [...targetBox];
                         }
 
-                        logs.push(`${attackerId} moved to ${targetLocation}`);
+                        logs.push({
+                            message: `${attackerId} moved to ${targetLocation}`,
+                            type: 'info',
+                            entityId: attackerId
+                        });
                     } else {
-                        logs.push(`Attack failed: ${attackerId} -> ${targetId} (Entity missing)`);
+                        logs.push({
+                            message: `Attack failed: ${attackerId} -> ${targetId} (Entity missing)`,
+                            type: 'warning'
+                        });
                     }
                     break;
                 }
@@ -271,7 +305,10 @@ export class GameEngine {
 
                     // 4. Log it
                     const nextPlayer = players[nextIndex];
-                    logs.push(`Turn passed to ${nextPlayer.id} (${nextPlayer.type})`);
+                    logs.push({
+                        message: `Turn passed to ${nextPlayer.id} (${nextPlayer.type})`,
+                        type: 'info'
+                    });
 
                     this.turnChanged = true;
                     break;

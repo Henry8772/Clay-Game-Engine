@@ -151,8 +151,42 @@ export const Chat = ({
                     }
 
                     if (isSystem) {
-                        // System logs (Game Engine Outputs) - Terminal Style
+                        // System logs (Game Engine Outputs) - Structured or Legacy
                         const subType = msg.data?.subType || 'LOG';
+                        const logs = msg.data?.logs; // Check for structured logs
+
+                        if (logs && Array.isArray(logs)) {
+                            return (
+                                <div key={msg._id} className="flex flex-col gap-1 py-2 pl-2 group transition-opacity select-none border-l-2 border-transparent hover:border-neutral-800">
+                                    {logs.map((log: any, idx: number) => {
+                                        const isDanger = log.type === 'danger';
+                                        const isWarning = log.type === 'warning';
+                                        const isSuccess = log.type === 'success';
+                                        const isInfo = log.type === 'info';
+                                        const isMod = log.type === 'modification';
+
+                                        return (
+                                            <div key={idx} className="flex-1 font-mono">
+                                                <div className="flex items-baseline gap-2">
+                                                    <span className={`text-[10px] font-bold uppercase tracking-wider w-8 shrink-0 select-none
+                                                        ${isDanger ? "text-red-500" : isWarning ? "text-yellow-500" : isSuccess ? "text-green-500" : isMod ? "text-indigo-400" : "text-neutral-600"}
+                                                    `}>
+                                                        {isDanger ? "DEAD" : isWarning ? "WARN" : isSuccess ? "WIN" : isMod ? "MOD" : "LOG"}
+                                                    </span>
+                                                    <span className={`text-[10px] leading-relaxed whitespace-pre-wrap font-medium
+                                                        ${isDanger ? "text-red-400" : isWarning ? "text-yellow-200" : isSuccess ? "text-green-300" : "text-neutral-400"}
+                                                    `}>
+                                                        {log.message}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            );
+                        }
+
+                        // Fallback to legacy string content
                         const isError = subType === 'error';
                         const isWarning = subType === 'warning';
                         const isModification = subType === 'modification_log';
@@ -173,39 +207,29 @@ export const Chat = ({
                         );
                     }
 
-                    // User Message - Right side, High Contrast
+                    // User Message - Right side, High Contrast, Rectangle
                     if (isUser) {
                         return (
-                            <div key={msg._id} className="flex flex-col items-end mt-6 mb-2 pl-12">
+                            <div key={msg._id} className="flex flex-col items-end mt-4 mb-2 pl-12">
                                 <div className="flex items-center gap-2 mb-1 mr-1">
                                     <span className="text-[10px] text-neutral-400 font-medium tracking-wider uppercase">You</span>
                                 </div>
-                                <div className="relative max-w-full">
-                                    <div className="px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap rounded-2xl rounded-tr-none bg-neutral-100 text-neutral-900 font-medium shadow-sm border border-white">
-                                        {msg.content}
-                                    </div>
-                                    <div className="absolute top-0 -right-2 w-0 h-0 border-t-[10px] border-l-[10px] border-t-neutral-100 border-l-transparent transform -scale-x-100" />
+                                <div className="max-w-full px-3 py-2 text-xs leading-relaxed whitespace-pre-wrap rounded border bg-neutral-100 text-neutral-900 border-white font-medium shadow-sm">
+                                    {msg.content}
                                 </div>
                             </div>
                         );
                     }
 
-                    // AI Message - Left side, High Contrast
+                    // AI Message - Left side, High Contrast, Rectangle
                     if (isAI) {
                         return (
-                            <div key={msg._id} className="flex flex-col items-start mt-6 mb-2 pr-12">
+                            <div key={msg._id} className="flex flex-col items-start mt-4 mb-2 pr-12">
                                 <div className="flex items-center gap-2 mb-1 ml-1">
                                     <span className="text-[10px] text-indigo-400 font-bold tracking-wider uppercase drop-shadow-[0_0_3px_rgba(99,102,241,0.8)]">AI Opponent</span>
                                 </div>
-                                <div className="relative max-w-full">
-                                    <div className="px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap rounded-2xl rounded-tl-none bg-indigo-900/80 text-white font-medium border border-indigo-500/30 shadow-[0_0_15px_rgba(99,102,241,0.15)] backdrop-blur-sm">
-                                        {msg.content}
-                                    </div>
-                                    {/* Tech details decoration */}
-                                    <div className="absolute -bottom-4 left-2 flex gap-2 opacity-50">
-                                        <div className="h-0.5 w-2 bg-indigo-500/50 rounded-full" />
-                                        <div className="h-0.5 w-4 bg-indigo-500/50 rounded-full" />
-                                    </div>
+                                <div className="max-w-full px-3 py-2 text-xs leading-relaxed whitespace-pre-wrap rounded border bg-indigo-900/40 text-neutral-100 border-indigo-500/30 shadow-[0_0_10px_rgba(99,102,241,0.1)] backdrop-blur-sm">
+                                    {msg.content}
                                 </div>
                             </div>
                         );
@@ -217,9 +241,9 @@ export const Chat = ({
 
                 {/* Optimistic User Message */}
                 {optimisticMessage && (
-                    <div className="flex flex-col items-end opacity-70">
+                    <div className="flex flex-col items-end opacity-70 mt-4 mb-2 pl-12">
                         <span className="text-[9px] text-neutral-600 mb-1 uppercase tracking-wider">usr (sending)</span>
-                        <div className="max-w-[95%] px-3 py-2 text-xs leading-relaxed whitespace-pre-wrap rounded border bg-white text-black border-white">
+                        <div className="max-w-full px-3 py-2 text-xs leading-relaxed whitespace-pre-wrap rounded border bg-neutral-100 text-neutral-900 border-white font-medium">
                             {optimisticMessage}
                         </div>
                     </div>

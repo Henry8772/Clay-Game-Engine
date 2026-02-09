@@ -40,6 +40,8 @@ export async function resolveGameAction(
     if (!finalLogic.includes("**Card Play:**")) {
         finalLogic += `\n**Card Play:** If user draws a CARD to the BOARD -> DESTROY the card, then SPAWN the corresponding unit (defined in 'spawns' property) at that location.`;
     }
+    // Add specific respawn logic for Puzzle Demo
+    finalLogic += `\n**Respawn Rule:** If the Alchemist Hero (or bp_alchemist_hero) is DESTROYED, immediately SPAWN it back at 'tile_r5_c5' (Start Position). Do NOT send it to sidebar.`;
 
     const systemInstruction = `You are a Game Engine Logic Processor convert the User's Intent into a sequence of Engine Commands (Tools).
     
@@ -68,7 +70,7 @@ export async function resolveGameAction(
     **INTERACTION CONTEXT:**
     - Target Zone: ${target_zone_id}
     - Zone Type: ${target_zone_type.toUpperCase()}
-    - Hazard Info: ${target_zone_type === 'hazard' ? "DANGER! This tile is DEADLY." : "Safe."}
+    - Hazard Info: ${(target_zone_type === 'hazard' || target_zone_type === 'lava') ? "DANGER! This tile is DEADLY." : "Safe."}
         `;
     }
 

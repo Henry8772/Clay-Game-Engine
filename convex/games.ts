@@ -67,7 +67,8 @@ export const updateState = mutation({
         newState: v.any(),
         summary: v.string(),
         role: v.string(), // "user" or "agent"
-        command: v.string() // The text causing this update
+        command: v.string(), // The text causing this update
+        logs: v.optional(v.any()) // Structured logs
     },
     handler: async (ctx, args) => {
         const game = await ctx.db.get(args.gameId);
@@ -90,7 +91,10 @@ export const updateState = mutation({
             role: "system", // Use 'system' for game logs
             content: args.summary,
             type: "chat",
-            timestamp: Date.now()
+            timestamp: Date.now(),
+            data: {
+                logs: args.logs
+            }
         });
 
         await ctx.db.patch(args.gameId, {

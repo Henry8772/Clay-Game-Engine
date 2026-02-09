@@ -78,12 +78,16 @@ export async function processGameMoveAction(
                 delete result.newState.focused_interaction;
             }
 
+            // Map logs to string for the summary field (backward compatibility / simple view)
+            const summaryText = result.logs.map((l: any) => l.message).join('\n');
+
             await fetchMutation(api.games.updateState, {
                 gameId: activeGame._id,
                 newState: result.newState,
-                summary: result.logs.join('\n'),
+                summary: summaryText,
                 role: "user",
-                command: userAction.description // Log the text
+                command: userAction.description, // Log the text
+                logs: result.logs // Pass structured logs
             });
         }
 
@@ -194,12 +198,14 @@ export async function processGameMoveAction(
             result.logs = [...result.logs, ...aiResult.logs];
 
             // Save AI State to DB
+            const aiSummaryText = aiResult.logs.map((l: any) => l.message).join('\n');
             await fetchMutation(api.games.updateState, {
                 gameId: activeGame._id,
                 newState: aiResult.newState,
-                summary: aiResult.logs.join('\n'),
+                summary: aiSummaryText,
                 role: "assistant",
-                command: aiCommand
+                command: aiCommand,
+                logs: aiResult.logs
             });
             // Merge AI tools into the response so the frontend sees them
             // @ts-ignore
