@@ -94,6 +94,17 @@ export async function resolveGameAction(
 
     const inputData = [{ role: 'user', content: userInput }];
 
+    // --- DEBUG LOG ---
+    console.log(`
+    [GameLogic] Resolving Action: "${actionDescription}"
+    ---------------------------------------------------
+    Entities: ${JSON.stringify(simplifiedEntities.map(e => `${e.label}(${e.team}) @ ${e.location}`), null, 2)}
+    Interaction: ${currentState.focused_interaction ? JSON.stringify(currentState.focused_interaction) : "None"}
+    Rules Snippet: ${finalLogic.slice(-200)}
+    ---------------------------------------------------
+    `);
+    // -----------------
+
     const schema = {
         type: SchemaType.OBJECT,
         properties: {
