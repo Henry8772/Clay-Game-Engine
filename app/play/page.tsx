@@ -111,6 +111,7 @@ export default function PlayPage() {
                 .catch(err => console.error("Failed to load navmesh file:", err));
         } else {
             setNavMesh([]);
+            return;
         }
     }, [currentGameState?.navMesh, assets.navmesh, selectedRunId]);
 
@@ -225,7 +226,9 @@ export default function PlayPage() {
         const scaleX = SCENE_WIDTH / 1000;
         const scaleY = SCENE_HEIGHT / 1000;
 
-        const background_url = basePath + '/' + assets.background;
+        const background_url = assets.background
+            ? `${basePath}/${assets.background}`
+            : "/placeholder.svg";
 
         // 1. Ambience Layer
         const ambience: AssetManifest = {

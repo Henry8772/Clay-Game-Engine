@@ -23,6 +23,10 @@ export async function runSpriteAgent(
 
     console.log(`[SpriteAgent] Running in mode: ${mode}`);
 
+    // We strictly need the output to be pixel-perfectly aligned between the two calls, so we use temperature 0.
+    // We run this sequentially: Scene -> White BG -> Black BG.
+    // This helps the model maintain consistency by seeing its own previous output.
+    console.log("[SpriteAgent] Isolating sprites (Sequential: White -> Black)...");
     const entitiesToKeep = [
         ...design.player_team,
         ...design.enemy_team,

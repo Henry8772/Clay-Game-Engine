@@ -1,4 +1,4 @@
-# Gemini AI Game Engine
+# Clay Game Engine
 
 > **The first game engine driven entirely by Gemini.**
 >
@@ -15,7 +15,7 @@ We built a "Liquid" Game Engine. By treating the entire game state—from the sp
 For a deep dive into the architecture and workflows, please visit our [Technical Documentation](docs/README.md).
 
 ## Gallery
-TODO: add game galleries to show game we created.
+![Gallery](assets/gallery/gallery.png)
 
 Check out our [Demo Showcase](docs/demo.md) to see the engine in action:
 *   **[Demo 1: The Tactical Boardgame](docs/demo.md#demo-1-the-tactical-boardgame-standard-generation)** - A complete generated RPG.
@@ -158,12 +158,6 @@ Install dependencies for both the frontend (root) and the backend.
 ```bash
 npm install
 npx convex dev #press enter for default
-```
-
-**Backend (LLM Engine):**
-```bash
-cd backend
-npm install
 ```
 
 ## Running the Application
