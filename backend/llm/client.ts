@@ -13,15 +13,16 @@ export class LLMClient {
     constructor(
         manufacturer: "gemini" = "gemini",
         model?: string,
-        debugMode?: boolean
+        debugMode?: boolean,
+        apiKey?: string
     ) {
         this.debugMode = debugMode ?? (process.env.USE_MOCK_MODE === 'true');
         this.model = model || process.env.DEFAULT_LLM_MODEL || "gemini-2.5-flash";
 
         if (manufacturer === "gemini") {
-            const apiKey = process.env.GEMINI_API_KEY;
-            if (!apiKey) throw new Error("GEMINI_API_KEY not found");
-            this.backend = new GeminiBackend(apiKey);
+            const finalApiKey = apiKey || process.env.GEMINI_API_KEY;
+            if (!finalApiKey) throw new Error("GEMINI_API_KEY not found (env or passed)");
+            this.backend = new GeminiBackend(finalApiKey);
         } else {
             throw new Error(`Unsupported manufacturer: ${manufacturer}`);
         }

@@ -40,8 +40,12 @@ export async function resolveGameAction(
     if (!finalLogic.includes("**Card Play:**")) {
         finalLogic += `\n**Card Play:** If user draws a CARD to the BOARD -> DESTROY the card, then SPAWN the corresponding unit (defined in 'spawns' property) at that location.`;
     }
-    // Add specific respawn logic for Puzzle Demo
-    finalLogic += `\n**Respawn Rule:** If the Alchemist Hero (or bp_alchemist_hero) is DESTROYED, immediately SPAWN it back at 'tile_r5_c5' (Start Position). Do NOT send it to sidebar.`;
+
+    // Inject Combat Logic if not present
+    if (!finalLogic.includes("**Combat:**")) {
+        finalLogic += `\n**Combat:** If a user moves a unit to a tile occupied by a hostile unit (different team), this is an ATTACK. Use ATTACK(attacker, target), not MOVE.`;
+    }
+
 
     const systemInstruction = `You are a Game Engine Logic Processor convert the User's Intent into a sequence of Engine Commands (Tools).
     

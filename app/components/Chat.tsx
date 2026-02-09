@@ -20,6 +20,7 @@ interface ChatProps {
     isPlayerTurn?: boolean;
     onEndTurn?: () => void;
     isInteractionLocked?: boolean;
+    apiKey?: string;
 }
 
 export const Chat = ({
@@ -32,7 +33,8 @@ export const Chat = ({
     externalIsProcessing,
     isPlayerTurn = false,
     onEndTurn,
-    isInteractionLocked = false
+    isInteractionLocked = false,
+    apiKey
 }: ChatProps) => {
     // 1. Data Fetching - Only one list now
     const messages = useQuery(api.messages.list, gameId ? { gameId: gameId as any } : "skip");
@@ -82,14 +84,14 @@ export const Chat = ({
             if (isEditMode) {
                 // GOD MODE ACTION
                 if (!gameId) throw new Error("Game ID unknown");
-                result = await modifyGameAction(gameId, input);
+                result = await modifyGameAction(gameId, input, apiKey);
             } else {
                 // STANDARD GAME MOVE
                 result = await processGameMoveAction(currentGameState, gameRules, {
                     type: "CHAT",
                     description: command,
                     payload: { text: command }
-                }, navMesh);
+                }, navMesh, apiKey);
             }
 
             if (!result.success) {

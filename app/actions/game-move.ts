@@ -11,7 +11,8 @@ export async function processGameMoveAction(
     currentState: any,
     rules: string,
     userAction: UserCommand,
-    navMesh?: any[]
+    navMesh?: any[],
+    apiKey?: string
 ) {
     console.log("Processing User Action:", userAction);
 
@@ -21,7 +22,7 @@ export async function processGameMoveAction(
         const activeGame = await fetchQuery(api.games.get, {});
         if (!activeGame) throw new Error("No active game found");
 
-        const client = new LLMClient();
+        const client = new LLMClient("gemini", undefined, undefined, apiKey);
 
         // =========================================================
         // 1. CONTEXT INJECTION (The "Hazard" Fix)

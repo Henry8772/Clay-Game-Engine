@@ -5,7 +5,7 @@ import { api } from "../../convex/_generated/api";
 import { compileGenerationGraph } from "../../backend/llm/graph/workflow";
 import { LLMClient } from "../../backend/llm/client";
 
-export async function createGameAction(prompt: string, gameId: string) {
+export async function createGameAction(prompt: string, gameId: string, apiKey?: string) {
     if (!prompt) throw new Error("Prompt is required");
     if (!gameId) throw new Error("Game ID is required");
 
@@ -13,7 +13,7 @@ export async function createGameAction(prompt: string, gameId: string) {
 
     // 1. Setup Client
     // Pass false as 3rd arg to disable debug/mock mode
-    const client = new LLMClient("gemini", undefined, false);
+    const client = new LLMClient("gemini", undefined, false, apiKey);
     const runId = `run_${Date.now()}_${crypto.randomUUID().slice(0, 8)}`;
 
     // 2. Setup Callback to report progress to Convex

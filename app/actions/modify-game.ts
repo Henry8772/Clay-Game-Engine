@@ -5,7 +5,7 @@ import { api } from "../../convex/_generated/api";
 import { LLMClient } from "../../backend/llm/client";
 import { processModification } from "../../backend/llm/agents/modification_agent";
 
-export async function modifyGameAction(gameId: string, userRequest: string) {
+export async function modifyGameAction(gameId: string, userRequest: string, apiKey?: string) {
     console.log(`[ModifyGame] Request: ${userRequest} for Game: ${gameId}`);
 
     // 1. Fetch Current State
@@ -16,10 +16,10 @@ export async function modifyGameAction(gameId: string, userRequest: string) {
 
     const currentState = gameState.state;
 
-    const runId = gameState.runId || "boardgame";
+    const runId = gameState.runId || "default_run";
 
     // 2. Init LLM
-    const client = new LLMClient("gemini", "gemini-3-flash-preview", false);
+    const client = new LLMClient("gemini", "gemini-2.5-flash", false, apiKey);
 
     try {
         // 3. Run Agent

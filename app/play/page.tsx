@@ -21,6 +21,12 @@ const FALLBACK_GAMESTATE = {
 export default function PlayPage() {
     const [prompt, setPrompt] = useState("");
     const [isGenerating, setIsGenerating] = useState(false);
+    const [apiKey, setApiKey] = useState<string | undefined>(undefined);
+
+    useEffect(() => {
+        const storedKey = sessionStorage.getItem("gemini_api_key");
+        if (storedKey) setApiKey(storedKey);
+    }, []);
 
     // Convex State Management
     const gameStateFromConvex = useQuery(api.games.get, {});
@@ -31,7 +37,7 @@ export default function PlayPage() {
     // Run Management
     const [availableRuns, setAvailableRuns] = useState<string[]>([]);
     const [isLoadingRuns, setIsLoadingRuns] = useState(true);
-    const [selectedRunId, setSelectedRunId] = useState<string>("boardgame"); // Default to empty, will be set by effect
+    const [selectedRunId, setSelectedRunId] = useState<string>(""); // Default to empty, will be set by effect
 
     const [navMesh, setNavMesh] = useState<any[]>([]);
 
@@ -475,7 +481,7 @@ export default function PlayPage() {
             if (!newGameId) throw new Error("Failed to create game");
 
             // 2. Fire the Server Action
-            await createGameAction(prompt, newGameId);
+            await createGameAction(prompt, newGameId, apiKey);
 
             setPrompt("");
 
@@ -635,6 +641,7 @@ export default function PlayPage() {
                         isPlayerTurn={isPlayerTurn}
                         onEndTurn={() => handleAction("ACTION: END_TURN")}
                         isInteractionLocked={isInteractionLocked}
+                        apiKey={apiKey}
                     />
                 </div>
             </main >
