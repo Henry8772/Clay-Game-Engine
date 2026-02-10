@@ -4,7 +4,7 @@
 >
 > *🏆 Built for the Gemini 3 Hackathon | Made with ❤️*
 
-This project is a **Native Multimodal Engine**. Unlike tools that just generate code, we use **Gemini 2.5 Flash** as the runtime server. The engine manages state, rules, and assets purely through language, enabling **real-time "God Mode"** modifications in multiplayer environments.
+This project is a **Native Multimodal Engine**. Unlike tools that just generate code, we use **Gemini 3 Flash** as the runtime server. The engine manages state, rules, and assets purely through language, enabling **real-time "God Mode"** modifications in multiplayer environments.
 
 
 
