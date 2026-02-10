@@ -117,7 +117,6 @@ export class LLMClient {
         if (this.debugMode) {
             if (mockResponse) {
                 dataToMock = mockResponse;
-                console.log(`DEBUG: Using direct mock response for '${label}'`);
             } else {
                 dataToMock = await this.tryGetMock(label);
             }
@@ -165,7 +164,6 @@ export class LLMClient {
             let dataToMock = null;
             if (mockResponse) {
                 dataToMock = mockResponse;
-                console.log(`DEBUG: Using direct mock response for '${label}'`);
             } else {
                 dataToMock = await this.tryGetMock(label);
             }
@@ -177,12 +175,12 @@ export class LLMClient {
 
         // 2. Live Call
         const startTime = performance.now();
-        const { timeout: timeoutOverride, ...apiConfig } = config || {};
+        const { timeout: timeoutOverride, model: modelOverride, ...apiConfig } = config || {};
         const timeoutMs = timeoutOverride || 60000; // Default 60s timeout for JSON
 
         try {
             const result = await this.withTimeout(
-                this.backend.generateJSON<T>(system, inputData, this.model, schema, apiConfig),
+                this.backend.generateJSON<T>(system, inputData, modelOverride || this.model, schema, apiConfig),
                 timeoutMs,
                 label
             );

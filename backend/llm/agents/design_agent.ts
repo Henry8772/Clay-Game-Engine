@@ -6,6 +6,9 @@ import { SchemaType } from "@google/generative-ai";
  * The Blueprint that drives all other agents.
  */
 export interface GameDesign {
+    // Meta
+    title: string;          // e.g. "Cyberpunk Heist"
+
     // Visuals (Scene Agent)
     art_style: string;      // e.g. "16-bit pixel art"
     perspective: string;    // e.g. "Top-down orthographic"
@@ -50,8 +53,9 @@ export async function runDesignAgent(client: LLMClient, userRequest: string): Pr
     Analyze the user's request and output a precise Game Design Specification.
     
     **DESIGN GUIDELINES:**
-    1. **Visuals:** Define a coherent art style and perspective.
-    2. **Grid/Topology:** YOU MUST USE A RECTANGULAR GRID (MxN). 
+    1. **Title:** specific, creative, and short title for the game.
+    2. **Visuals:** Define a coherent art style and perspective.
+    3. **Grid/Topology:** YOU MUST USE A RECTANGULAR GRID (MxN). 
        - Do NOT use hexagons, graphs, or irregular shapes.
        - Always specify 'grid_shape' with rows and columns.
        - 'grid_type' should describe the layout (e.g. "6x6 Grid", "Chess Board").
@@ -67,6 +71,7 @@ export async function runDesignAgent(client: LLMClient, userRequest: string): Pr
     const schema = {
         type: SchemaType.OBJECT,
         properties: {
+            title: { type: SchemaType.STRING },
             art_style: { type: SchemaType.STRING },
             perspective: { type: SchemaType.STRING },
             background_theme: { type: SchemaType.STRING },
@@ -86,7 +91,7 @@ export async function runDesignAgent(client: LLMClient, userRequest: string): Pr
             rules_summary: { type: SchemaType.STRING },
             game_loop_mechanics: { type: SchemaType.STRING }
         },
-        required: ["art_style", "grid_type", "grid_shape", "player_team", "enemy_team", "game_loop_mechanics"]
+        required: ["title", "art_style", "grid_type", "grid_shape", "player_team", "enemy_team", "game_loop_mechanics"]
     };
 
     return await client.generateJSON<GameDesign>(

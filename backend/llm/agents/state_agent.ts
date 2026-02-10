@@ -146,6 +146,7 @@ export async function runStateAgent(
     return {
         initialState: {
             meta: {
+                title: design.title || "Untitled Game",
                 turnCount: 1,
                 activePlayerId: "player",
                 activePlayerIndex: 0, // Start with first player

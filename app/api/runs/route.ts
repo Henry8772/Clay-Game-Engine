@@ -31,9 +31,9 @@ export async function GET() {
                     const designPath = path.join(runPath, 'design.json');
                     if (fs.existsSync(designPath)) {
                         const design = JSON.parse(fs.readFileSync(designPath, 'utf8'));
-                        // Assuming design has a title or using the first asset? 
-                        // Let's use the runId but flag it differently or maybe the prompt if we had it.
-                        // For now, let's just clean up the timestamp for display if it's a run_timestamp
+                        if (design.title) {
+                            title = design.title;
+                        }
                     }
                 } catch (e) {
                     // Ignore
@@ -41,6 +41,7 @@ export async function GET() {
 
                 return {
                     id: runId,
+                    title,
                     isComplete,
                     timestamp: fs.statSync(runPath).birthtimeMs
                 };

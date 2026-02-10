@@ -251,9 +251,6 @@ export class GeminiBackend implements LLMBackend {
         if (options?.config) {
             Object.assign(config, options.config);
         }
-
-        console.log(`[GeminiBackend] generateImage (new SDK) config: ${JSON.stringify(config)}`);
-
         // Using the new SDK structure
         const response = await ai.models.generateContent({
             model: modelName,
@@ -302,8 +299,6 @@ export class GeminiBackend implements LLMBackend {
         if (options?.config) {
             Object.assign(config, options.config);
         }
-
-        console.log(`[GeminiBackend] editImage (new SDK) config: ${JSON.stringify(config)}`);
 
         const response = await ai.models.generateContent({
             model: modelName,

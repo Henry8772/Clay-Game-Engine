@@ -35,7 +35,7 @@ export default function PlayPage() {
     const convexState = gameStateFromConvex?.state;
 
     // Run Management
-    const [availableRuns, setAvailableRuns] = useState<{ id: string, isComplete: boolean, timestamp: number }[]>([]);
+    const [availableRuns, setAvailableRuns] = useState<{ id: string, title?: string, isComplete: boolean, timestamp: number }[]>([]);
     const [isLoadingRuns, setIsLoadingRuns] = useState(true);
     const [selectedRunId, setSelectedRunId] = useState<string>(""); // Default to empty, will be set by effect
     const [hasLoadedRun, setHasLoadedRun] = useState(false);
@@ -51,23 +51,21 @@ export default function PlayPage() {
         if (lastRun) setLastGeneratedRunId(lastRun);
     }, []);
 
-    // 1. Fetch Available Runs on Mount
-    useEffect(() => {
+    const fetchRuns = async (targetRunId?: string) => {
         setIsLoadingRuns(true);
-        fetch('/api/runs')
-            .then(res => res.json())
-            .then(data => {
-                if (data.runs && Array.isArray(data.runs)) {
-                    setAvailableRuns(data.runs);
+        try {
+            const res = await fetch('/api/runs');
+            const data = await res.json();
 
-                    // Priority Logic:
-                    // 1. LocalStorage (User preference)
-                    // 2. Hardcoded specific runs (Dev preference)
-                    // 3. First available alpha-sorted
+            if (data.runs && Array.isArray(data.runs)) {
+                setAvailableRuns(data.runs);
 
-                    let targetRun = "";
+                // Determining which run to select
+                let targetRun = targetRunId || "";
+
+                // If no specific target, check storage or defaults
+                if (!targetRun) {
                     const savedRun = localStorage.getItem('gemini_selected_run');
-
                     if (savedRun && data.runs.some((r: any) => r.id === savedRun)) {
                         targetRun = savedRun;
                     } else {
@@ -82,16 +80,22 @@ export default function PlayPage() {
                             targetRun = data.runs[0]?.id;
                         }
                     }
-
-                    // Only update if differnt/empty to avoid unnecessary re-renders or overrides if state was already set (though on mount it shouldn't be)
-                    // We check !selectedRunId to allow for default state if needed, but here we want to enforce the determined logic
-                    if (targetRun) {
-                        setSelectedRunId(targetRun);
-                    }
                 }
-            })
-            .catch(err => console.error("Failed to fetch runs:", err))
-            .finally(() => setIsLoadingRuns(false));
+
+                if (targetRun) {
+                    setSelectedRunId(targetRun);
+                }
+            }
+        } catch (err) {
+            console.error("Failed to fetch runs:", err);
+        } finally {
+            setIsLoadingRuns(false);
+        }
+    };
+
+    // 1. Fetch Available Runs on Mount
+    useEffect(() => {
+        fetchRuns();
     }, []);
 
     // Persist selection
@@ -110,7 +114,6 @@ export default function PlayPage() {
         // STRATEGY 1: Load directly from the live Game State (Best Practice / Fast)
         // The Modification Agent updates this directly in the DB.
         if (currentGameState?.navMesh && Array.isArray(currentGameState.navMesh) && currentGameState.navMesh.length > 0) {
-            console.log("Using Live NavMesh from Convex State");
             setNavMesh(currentGameState.navMesh);
             return;
         }
@@ -121,7 +124,6 @@ export default function PlayPage() {
         const navMeshUrl = basePath + '/' + assets.navmesh;
 
         if (navMeshUrl && assets.navmesh) {
-            console.log("Loading NavMesh from File (Legacy):", navMeshUrl);
             fetch(navMeshUrl)
                 .then(res => res.json())
                 .then(data => setNavMesh(data))
@@ -189,11 +191,12 @@ export default function PlayPage() {
         });
     };
 
-    const load_test = async () => {
-        if (!selectedRunId) return;
+    const load_test = async (runIdOverride?: string) => {
+        const runIdToLoad = runIdOverride || selectedRunId;
+        if (!runIdToLoad) return;
         setIsGenerating(true);
         try {
-            const basePath = `/api/asset-proxy/runs/${selectedRunId}`;
+            const basePath = `/api/asset-proxy/runs/${runIdToLoad}`;
             const res = await fetch(`${basePath}/gamestate.json`);
             if (!res.ok) throw new Error("Gamestate missing");
             const data = await res.json();
@@ -204,13 +207,10 @@ export default function PlayPage() {
                 initialState = data.initialState;
             }
 
-
-            // Call Convex Mutation to Reset/Load Game
-            console.log(`[CLIENT LOAD] Sending content to Convex for run ${selectedRunId}:`, initialState);
             await resetGame({
                 initialState: initialState,
                 rules: data.rules || "Standard game rules",
-                runId: selectedRunId,
+                runId: runIdToLoad,
                 engine_tools: data.engine_tools,
                 engine_logic: data.engine_logic
             });
@@ -220,12 +220,14 @@ export default function PlayPage() {
             setChatOptimisticMessage(null);
             setHasLoadedRun(true);
 
-            // No reload - let Convex subscriptions update the UI
-            // window.location.reload(); 
+            // If we provided an override, ensure the UI selector matches (it should have been set by the caller usually, but safe to ensure)
+            if (runIdOverride && runIdOverride !== selectedRunId) {
+                setSelectedRunId(runIdOverride);
+            }
 
         } catch (e) {
-            console.error("Failed to load test run:", e);
-            alert("Failed to load run: " + selectedRunId);
+            console.error("Failed to load run:", e);
+            alert("Failed to load run: " + runIdToLoad);
         } finally {
             setIsGenerating(false);
         }
@@ -519,6 +521,10 @@ export default function PlayPage() {
             if (result && result.runId) {
                 localStorage.setItem("gemini_last_gen_run_id", result.runId);
                 setLastGeneratedRunId(result.runId);
+
+                // AUTO-SELECT & AUTO-LOAD
+                await fetchRuns(result.runId); // This updates selectedRunId state
+                await load_test(result.runId); // This loads the game
             }
 
             setPrompt("");
@@ -595,19 +601,28 @@ export default function PlayPage() {
                 <div className="flex items-center gap-3">
 
                     {/* RUN SELECTOR */}
-                    <select
-                        className="px-2 py-1.5 text-xs bg-black text-neutral-400 border border-neutral-800 rounded hover:border-neutral-600 outline-none"
-                        value={selectedRunId}
-                        onChange={(e) => setSelectedRunId(e.target.value)}
-                    >
-                        {isLoadingRuns && <option value="">Loading runs...</option>}
-                        {!isLoadingRuns && availableRuns.length === 0 && <option value="">No runs found</option>}
-                        {availableRuns.map(run => (
-                            <option key={run.id} value={run.id}>
-                                {run.id} {run.isComplete ? "" : "(Incomplete)"}
-                            </option>
-                        ))}
-                    </select>
+                    <div className="flex items-center gap-1">
+                        <select
+                            className="px-2 py-1.5 text-xs bg-black text-neutral-400 border border-neutral-800 rounded hover:border-neutral-600 outline-none max-w-[200px]"
+                            value={selectedRunId}
+                            onChange={(e) => setSelectedRunId(e.target.value)}
+                        >
+                            {isLoadingRuns && <option value="">Loading runs...</option>}
+                            {!isLoadingRuns && availableRuns.length === 0 && <option value="">No runs found</option>}
+                            {availableRuns.map(run => (
+                                <option key={run.id} value={run.id}>
+                                    {run.title || run.id} {run.isComplete ? "" : "(Incomplete)"}
+                                </option>
+                            ))}
+                        </select>
+                        <button
+                            className="p-1.5 text-neutral-400 hover:text-white border border-neutral-800 hover:border-neutral-600 rounded"
+                            title="Refresh Runs"
+                            onClick={() => fetchRuns(selectedRunId)}
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /><path d="M3 3v5h5" /><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16" /><path d="M16 16h5v5" /></svg>
+                        </button>
+                    </div>
 
                     <button
                         className={`px-3 py-1.5 text-xs font-medium border rounded transition-colors ${showDebug
@@ -625,11 +640,6 @@ export default function PlayPage() {
                             onClick={() => {
                                 const selectedRun = availableRuns.find(r => r.id === selectedRunId);
                                 if (selectedRun && !selectedRun.isComplete) {
-                                    // Set a temporary prompt to satisfy any checks, though backend handles it.
-                                    // Actually, we should just let the backend handle the resume.
-                                    // But handleGenerate checks `!prompt.trim() && !existingRunId`.
-                                    // and we pass `selectedRunId` as `existingRunId`.
-                                    // Pass prompt override
                                     handleGenerate(selectedRunId, "Resuming...");
                                 } else {
                                     load_test();
@@ -680,7 +690,7 @@ export default function PlayPage() {
                             ) : !hasLoadedRun ? (
                                 <div className="flex flex-col items-center justify-center gap-4 animate-in fade-in duration-500">
                                     <button
-                                        onClick={load_test}
+                                        onClick={() => load_test()}
                                         className="px-6 py-3 bg-white text-black font-semibold rounded hover:bg-neutral-200 transition-colors"
                                     >
                                         Load Game

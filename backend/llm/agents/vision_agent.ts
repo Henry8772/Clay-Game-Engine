@@ -58,7 +58,9 @@ export async function runVisionAgent(
             prompt,
             [{ inlineData: { data: spriteBuffer.toString('base64'), mimeType: "image/png" } }],
             schema,
-            "vision_agent"
+            "vision_agent",
+            undefined,
+            { model: "gemini-3-flash-preview" }
         );
     } catch (e) {
         console.warn("Client generateJSON failed, falling back to manual content generation if needed or rethrow.", e);

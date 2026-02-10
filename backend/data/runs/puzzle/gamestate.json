@@ -3,6 +3,13 @@
     "meta": {
       "turnCount": 1,
       "activePlayerId": "player",
+      "players": [
+        {
+          "id": "human_p1",
+          "type": "human",
+          "team": "blue"
+        }
+      ],
       "phase": "main",
       "runId": "state",
       "version": "2.0",

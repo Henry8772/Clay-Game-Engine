@@ -225,7 +225,7 @@ export const nodeStateGenerator = async (state: GraphState, config?: { configura
     // Prepare Asset Manifest from state.extractedAssets
     const assetManifest: Record<string, string> = {};
     if (state.extractedAssets) {
-        state.extractedAssets.forEach(file => {
+        Object.values(state.extractedAssets).forEach(file => {
             const name = path.parse(file).name;
             assetManifest[name] = file;
         });

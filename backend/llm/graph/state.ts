@@ -18,7 +18,7 @@ export interface GraphState {
     backgroundImage?: Buffer;
     spriteImage?: Buffer;
     analysisJson?: any[];
-    extractedAssets?: string[];
+    extractedAssets?: Record<string, string>;
     navMesh?: any[];
     finalGameState?: any;
 }

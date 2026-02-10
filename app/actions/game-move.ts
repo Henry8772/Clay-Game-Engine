@@ -14,7 +14,7 @@ export async function processGameMoveAction(
     navMesh?: any[],
     apiKey?: string
 ) {
-    console.log("Processing User Action:", userAction);
+    // console.log("Processing User Action:", userAction);
 
     try {
         const activeGame = await fetchQuery(api.games.get, {});
@@ -138,8 +138,6 @@ export async function processGameMoveAction(
         // THE "FROZEN" & AI UPDATE LOOP
         // ======================================================
         // @ts-ignore
-        console.log("Active Player:", activePlayer);
-        console.log(result.turnChanged, activePlayer.type === 'ai');
         if (result.turnChanged && activePlayer.type === 'ai') {
 
             console.log("--> Triggering AI Turn (REAL AI)...");
@@ -149,7 +147,7 @@ export async function processGameMoveAction(
             const aiMoveResult = await generateEnemyMove(client, result.newState, rules, navMesh || [], activePlayer);
             const aiCommand = aiMoveResult.command;
 
-            console.log(`[AI] Command decided: "${aiCommand}"`);
+            // console.log(`[AI] Command decided: "${aiCommand}"`);
 
             // 2. Prepare Engine for AI
             // FILTER OUT "END_TURN" from the tools list passed to engine to discourage AI usage,

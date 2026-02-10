@@ -28,8 +28,6 @@ export async function POST(req: NextRequest) {
         // Write the file
         fs.writeFileSync(targetPath, buffer);
 
-        console.log(`Color map saved to: ${targetPath}`);
-
         return NextResponse.json({ success: true, path: targetPath });
     } catch (error) {
         console.error("Error saving color map:", error);
