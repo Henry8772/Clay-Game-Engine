@@ -35,7 +35,7 @@ export async function reclassifyMap(
     existingGrid: any[],
     logicContext: string
 ): Promise<any[]> {
-    console.log(`[NavMeshAgent] Re-classifying with context: "${logicContext}"`);
+
 
     const prompt = `
         Look at this updated game map.
@@ -85,17 +85,17 @@ export async function runNavMeshAgent(
     backgroundBuffer: Buffer,
     design: GameDesign
 ): Promise<any[]> {
-    console.log(`[NavMeshAgent] Generating NavMesh for ${design.grid_type}...`);
+
 
     if (client.isDebug) {
-        console.log("[NavMeshAgent] Returning MOCK_NAVMESH");
+
         return MOCK_NAVMESH;
     }
 
 
     if (design.grid_shape && design.grid_shape.rows > 0) {
         const { rows, cols } = design.grid_shape;
-        console.log(`[NavMeshAgent] Mode: Dense Grid (${rows}x${cols} covering full screen)`);
+
 
 
         const gridTiles = generateFullScreenGrid(rows, cols);
@@ -144,7 +144,7 @@ export async function runNavMeshAgent(
     }
 
 
-    console.log(`[NavMeshAgent] Mode: Sparse Detection (Finding playable region)`);
+
 
     const prompt = `
         Look at this game background.

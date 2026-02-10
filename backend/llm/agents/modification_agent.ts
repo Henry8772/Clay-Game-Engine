@@ -20,6 +20,7 @@ function buildDesignFromState(state: UniversalState): GameDesign {
         });
     }
     return {
+        title: "Unknown Title",
         art_style: (state.meta.vars as any)?.art_style || "unknown",
         perspective: "unknown",
         background_theme: "unknown",
@@ -42,7 +43,7 @@ export async function processModification(
     userRequest: string
 ): Promise<{ newState: UniversalState; message: string; shouldRegenerate?: boolean; newPrompt?: string }> {
 
-    console.log(`[ModificationAgent] Processing request: ${runId}, ${currentState}, ${userRequest}`);
+
     // 1. Define Schema for Structured Output
     const toolSchema = {
         description: "Tool selection response",
@@ -106,8 +107,7 @@ export async function processModification(
 
     const inputData = [{ role: 'user', content: `${userRequest}\n\n[Context] Game Entities Count: ${Object.keys(currentState.entities).length}` }];
 
-    console.log(`[ModificationAgent] systemPrompt: ${systemPrompt}`);
-    console.log(`[ModificationAgent] inputData: ${JSON.stringify(inputData)}`);
+
 
     let tool: string | undefined;
     let args: any;
@@ -133,11 +133,11 @@ export async function processModification(
         args = response.args;
     }
 
-    console.log(`[ModificationAgent] Tool: ${tool}`, args);
 
 
 
-    console.log(`[ModificationAgent] Tool: ${tool}`, args);
+
+
 
     // Build design context for agents
     const designContext = buildDesignFromState(currentState);
@@ -156,18 +156,18 @@ export async function processModification(
 
     switch (tool) {
         case "generate_background": {
-            console.log(`[ModAgent] Generating background: ${args.description}`);
+
             const currentBg = (currentState.meta as any).vars?.background;
             let newBgBuffer: Buffer;
 
-            console.log(`[ModAgent] Current background: ${currentBg}`);
+
 
             if (currentBg) {
                 try {
 
                     const bgPath = getDiskPath(currentBg);
                     const bgBuffer = await fs.readFile(bgPath);
-                    console.log(`[ModAgent] Editing existing background: ${bgPath}`);
+
 
 
                     const editPrompt = `Edit this game background. ${args.description}. Maintain the exact layout, perspective.`;
@@ -221,7 +221,7 @@ export async function processModification(
                 break;
             }
 
-            console.log(`[ModAgent] Found blueprint for '${args.name}': ${foundBlueprint.id} (${foundBlueprint.label})`);
+
 
 
             for (let i = 0; i < count; i++) {
@@ -262,7 +262,7 @@ export async function processModification(
 
         case "update_global_sprite_style": {
             const style = args.styleDescription;
-            console.log(`[ModAgent] Global style update to: ${style}`);
+
 
 
             let spritePath = path.join(process.cwd(), 'backend', 'data', 'runs', runId, 'sprites_white.png');
@@ -288,7 +288,7 @@ export async function processModification(
             const finalSheetPath = await saveAsset(runId, newSheetBuffer, finalSheetName);
 
             // 3. Run Vision Agent (Uses the transparent buffer)
-            console.log(`[ModAgent] Running vision agent to detect items...`);
+
             const detectedItems = await runVisionAgent(client, newSheetBuffer, designContext);
 
             // --- Generate Debug Segmentation Image ---
@@ -297,7 +297,7 @@ export async function processModification(
 
                 const segmentedName = `sprites_restyle_segmented_${timestamp}.png`;
                 await saveAsset(runId, segmentedBuffer, segmentedName);
-                console.log(`[ModAgent] Saved segmentation debug image: ${segmentedName}`);
+
 
             } catch (err) {
                 console.warn(`[ModAgent] Failed to generate debug segmentation image:`, err);
@@ -362,7 +362,7 @@ export async function processModification(
             const environment_description = args.environment_description || `Update backgroundenvironment follows ${userRequest}`;
             const logic_instruction = args.logic_instruction ||
                 `Modified terrain described as '${userRequest}'.`;
-            console.log(`[ModAgent] Environment Update: Visual="${environment_description}", Logic="${logic_instruction}"`);
+
 
 
 

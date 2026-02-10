@@ -11,10 +11,7 @@ export async function createGameAction(prompt: string, gameId: string, apiKey?: 
     // If resuming, prompt is optional (we might not have it, but we have the design)
     if (!prompt && !existingRunId) throw new Error("Prompt is required");
 
-    console.log(`[createGameAction] Starting generation for game: ${gameId} with prompt: ${prompt || "RESUME"}`);
-    if (existingRunId) {
-        console.log(`[createGameAction] Resuming run: ${existingRunId}`);
-    }
+
 
     // 1. Setup Client
     // Pass false as 3rd arg to disable debug/mock mode
@@ -24,7 +21,7 @@ export async function createGameAction(prompt: string, gameId: string, apiKey?: 
     // 2. Setup Callback to report progress to Convex
     // This allows the server to "talk" to the frontend via the DB
     const reportProgress = async (msg: string) => {
-        console.log(`[createGameAction] Progress: ${msg}`);
+
         await fetchMutation(api.games.updateStatus, {
             gameId: gameId as any,
             status: "generating",
@@ -61,7 +58,7 @@ export async function createGameAction(prompt: string, gameId: string, apiKey?: 
         }
 
         // 4. Save Final State to Convex
-        console.log(`[createGameAction] Generation complete. Saving to Convex...`);
+
 
         await fetchMutation(api.games.reset, {
             initialState: result.finalGameState,

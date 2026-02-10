@@ -31,7 +31,7 @@ export async function generateEnemyMove(
     };
 
 
-    console.log(`[EnemyAI] Tactical State Trace:\n${JSON.stringify(tacticalState, null, 2)}`);
+
     const systemPrompt = `You are a Tactical AI Player named "${playerProfile.id}".
     
 **OBJECTIVE:**
@@ -65,7 +65,7 @@ Defend your units labeled 'MY_UNIT'.
         required: ["command"]
     };
 
-    console.log(`[EnemyAI] Thinking as ${playerProfile.id} (${playerProfile.team})...`);
+
 
     try {
 

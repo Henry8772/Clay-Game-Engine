@@ -14,7 +14,7 @@ export async function processGameMoveAction(
     navMesh?: any[],
     apiKey?: string
 ) {
-    // console.log("Processing User Action:", userAction);
+
 
     try {
         const activeGame = await fetchQuery(api.games.get, {});
@@ -72,7 +72,7 @@ export async function processGameMoveAction(
             const targetTile = navMesh.find((zone: any) => zone.label === targetId);
 
             if (targetTile) {
-                console.log(`[Context] Focused Zone: ${targetId} (Type: ${targetTile.type})`);
+
 
                 // INJECT into State so LLM sees it
                 stateForLLM = {
@@ -140,14 +140,14 @@ export async function processGameMoveAction(
         // @ts-ignore
         if (result.turnChanged && activePlayer.type === 'ai') {
 
-            console.log("--> Triggering AI Turn (REAL AI)...");
+
 
             // 1. Generate Move using the AI Agent
             // Ensure we pass the current state which reflects the user's just-completed move
             const aiMoveResult = await generateEnemyMove(client, result.newState, rules, navMesh || [], activePlayer);
             const aiCommand = aiMoveResult.command;
 
-            // console.log(`[AI] Command decided: "${aiCommand}"`);
+
 
             // 2. Prepare Engine for AI
             // FILTER OUT "END_TURN" from the tools list passed to engine to discourage AI usage,
@@ -172,7 +172,7 @@ export async function processGameMoveAction(
             let autoEnded = false;
 
             if (!aiResult.turnChanged) {
-                console.log("[AI] Forcing END_TURN as AI did not end it.");
+
                 const endTurnTools = [{ name: "END_TURN", args: {} }];
                 // @ts-ignore
                 const etResult = aiEngine.applyTools(endTurnTools);
@@ -185,7 +185,7 @@ export async function processGameMoveAction(
                 };
                 autoEnded = true;
             } else {
-                console.log("[AI] AI already ended the turn. Skipping force end.");
+
             }
 
             // 5. Merge Results for Frontend

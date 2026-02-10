@@ -30,11 +30,7 @@ export const reset = mutation({
         progress: v.optional(v.string()) // <--- NEW
     },
     handler: async (ctx, args) => {
-        console.log(`[GAME RESET] Loading run: ${args.runId}`);
-        const entityCount = args.initialState?.entities
-            ? (Array.isArray(args.initialState.entities) ? args.initialState.entities.length : Object.keys(args.initialState.entities).length)
-            : 0;
-        console.log(`[GAME RESET] Content check: ${entityCount} entities loaded from state.`);
+
 
 
         // Deactivate all old games

@@ -46,7 +46,7 @@ export interface GameDesign {
  */
 
 export async function runDesignAgent(client: LLMClient, userRequest: string): Promise<GameDesign> {
-    console.log("[DesignAgent] Architecting game...");
+
 
     const systemPrompt = `
     You are a Lead Game Designer. 

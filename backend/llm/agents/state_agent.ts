@@ -11,7 +11,7 @@ export async function runStateAgent(
     design: GameDesign,
     assetManifest: Record<string, string> = {}
 ): Promise<any> {
-    console.log("[StateAgent] Architecting Game State...");
+
 
     // 1. Prepare Asset Paths
     const formattedAssets = Object.values(assetManifest).map(filename => {

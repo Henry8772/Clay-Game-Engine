@@ -6,7 +6,7 @@ import { LLMClient } from "../../backend/llm/client";
 import { processModification } from "../../backend/llm/agents/modification_agent";
 
 export async function modifyGameAction(gameId: string, userRequest: string, apiKey?: string) {
-    // console.log(`[ModifyGame] Request: ${userRequest} for Game: ${gameId}`);
+
 
     // 1. Fetch Current State
     // Using fetchQuery to get state from Convex

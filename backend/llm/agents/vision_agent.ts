@@ -17,10 +17,10 @@ export async function runVisionAgent(
     spriteBuffer: Buffer,
     design: GameDesign
 ): Promise<DetectedItem[]> {
-    console.log("[VisionAgent] Analyzing sprites...");
+
 
     if (client.isDebug) {
-        console.log("[VisionAgent] Returning MOCK_VISION_ANALYSIS");
+
         return MOCK_VISION_ANALYSIS as unknown as DetectedItem[];
     }
 
