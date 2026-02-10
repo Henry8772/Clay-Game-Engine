@@ -66,7 +66,7 @@ export async function processModification(
                     newStyleDescription: { type: "STRING", description: "New visual description for update" },
                     newPrompt: { type: "STRING", description: "New game prompt for regeneration" },
                     styleDescription: { type: "STRING", description: "Global style description" },
-                    visual_instruction: {
+                    environment_description: {
                         type: "STRING",
                         description: "A short, plain English command (e.g. 'Turn lava to ice'). Do NOT include style keywords, resolutions, or lists."
                     },
@@ -94,10 +94,10 @@ export async function processModification(
 
     EXAMPLES:
     User: "Make it look like night time"
-    Output: {"tool":"modify_environment","args":{"visual_instruction":"Change lighting to dark night.","logic_instruction":"No logic change."}}
+    Output: {"tool":"modify_environment","args":{"environment_description":"Change lighting to dark night.","logic_instruction":"No logic change."}}
 
     User: "Freeze the lava"
-    Output: {"tool":"modify_environment","args":{"visual_instruction":"Turn liquid lava into solid blue ice.","logic_instruction":"Lava tiles are now traversable floor."}}
+    Output: {"tool":"modify_environment","args":{"environment_description":"Turn liquid lava into solid blue ice.","logic_instruction":"Lava tiles are now traversable floor."}}
 
     User: "Add a goblin"
     Output: {"tool":"spawn_entity","args":{"name":"Goblin","count":1}}
@@ -195,67 +195,67 @@ export async function processModification(
             break;
         }
 
-        case "spawn_entity":
-            {
-                const count = args.count || 1;
-                const desc = args.description || args.name;
-                let assetPath: string;
+        case "spawn_entity": {
+            const count = args.count || 1;
+            const nameToFind = (args.name || "").toLowerCase();
+            let foundBlueprint: any = null;
 
-                // [Strategy: EditImage] Try to find master spritesheet to maintain style coherence
-                // We look for 'sprites.png' or 'sprites_white.png' (segmented version)
-                const spriteSheetName = "sprites.png";
-                const spriteSheetPath = path.join(process.cwd(), 'backend', 'data', 'runs', runId, spriteSheetName);
+            // 1. Find matching blueprint
+            if (currentState.blueprints) {
+                for (const bp of Object.values(currentState.blueprints)) {
+                    // Match by label (preferred) or ID, case-insensitive
+                    const bpLabel = (bp.label || (bp as any).name || "").toLowerCase();
+                    const bpId = bp.id.toLowerCase();
 
-                let spriteBuffer: Buffer;
-
-                try {
-                    const sheetBuffer = await fs.readFile(spriteSheetPath);
-                    console.log(`[ModAgent] Using master spritesheet as style reference.`);
-
-                    // We ask the model to add the new entity to the sheet or use the sheet as style ref
-                    // "Add a [Entity] to this sprite sheet" might return a full sheet.
-                    // For this agent which spawns *instances*, we ideally want an isolated sprite.
-                    // We'll treat the sheet as a visual reference for the edit/generation.
-                    const editPrompt = `Create a new sprite of ${desc}. Match the art style, line weight, and perspective of the provided reference sprites exactly. Output on a white background.`;
-
-                    spriteBuffer = await client.editImage(editPrompt, sheetBuffer, "gemini-2.5-flash-image");
-                } catch (e) {
-                    console.log(`[ModAgent] No master spritesheet found (${e}), generating from scratch.`);
-                    spriteBuffer = await client.generateImage(`Sprite of ${desc}, isolated on white background`, "gemini-2.5-flash-image");
-                }
-
-                const filename = `spawn_${Date.now()}.png`;
-                assetPath = await saveAsset(runId, spriteBuffer, filename);
-
-                const orcLocations = ['tile_r3_c1', 'tile_r3_c0', 'tile_r5_c3'];
-
-                for (let i = 0; i < count; i++) {
-                    const newId = `ent_${Date.now()}_${i}`;
-
-                    // Determine location
-                    let spawnLoc = "tile_r2_c2";
-                    if (runId === 'boardgame' && args.name === 'Orc' && i < orcLocations.length) {
+                    if (bpLabel.includes(nameToFind) || bpId.includes(nameToFind)) {
+                        foundBlueprint = bp;
+                        break;
                     }
-
-                    // Add to State
-                    currentState.entities[newId] = {
-                        t: "generated_spawn",
-                        id: newId,
-                        label: args.name,
-                        type: args.type,
-                        team: args.team === "player" ? "blue" : (args.team === "enemy" ? "red" : "neutral"),
-                        src: assetPath,
-                        // Place them near center or use navmesh logic if available (simplified here)
-                        pixel_box: [350 + (i * 20), 450 + (i * 20), 450 + (i * 20), 550 + (i * 20)],
-                        location: spawnLoc,
-                        loc: "board",
-                        owner: "ai",
-                        props: {}
-                    } as any;
                 }
-                message = `Spawned ${count} x ${args.name}`;
+            }
+
+            if (!foundBlueprint) {
+                const available = currentState.blueprints
+                    ? Object.values(currentState.blueprints).map(b => b.label || b.id).join(", ")
+                    : "None";
+                message = `Failed to spawn '${args.name}'. No matching blueprint found. Available blueprints: ${available}`;
+                console.warn(`[ModAgent] Spawn failed: ${message}`);
                 break;
             }
+
+            console.log(`[ModAgent] Found blueprint for '${args.name}': ${foundBlueprint.id} (${foundBlueprint.label})`);
+
+            // 2. Spawn Entities
+            for (let i = 0; i < count; i++) {
+                const newId = `ent_${Date.now()}_${i}`;
+
+                // default location
+                let spawnLoc = "tile_r2_c2";
+
+                // Simple logic to offset multiple spawns (optional, keeping it simple)
+                // If the game has specific logic for placement, it might be separate, 
+                // but here we just place them.
+
+                currentState.entities[newId] = {
+                    ...foundBlueprint, // Inherit blueprint properties
+                    id: newId,
+                    t: "instance", // Mark as instance
+                    label: foundBlueprint.label || args.name, // Ensure label
+                    src: foundBlueprint.src, // Vital: Use the blueprint's image
+                    location: spawnLoc,
+                    loc: "board",
+                    owner: "ai",
+                    // Override with args if provided, else keep blueprint or default
+                    team: args.team ? (args.team === "player" ? "blue" : (args.team === "enemy" ? "red" : "neutral")) : (foundBlueprint.team || "neutral"),
+                    type: args.type || foundBlueprint.type || "unit",
+                    pixel_box: foundBlueprint.pixel_box || [350, 450, 450, 550], // Fallback or inherit
+                    props: { ...foundBlueprint.props }
+                } as any;
+            }
+
+            message = `Spawned ${count} x ${foundBlueprint.label || args.name} using blueprint.`;
+            break;
+        }
 
         case "trigger_regeneration": {
             shouldRegenerate = true;
@@ -367,11 +367,11 @@ export async function processModification(
         }
 
         case "modify_environment": {
-            // const { visual_instruction, logic_instruction } = args;
-            const visual_instruction = args.visual_instruction || `Update backgroundenvironment follows ${userRequest}`;
+            // const { environment_description, logic_instruction } = args;
+            const environment_description = args.environment_description || `Update backgroundenvironment follows ${userRequest}`;
             const logic_instruction = args.logic_instruction ||
                 `Modified terrain described as '${userRequest}'.`;
-            console.log(`[ModAgent] Environment Update: Visual="${visual_instruction}", Logic="${logic_instruction}"`);
+            console.log(`[ModAgent] Environment Update: Visual="${environment_description}", Logic="${logic_instruction}"`);
 
 
 
@@ -385,7 +385,7 @@ export async function processModification(
 
             // 2. VISUAL PHASE: Edit the Image
             // Use the user's prompt to guide the diffusion model
-            const editPrompt = `Edit this game map. ${visual_instruction}. Maintain exact perspective and grid layout.`;
+            const editPrompt = `Edit this game map. ${environment_description}. Maintain exact perspective and grid layout.`;
             const newBgBuffer = await client.editImage(editPrompt, bgBuffer, "gemini-2.5-flash-image");
 
             // 3. LOGIC PHASE: Re-scan NavMesh

@@ -11,7 +11,7 @@ export const MODIFICATION_TOOLS_DEF = [
     },
     {
         name: "spawn_entity",
-        description: "Creates and spawns a new entity/enemy into the game.",
+        description: "Spawns an instance of an existing entity blueprint. Does NOT generate new images.",
         parameters: z.object({
             name: z.string().describe("Name of the entity"),
             description: z.string().describe("Visual description for image generation"),
@@ -38,7 +38,7 @@ export const MODIFICATION_TOOLS_DEF = [
         name: "modify_environment",
         description: "Updates the game background visuals and re-calculates the navigation mesh logic based on natural language instructions.",
         parameters: z.object({
-            visual_instruction: z.string().describe("Prompt for the image editor"),
+            environment_description: z.string().describe("Prompt for the image editor"),
             logic_instruction: z.string().describe("Context for the NavMesh agent to understand the new terrain"),
         }),
     }
