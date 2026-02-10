@@ -7,6 +7,7 @@
 This project is a **Native Multimodal Engine**. Unlike tools that just generate code, we use **Gemini 2.5 Flash** as the runtime server. The engine manages state, rules, and assets purely through language, enabling **real-time "God Mode"** modifications in multiplayer environments.
 
 
+
 ## What is this project?
 Game development is traditionally rigid: hard-coded physics, static assets, and compiled binaries. If you want to change the rules, you have to rewrite the code.
 
@@ -14,8 +15,9 @@ We built a "Liquid" Game Engine. By treating the entire game state—from the sp
 
 For a deep dive into the architecture and workflows, please visit our [Technical Documentation](docs/README.md).
 
-## Gallery
-![Gallery](assets/gallery/gallery.png)
+## Demo video
+[![Watch the demo](https://img.youtube.com/vi/EshMFE5oguc/0.jpg)](https://www.youtube.com/watch?v=EshMFE5oguc)
+> If the thumbnail doesn’t load: [https://www.youtube.com/watch?v=EshMFE5oguC](https://www.youtube.com/watch?v=EshMFE5oguc)
 
 Check out our [Demo Showcase](docs/demo.md) to see the engine in action:
 *   **[Demo 1: The Tactical Boardgame](docs/demo.md#demo-1-the-tactical-boardgame-standard-generation)** - A complete generated RPG.
