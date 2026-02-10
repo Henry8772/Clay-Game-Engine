@@ -54,7 +54,6 @@ Defend your units labeled 'MY_UNIT'.
 - "Move {my_unit_label} to {tile_id}"
 - "Attack {enemy_label} with {my_unit_label}"
 - "Spawn {card_label} at {tile_id}"
-- "End turn"
 `;
 
     const inputData = `TACTICAL_STATE: ${JSON.stringify(tacticalState)}`;
@@ -82,6 +81,6 @@ Defend your units labeled 'MY_UNIT'.
 
     } catch (e) {
         console.error("AI failed to move:", e);
-        return { command: "End turn" };
+        return { command: "NARRATE('AI is confused and skips turn.')" };
     }
 }

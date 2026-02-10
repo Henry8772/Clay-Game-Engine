@@ -16,13 +16,48 @@ export async function processGameMoveAction(
 ) {
     console.log("Processing User Action:", userAction);
 
-
-
     try {
         const activeGame = await fetchQuery(api.games.get, {});
         if (!activeGame) throw new Error("No active game found");
 
         const client = new LLMClient("gemini", undefined, undefined, apiKey);
+
+        // =========================================================
+        // 0. RUNTIME LOCATION HYDRATION (Attributes from Geometry)
+        // =========================================================
+        const getIntersectionArea = (boxA: number[], boxB: number[]): number => {
+            const [yMinA, xMinA, yMaxA, xMaxA] = boxA;
+            const [yMinB, xMinB, yMaxB, xMaxB] = boxB;
+            const yOverlap = Math.max(0, Math.min(yMaxA, yMaxB) - Math.max(yMinA, yMinB));
+            const xOverlap = Math.max(0, Math.min(xMaxA, xMaxB) - Math.max(xMinA, xMinB));
+            return yOverlap * xOverlap;
+        };
+
+        if (navMesh && currentState.entities) {
+            Object.values(currentState.entities).forEach((entity: any) => {
+                if (entity.pixel_box) {
+                    let bestTile = null;
+                    let maxArea = 0;
+
+                    // Find maximal overlap with any tile
+                    for (const tile of navMesh) {
+                        const area = getIntersectionArea(entity.pixel_box, tile.box_2d);
+                        if (area > maxArea) {
+                            maxArea = area;
+                            bestTile = tile.label;
+                        }
+                    }
+
+                    // Threshold: meaningful overlap (e.g. > 100 pixels) implies "on tile"
+                    if (maxArea > 100 && bestTile) {
+                        entity.location = bestTile;
+                    } else if (!entity.location) {
+                        // Fallback if no location and no board overlap
+                        entity.location = "sidebar";
+                    }
+                }
+            });
+        }
 
         // =========================================================
         // 1. CONTEXT INJECTION (The "Hazard" Fix)
@@ -104,113 +139,76 @@ export async function processGameMoveAction(
         console.log(result.turnChanged, activePlayer.type === 'ai');
         if (result.turnChanged && activePlayer.type === 'ai') {
 
-            console.log("--> Triggering AI Turn (FAKE/DEMO MODE)...");
+            console.log("--> Triggering AI Turn (REAL AI)...");
 
-            // FAKE AI LOGIC FOR DEMO
-            const currentTurn = result.newState.meta.turnCount;
-            let aiCommand = "End turn."; // Default fallback
-
-            // 1. Aggressive Attack Logic (Check for adjacency)
-            // Parse grid coordinates
-            const getCoords = (loc: string) => {
-                const match = loc.match(/tile_r(\d+)_c(\d+)/);
-                return match ? { r: parseInt(match[1]), c: parseInt(match[2]) } : null;
-            };
-
-            console.log("result.newState.entities", result.newState.entities);
-
-            const entities = Object.values(result.newState.entities) as any[];
-
-            console.log("entities", entities);
-
-            const aiUnits = entities.filter(e => e.team === 'red');
-
-            console.log("aiUnits", aiUnits);
-
-            const playerUnits = entities.filter(e => e.team === 'blue');
-
-            console.log("playerUnits", playerUnits);
-
-            let attackCommand = null;
-
-            for (const ai of aiUnits) {
-                if (!ai.location) continue;
-                const aiPos = getCoords(ai.location);
-                if (!aiPos) continue;
-
-                for (const player of playerUnits) {
-                    if (!player.location) continue;
-                    const pPos = getCoords(player.location);
-
-
-
-                    if (!pPos) continue;
-
-                    // Manhattan Distance
-                    const dist = Math.abs(aiPos.r - pPos.r) + Math.abs(aiPos.c - pPos.c);
-                    console.log("pPos, aiPos, dist", pPos, aiPos, dist);
-                    // If adjacent (dist === 1), ATTACK!
-                    if (dist === 1) {
-                        attackCommand = `Entity ${ai.id} attacks ${player.id}. End turn.`;
-                        break;
-                    }
-                }
-                if (attackCommand) break;
-            }
-
-            if (attackCommand) {
-                aiCommand = attackCommand;
-            } else if (currentTurn === 2) {
-                // Move Zombie (entity_8) forward
-                // Ensure it doesn't move on top of someone unless it's an attack (which we caught above)
-                aiCommand = "Move entity entity_8 to tile_r2_c4. End turn.";
-            } else if (currentTurn === 4) {
-                // Move Orc (entity_9) forward
-                aiCommand = "Move entity entity_9 to tile_r2_c5. End turn.";
-            } else {
-                // Random fallback or just pass
-                aiCommand = "End turn.";
-            }
-
-            // const aiMoveResult = await generateEnemyMove(client, result.newState, rules, navMesh || [], activePlayer);
-            // const aiCommand = aiMoveResult.command;
+            // 1. Generate Move using the AI Agent
+            // Ensure we pass the current state which reflects the user's just-completed move
+            const aiMoveResult = await generateEnemyMove(client, result.newState, rules, navMesh || [], activePlayer);
+            const aiCommand = aiMoveResult.command;
 
             console.log(`[AI] Command decided: "${aiCommand}"`);
 
-            // Create a new engine instance for the AI using the FRESH state
-            // This ensures the LLM knows exactly who the active player is right now
+            // 2. Prepare Engine for AI
+            // FILTER OUT "END_TURN" from the tools list passed to engine to discourage AI usage,
+            // though the engine itself technically still supports it if called.
+            const aiToolsList = activeGame.engine_tools.filter((t: string) => !t.includes("END_TURN"));
+
             const aiEngine = new GameEngine(
                 result.newState,
                 rules,
                 client,
                 navMesh,
                 false,
-                [...activeGame.engine_tools, "6. END_TURN() -> Pass play to the opponent."],
+                aiToolsList,
                 activeGame.engine_logic
             );
 
-            // Execute on the NEW aiEngine, not the old 'engine'
+            // 3. Execute AI Command
             const aiResult = await aiEngine.processCommand(aiCommand);
 
-            // Update final state to return to client
-            // @ts-ignore
-            result.newState = aiResult.newState;
-            // @ts-ignore
-            result.logs = [...result.logs, ...aiResult.logs];
+            // 4. Manual FORCE END TURN (Conditional)
+            let endTurnResult = { newState: aiResult.newState, logs: [], tools: [] };
+            let autoEnded = false;
 
-            // Save AI State to DB
-            const aiSummaryText = aiResult.logs.map((l: any) => l.message).join('\n');
+            if (!aiResult.turnChanged) {
+                console.log("[AI] Forcing END_TURN as AI did not end it.");
+                const endTurnTools = [{ name: "END_TURN", args: {} }];
+                // @ts-ignore
+                const etResult = aiEngine.applyTools(endTurnTools);
+
+                endTurnResult = {
+                    newState: etResult.newState,
+                    logs: etResult.logs,
+                    // @ts-ignore
+                    tools: endTurnTools
+                };
+                autoEnded = true;
+            } else {
+                console.log("[AI] AI already ended the turn. Skipping force end.");
+            }
+
+            // 5. Merge Results for Frontend
+            // The final state is the one from the *last* operation
+            result.newState = endTurnResult.newState;
+
+            // Log concatenation: User Actions -> AI Actions -> Turn Switch
+            // @ts-ignore
+            result.logs = [...result.logs, ...aiResult.logs, ...(endTurnResult.logs || [])];
+
+            // Tool concatenation: User Tools -> AI Tools -> Synthetic End Turn
+            // @ts-ignore
+            result.tools = [...result.tools, ...aiResult.tools, ...(endTurnResult.tools || [])];
+
+            // 6. Save AI Action + Turn End to DB
+            const aiSummaryText = [...aiResult.logs, ...(endTurnResult.logs || [])].map((l: any) => l.message).join('\n');
             await fetchMutation(api.games.updateState, {
                 gameId: activeGame._id,
-                newState: aiResult.newState,
+                newState: result.newState,
                 summary: aiSummaryText,
                 role: "assistant",
-                command: aiCommand,
-                logs: aiResult.logs
+                command: aiCommand + (autoEnded ? " [Turn Ended Automatically]" : ""),
+                logs: [...aiResult.logs, ...(endTurnResult.logs || [])]
             });
-            // Merge AI tools into the response so the frontend sees them
-            // @ts-ignore
-            result.tools = [...result.tools, ...aiResult.tools];
         }
 
         return {
