@@ -29,6 +29,25 @@ const saveRunArtifact = async (runId: string | undefined, filename: string, cont
     }
 };
 
+// Helper to check for existing artifacts (Resume Logic)
+const checkRunArtifact = async (runId: string | undefined, filename: string): Promise<Buffer | string | null> => {
+    if (!runId) return null;
+    try {
+        const fs = await import("fs");
+        const path = await import("path");
+        const { DATA_RUNS_DIR } = await import("../utils/paths");
+        const filePath = path.resolve(DATA_RUNS_DIR, runId, filename);
+
+        if (fs.existsSync(filePath)) {
+            console.log(`[Nodes] Found existing ${filename} for run ${runId}, skipping generation.`);
+            return await fs.promises.readFile(filePath);
+        }
+    } catch (e) {
+        console.warn(`[Nodes] Failed to check/read ${filename}:`, e);
+    }
+    return null;
+};
+
 export interface GenerationGraphConfig {
     client: LLMClient;
     useMock?: boolean;
@@ -39,6 +58,13 @@ export interface GenerationGraphConfig {
 export const nodeDesignGenerator = async (state: GraphState, config?: { configurable?: GenerationGraphConfig }) => {
     const { client, onProgress } = config?.configurable || {};
     if (!client) throw new Error("Client not found");
+
+    // RESUME CHECK
+    const existing = await checkRunArtifact(state.runId, "design.json");
+    if (existing) {
+        if (onProgress) await onProgress("Found existing Design. Skipping...");
+        return { gameDesign: JSON.parse(existing.toString()) };
+    }
 
     if (onProgress) await onProgress("Architecting Game Design...");
 
@@ -54,6 +80,13 @@ export const nodeSceneGenerator = async (state: GraphState, config?: { configura
     if (!client) throw new Error("Client not found");
     if (!state.gameDesign) throw new Error("Game Design missing");
 
+    // RESUME CHECK
+    const existing = await checkRunArtifact(state.runId, "scene.png");
+    if (existing) {
+        if (onProgress) await onProgress("Found existing Scene. Skipping...");
+        return { sceneImage: existing as Buffer }; // readFile returns Buffer
+    }
+
     if (onProgress) await onProgress("Generating Scene...");
 
     const sceneImage = await runSceneAgent(client, state.gameDesign);
@@ -68,6 +101,13 @@ export const nodeBackgroundExtractor = async (state: GraphState, config?: { conf
     if (!client) throw new Error("Client not found");
     if (!state.sceneImage) throw new Error("Scene image missing");
 
+    // RESUME CHECK
+    const existing = await checkRunArtifact(state.runId, "background.png");
+    if (existing) {
+        if (onProgress) await onProgress("Found existing Background. Skipping...");
+        return { backgroundImage: existing as Buffer };
+    }
+
     if (onProgress) await onProgress("Extracting Background...");
 
     const backgroundImage = await runBackgroundAgent(client, state.sceneImage);
@@ -81,6 +121,13 @@ export const nodeSpriteIsolator = async (state: GraphState, config?: { configura
     const { client, onProgress } = config?.configurable || {};
     if (!client) throw new Error("Client not found");
     if (!state.sceneImage) throw new Error("Scene image missing");
+
+    // RESUME CHECK
+    const existing = await checkRunArtifact(state.runId, "sprites.png");
+    if (existing) {
+        if (onProgress) await onProgress("Found existing Sprites. Skipping...");
+        return { spriteImage: existing as Buffer };
+    }
 
     if (onProgress) await onProgress("Isolating Sprites...");
 
@@ -106,6 +153,13 @@ export const nodeVisionAnalyzer = async (state: GraphState, config?: { configura
     if (!client) throw new Error("Client not found");
     if (!state.spriteImage) throw new Error("Sprite image missing");
     if (!state.gameDesign) throw new Error("Game Design missing");
+
+    // RESUME CHECK
+    const existing = await checkRunArtifact(state.runId, "analysis.json");
+    if (existing) {
+        if (onProgress) await onProgress("Found existing Analysis. Skipping...");
+        return { analysisJson: JSON.parse(existing.toString()) };
+    }
 
     if (onProgress) await onProgress("Analyzing Sprites...");
 
@@ -142,6 +196,13 @@ export const nodeNavMeshGenerator = async (state: GraphState, config?: { configu
     if (!state.backgroundImage) throw new Error("Background image missing");
     if (!state.gameDesign) throw new Error("Game Design missing");
 
+    // RESUME CHECK
+    const existing = await checkRunArtifact(state.runId, "navmesh.json");
+    if (existing) {
+        if (onProgress) await onProgress("Found existing Navmesh. Skipping...");
+        return { navMesh: JSON.parse(existing.toString()) };
+    }
+
     if (onProgress) await onProgress("Generating NavMesh...");
 
     const navMesh = await runNavMeshAgent(client, state.backgroundImage, state.gameDesign);
@@ -159,9 +220,20 @@ export const nodeStateGenerator = async (state: GraphState, config?: { configura
     if (!state.runId) throw new Error("Run ID missing");
     if (!state.gameDesign) throw new Error("Game Design missing");
 
+    const path = await import("path");
+
+    // Prepare Asset Manifest from state.extractedAssets
+    const assetManifest: Record<string, string> = {};
+    if (state.extractedAssets) {
+        state.extractedAssets.forEach(file => {
+            const name = path.parse(file).name;
+            assetManifest[name] = file;
+        });
+    }
+
     if (onProgress) await onProgress("Generating Game State...");
 
-    const finalGameState = await runStateAgent(client, state.analysisJson, state.navMesh, state.runId, state.gameDesign);
+    const finalGameState = await runStateAgent(client, state.analysisJson, state.navMesh, state.runId, state.gameDesign, assetManifest);
     await saveRunArtifact(state.runId, "gamestate.json", JSON.stringify(finalGameState, null, 2));
 
     return { finalGameState };

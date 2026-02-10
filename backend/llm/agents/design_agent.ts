@@ -51,7 +51,10 @@ export async function runDesignAgent(client: LLMClient, userRequest: string): Pr
     
     **DESIGN GUIDELINES:**
     1. **Visuals:** Define a coherent art style and perspective.
-    2. **Grid/Topology:** Define the playable area structure (e.g. "6x6 Grid", "3 Lane Track").
+    2. **Grid/Topology:** YOU MUST USE A RECTANGULAR GRID (MxN). 
+       - Do NOT use hexagons, graphs, or irregular shapes.
+       - Always specify 'grid_shape' with rows and columns.
+       - 'grid_type' should describe the layout (e.g. "6x6 Grid", "Chess Board").
     3. **Assets:** List the specific units/items needed.
     4. **Logic:** Define how the engine tools (MOVE, SPAWN, ATTACK, DESTROY) are used.
     
@@ -68,6 +71,14 @@ export async function runDesignAgent(client: LLMClient, userRequest: string): Pr
             perspective: { type: SchemaType.STRING },
             background_theme: { type: SchemaType.STRING },
             grid_type: { type: SchemaType.STRING },
+            grid_shape: {
+                type: SchemaType.OBJECT,
+                properties: {
+                    rows: { type: SchemaType.NUMBER },
+                    cols: { type: SchemaType.NUMBER }
+                },
+                required: ["rows", "cols"]
+            },
             player_team: { type: SchemaType.ARRAY, items: { type: SchemaType.STRING } },
             enemy_team: { type: SchemaType.ARRAY, items: { type: SchemaType.STRING } },
             obstacles: { type: SchemaType.ARRAY, items: { type: SchemaType.STRING } },
@@ -75,7 +86,7 @@ export async function runDesignAgent(client: LLMClient, userRequest: string): Pr
             rules_summary: { type: SchemaType.STRING },
             game_loop_mechanics: { type: SchemaType.STRING }
         },
-        required: ["art_style", "grid_type", "player_team", "enemy_team", "game_loop_mechanics"]
+        required: ["art_style", "grid_type", "grid_shape", "player_team", "enemy_team", "game_loop_mechanics"]
     };
 
     return await client.generateJSON<GameDesign>(

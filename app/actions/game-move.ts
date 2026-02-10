@@ -127,8 +127,11 @@ export async function processGameMoveAction(
             });
         }
 
-        const players = result.newState.meta.players;
-        let activeIndex = result.newState.meta.activePlayerIndex;
+        const players = result.newState.meta.players || [
+            { id: "player", type: "human" },
+            { id: "enemy", type: "ai" }
+        ];
+        let activeIndex = result.newState.meta.activePlayerIndex ?? 0;
         let activePlayer = players[activeIndex];
 
         // ======================================================
@@ -167,7 +170,7 @@ export async function processGameMoveAction(
             const aiResult = await aiEngine.processCommand(aiCommand);
 
             // 4. Manual FORCE END TURN (Conditional)
-            let endTurnResult = { newState: aiResult.newState, logs: [], tools: [] };
+            let endTurnResult: { newState: any, logs: any[], tools: any[] } = { newState: aiResult.newState, logs: [], tools: [] };
             let autoEnded = false;
 
             if (!aiResult.turnChanged) {

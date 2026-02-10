@@ -9,7 +9,7 @@ describe('REAL: State Agent', () => {
     const shouldRun = process.env.GEMINI_API_KEY && !process.env.GEMINI_API_KEY.includes("dummy");
 
     it.skipIf(!shouldRun)('should map extracted files to blueprints', async () => {
-        const runDir = getTestRunDir('puzzle');
+        const runDir = getTestRunDir('run_1770725331397_328011b5');
 
         // 1. Setup Paths
         const analysisPath = path.join(runDir, "analysis.json");

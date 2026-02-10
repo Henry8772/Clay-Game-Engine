@@ -5,19 +5,18 @@ export interface EnemyMoveResult {
     command: string;
 }
 
-// 1. Update Signature to accept the specific identity
+
 export async function generateEnemyMove(
     client: LLMClient,
     currentState: any,
     rules: string,
     navMesh: any[],
-    playerProfile: { id: string; team: string } = { id: 'ai', team: 'red' } // Default fallback
+    playerProfile: { id: string; team: string } = { id: 'ai', team: 'red' }
 ): Promise<EnemyMoveResult> {
 
-    // 2. Tactical View (Speed Optimization)
-    // We map the full state to a lightweight view for the AI
+
     const tacticalState = {
-        my_identity: playerProfile, // Explicitly tell AI who it is in the JSON
+        my_identity: playerProfile,
         units: Object.values(currentState.entities).map((e: any) => ({
             id: e.id,
             label: e.label,
@@ -31,7 +30,7 @@ export async function generateEnemyMove(
         valid_tiles: navMesh ? navMesh.map((n: any) => n.label) : []
     };
 
-    // 3. Dynamic System Prompt
+
     console.log(`[EnemyAI] Tactical State Trace:\n${JSON.stringify(tacticalState, null, 2)}`);
     const systemPrompt = `You are a Tactical AI Player named "${playerProfile.id}".
     
@@ -69,7 +68,7 @@ Defend your units labeled 'MY_UNIT'.
     console.log(`[EnemyAI] Thinking as ${playerProfile.id} (${playerProfile.team})...`);
 
     try {
-        // 4. One-Shot Generation (Fastest)
+
         const result = await client.generateJSON<EnemyMoveResult>(
             systemPrompt,
             [{ role: "user", content: inputData }],

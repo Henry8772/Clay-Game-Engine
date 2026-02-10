@@ -35,12 +35,21 @@ export default function PlayPage() {
     const convexState = gameStateFromConvex?.state;
 
     // Run Management
-    const [availableRuns, setAvailableRuns] = useState<string[]>([]);
+    const [availableRuns, setAvailableRuns] = useState<{ id: string, isComplete: boolean, timestamp: number }[]>([]);
     const [isLoadingRuns, setIsLoadingRuns] = useState(true);
     const [selectedRunId, setSelectedRunId] = useState<string>(""); // Default to empty, will be set by effect
     const [hasLoadedRun, setHasLoadedRun] = useState(false);
 
+    // Resume State
+    const [lastGeneratedRunId, setLastGeneratedRunId] = useState<string | null>(null);
+
     const [navMesh, setNavMesh] = useState<any[]>([]);
+
+    // Load last run ID
+    useEffect(() => {
+        const lastRun = localStorage.getItem("gemini_last_gen_run_id");
+        if (lastRun) setLastGeneratedRunId(lastRun);
+    }, []);
 
     // 1. Fetch Available Runs on Mount
     useEffect(() => {
@@ -59,18 +68,18 @@ export default function PlayPage() {
                     let targetRun = "";
                     const savedRun = localStorage.getItem('gemini_selected_run');
 
-                    if (savedRun && data.runs.includes(savedRun)) {
+                    if (savedRun && data.runs.some((r: any) => r.id === savedRun)) {
                         targetRun = savedRun;
                     } else {
                         // Priority: run_test_real_agents -> run_test_real_workflow -> experiment-3 -> First available
-                        if (data.runs.includes('run_test_real_agents')) {
+                        if (data.runs.some((r: any) => r.id === 'run_test_real_agents')) {
                             targetRun = 'run_test_real_agents';
-                        } else if (data.runs.includes('run_test_real_workflow')) {
+                        } else if (data.runs.some((r: any) => r.id === 'run_test_real_workflow')) {
                             targetRun = 'run_test_real_workflow';
-                        } else if (data.runs.includes('experiment-3')) {
+                        } else if (data.runs.some((r: any) => r.id === 'experiment-3')) {
                             targetRun = 'experiment-3';
                         } else {
-                            targetRun = data.runs[0];
+                            targetRun = data.runs[0]?.id;
                         }
                     }
 
@@ -485,8 +494,8 @@ export default function PlayPage() {
         }
     };
 
-    const handleGenerate = async () => {
-        if (!prompt.trim()) return;
+    const handleGenerate = async (existingRunId?: string, promptOverride?: string) => {
+        if (!prompt.trim() && !existingRunId && !promptOverride) return;
 
         setIsGenerating(true);
         try {
@@ -504,7 +513,13 @@ export default function PlayPage() {
             if (!newGameId) throw new Error("Failed to create game");
 
             // 2. Fire the Server Action
-            await createGameAction(prompt, newGameId, apiKey);
+            const finalPrompt = promptOverride || prompt;
+            const result = await createGameAction(finalPrompt, newGameId, apiKey, existingRunId); // Pass existingRunId
+
+            if (result && result.runId) {
+                localStorage.setItem("gemini_last_gen_run_id", result.runId);
+                setLastGeneratedRunId(result.runId);
+            }
 
             setPrompt("");
 
@@ -514,6 +529,12 @@ export default function PlayPage() {
         } finally {
             setIsGenerating(false);
         }
+    };
+
+    const handleResume = () => {
+        if (!lastGeneratedRunId) return;
+        // Pass prompt override to handleGenerate
+        handleGenerate(lastGeneratedRunId, "Resuming generation...");
     };
 
 
@@ -541,20 +562,31 @@ export default function PlayPage() {
                     <div className="flex items-center group relative">
                         <input
                             type="text"
-                            className="w-full bg-neutral-900 border border-neutral-800 rounded px-4 py-2 text-sm text-white placeholder-neutral-500 focus:outline-none focus:border-white focus:ring-1 focus:ring-white transition-all opacity-50 cursor-not-allowed"
-                            placeholder="Generation disabled: High server load. Back soon!"
+                            className="w-full bg-neutral-900 border border-neutral-800 rounded px-4 py-2 text-sm text-white placeholder-neutral-500 focus:outline-none focus:border-white focus:ring-1 focus:ring-white transition-all"
+                            placeholder="Describe a game to generate..."
                             value={prompt}
                             onChange={(e) => setPrompt(e.target.value)}
-                            disabled={true}
+                            disabled={isGenerating}
                             onKeyDown={(e) => e.key === 'Enter' && handleGenerate()}
                         />
-                        <div className="absolute right-1 top-1 bottom-1">
+                        <div className="absolute right-1 top-1 bottom-1 flex gap-2">
+                            {lastGeneratedRunId && !isGenerating && !prompt.trim() && (
+                                <button
+                                    className="h-full px-3 text-xs font-medium rounded transition-colors bg-indigo-900/50 text-indigo-300 hover:bg-indigo-900/80 border border-indigo-500/30"
+                                    onClick={handleResume}
+                                >
+                                    Resume
+                                </button>
+                            )}
                             <button
-                                className={`h-full px-3 text-xs font-medium rounded transition-colors bg-transparent text-neutral-600 cursor-not-allowed`}
-                                onClick={handleGenerate}
-                                disabled={true}
+                                className={`h-full px-3 text-xs font-medium rounded transition-colors ${prompt.trim() && !isGenerating
+                                    ? "bg-white text-black hover:bg-neutral-200"
+                                    : "bg-transparent text-neutral-600 cursor-not-allowed"
+                                    }`}
+                                onClick={() => handleGenerate()}
+                                disabled={!prompt.trim() || isGenerating}
                             >
-                                Disabled
+                                {isGenerating ? "Generating..." : "Generate"}
                             </button>
                         </div>
                     </div>
@@ -571,7 +603,9 @@ export default function PlayPage() {
                         {isLoadingRuns && <option value="">Loading runs...</option>}
                         {!isLoadingRuns && availableRuns.length === 0 && <option value="">No runs found</option>}
                         {availableRuns.map(run => (
-                            <option key={run} value={run}>{run}</option>
+                            <option key={run.id} value={run.id}>
+                                {run.id} {run.isComplete ? "" : "(Incomplete)"}
+                            </option>
                         ))}
                     </select>
 
@@ -586,16 +620,28 @@ export default function PlayPage() {
 
                     <div className="flex items-center gap-2">
                         <button
-                            className="px-3 py-1.5 text-xs font-medium text-neutral-400 hover:text-white border border-neutral-800 hover:border-neutral-600 rounded transition-colors"
-                            onClick={load_test}
-                            disabled={isGenerating}
+                            className={`px-3 py-1.5 text-xs font-medium border rounded transition-colors ${isEditorOpen ? "bg-white text-black border-white" : "text-neutral-400 hover:text-white border-neutral-800 hover:border-neutral-600"
+                                }`}
+                            onClick={() => {
+                                const selectedRun = availableRuns.find(r => r.id === selectedRunId);
+                                if (selectedRun && !selectedRun.isComplete) {
+                                    // Set a temporary prompt to satisfy any checks, though backend handles it.
+                                    // Actually, we should just let the backend handle the resume.
+                                    // But handleGenerate checks `!prompt.trim() && !existingRunId`.
+                                    // and we pass `selectedRunId` as `existingRunId`.
+                                    // Pass prompt override
+                                    handleGenerate(selectedRunId, "Resuming...");
+                                } else {
+                                    load_test();
+                                }
+                            }}
+                            disabled={isGenerating || !selectedRunId}
                         >
-                            Load
+                            {availableRuns.find(r => r.id === selectedRunId)?.isComplete === false ? "Resume Generation" : "Load Game"}
                         </button>
                         <button
-                            className={`px-3 py-1.5 text-xs font-medium border rounded transition-colors ${isEditorOpen
-                                ? "bg-white text-black border-white"
-                                : "text-neutral-400 hover:text-white border-neutral-800 hover:border-neutral-600"}`}
+                            className={`px-3 py-1.5 text-xs font-medium border rounded transition-colors ${isEditorOpen ? "bg-white text-black border-white" : "text-neutral-400 hover:text-white border-neutral-800 hover:border-neutral-600"
+                                }`}
                             onClick={() => setIsEditorOpen(true)}
                             disabled={!currentGameState}
                         >
