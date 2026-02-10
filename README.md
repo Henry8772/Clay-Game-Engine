@@ -8,7 +8,7 @@ Platforms like **Roblox** have empowered millions of kids to create their own ga
 Clay removes this barrier entirely by replacing the script with **Natural Language**.
 
 * **No Code, Just Talk:** We replaced the IDE with a chat box. You don't write scripts; you just describe what you want.
-* **Instant Multiplayer (Coming Soon):** In traditional engines, multiplayer requires writing complex networking and synchronization code. **Thanks to our linguistic paradigm, we can support this easily.** We are currently building the ability to add a new player seat with a single sentence: **"Add a player 2 slot."**
+* **Instant Multiplayer (Coming Soon):** In traditional engines, multiplayer requires writing complex networking and synchronization code. **Thanks to our unique architecture, we can support this easily.** We are currently building the ability to add a new player seat with a single sentence in mid-game: **"Add a player 2 slot."**
 * **Limitless Imagination:** You aren't restricted by an asset store. If you want to create a game where **Batman uses an ultimate move on Voldemort**, or build a **Pokemon version of Hearthstone**, the engine generates the sprites, rules, and logic for it instantly.
 
 ---
