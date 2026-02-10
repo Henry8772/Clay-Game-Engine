@@ -18,6 +18,8 @@ export const useCameraShake = (stage: PIXI.Container | null) => {
         const initialY = stage.y;
 
         const update = () => {
+            if (!stage || stage.destroyed) return;
+
             if (shakeIntensity.current > 0.5) {
                 const dx = (Math.random() - 0.5) * shakeIntensity.current;
                 const dy = (Math.random() - 0.5) * shakeIntensity.current;

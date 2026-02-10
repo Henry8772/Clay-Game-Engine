@@ -202,8 +202,12 @@ export const DropZone = ({ id, x, y, width, height, debugColor = 0x222222, cellS
 
         return () => {
             unregisterZone(id);
-            stage.removeChild(container);
-            container.destroy({ children: true });
+            if (stage && !stage.destroyed) {
+                stage.removeChild(container);
+            }
+            if (!container.destroyed) {
+                container.destroy({ children: true });
+            }
         };
     }, [app, stage, x, y, width, height, cellSize, id, registerZone, unregisterZone, displayMode, visible, debugColor, label]);
 

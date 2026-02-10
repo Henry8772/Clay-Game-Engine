@@ -278,8 +278,10 @@ export const GameSprite = ({ id, name, initialX, initialY, color, src, onAction,
 
         return () => {
             unregisterEntity(id);
-            app.ticker.remove(updateTicker);
-            if (stage) {
+            if (app && app.ticker) {
+                app.ticker.remove(updateTicker);
+            }
+            if (stage && !stage.destroyed) {
                 stage.off('pointermove', onDragMove);
                 stage.off('pointerup', onRelease);
                 stage.off('pointerupoutside', onRelease);

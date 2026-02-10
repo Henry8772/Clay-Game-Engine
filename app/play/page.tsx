@@ -38,6 +38,7 @@ export default function PlayPage() {
     const [availableRuns, setAvailableRuns] = useState<string[]>([]);
     const [isLoadingRuns, setIsLoadingRuns] = useState(true);
     const [selectedRunId, setSelectedRunId] = useState<string>(""); // Default to empty, will be set by effect
+    const [hasLoadedRun, setHasLoadedRun] = useState(false);
 
     const [navMesh, setNavMesh] = useState<any[]>([]);
 
@@ -88,6 +89,7 @@ export default function PlayPage() {
     useEffect(() => {
         if (selectedRunId) {
             localStorage.setItem('gemini_selected_run', selectedRunId);
+            setHasLoadedRun(false);
         }
     }, [selectedRunId]);
 
@@ -207,6 +209,7 @@ export default function PlayPage() {
             // Reset local UI state
             setReachableTiles(new Set());
             setChatOptimisticMessage(null);
+            setHasLoadedRun(true);
 
             // No reload - let Convex subscriptions update the UI
             // window.location.reload(); 
@@ -621,15 +624,24 @@ export default function PlayPage() {
 
                     <div className="flex-1 relative overflow-hidden flex items-center justify-center p-8 bg-neutral-950">
                         <div className="relative z-10 w-full h-full border border-neutral-800 rounded bg-black shadow-2xl overflow-hidden flex items-center justify-center">
-                            {gameStateFromConvex?.status === 'generating' ? (
+                            {gameStateFromConvex?.status === 'generating' || isGenerating ? (
                                 <div className="flex flex-col items-center justify-center gap-4 animate-in fade-in duration-500">
                                     <div className="w-12 h-12 border-4 border-neutral-800 border-t-white rounded-full animate-spin" />
                                     <div className="space-y-1 text-center">
                                         <h3 className="text-lg font-medium text-white">Generating Game</h3>
                                         <p className="text-sm text-neutral-500 font-mono">
-                                            {gameStateFromConvex.progress || "Initializing..."}
+                                            {gameStateFromConvex?.progress || "Initializing..."}
                                         </p>
                                     </div>
+                                </div>
+                            ) : !hasLoadedRun ? (
+                                <div className="flex flex-col items-center justify-center gap-4 animate-in fade-in duration-500">
+                                    <button
+                                        onClick={load_test}
+                                        className="px-6 py-3 bg-white text-black font-semibold rounded hover:bg-neutral-200 transition-colors"
+                                    >
+                                        Load Game
+                                    </button>
                                 </div>
                             ) : (
                                 <GameErrorBoundary>

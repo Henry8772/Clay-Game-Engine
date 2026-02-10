@@ -20,6 +20,7 @@ export const SnapshotHelper = ({ shouldCapture, onCaptured }: SnapshotHelperProp
         // Extract image
         const capture = async () => {
             try {
+                if (!app.renderer) return;
                 const dataUrl = await app.renderer.extract.base64(app.stage);
                 onCaptured(dataUrl);
             } catch (e) {

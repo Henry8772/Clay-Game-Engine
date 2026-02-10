@@ -53,8 +53,12 @@ export const AmbienceLayer = ({ assets, width, height }: AmbienceLayerProps) => 
         stage.addChildAt(layerContainer, 0); // Layer 0: Bottom
 
         return () => {
-            stage.removeChild(layerContainer);
-            layerContainer.destroy({ children: true });
+            if (stage && !stage.destroyed) {
+                stage.removeChild(layerContainer);
+            }
+            if (!layerContainer.destroyed) {
+                layerContainer.destroy({ children: true });
+            }
         };
     }, [app, stage, assets, width, height]);
 
