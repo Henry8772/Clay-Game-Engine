@@ -29,7 +29,7 @@ Check out our [Demo Showcase](docs/demo.md) to see the engine in action:
 
 We are moving beyond "Text-to-Code." We are doing "Text-to-State."
 
-| **Feature**        | **Traditional Engine** | **AI Code Generators**     | **Gemini Game Engine**      |
+| **Feature**        | **Traditional Engine** | **AI Code Generators**     | **Clay Engine**      |
 | ------------------ | ---------------------- | -------------------------- | --------------------------- |
 | **Core Logic**     | Hard-coded (C++/C#)    | AI writes code (Python/JS) | **Linguistic (Prompts)**    |
 | **State Source**   | Binary Memory          | Local Variables            | **Chat History (JSON)**     |
