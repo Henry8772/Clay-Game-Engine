@@ -541,23 +541,20 @@ export default function PlayPage() {
                     <div className="flex items-center group relative">
                         <input
                             type="text"
-                            className="w-full bg-neutral-900 border border-neutral-800 rounded px-4 py-2 text-sm text-white placeholder-neutral-500 focus:outline-none focus:border-white focus:ring-1 focus:ring-white transition-all"
-                            placeholder="Describe your game idea..."
+                            className="w-full bg-neutral-900 border border-neutral-800 rounded px-4 py-2 text-sm text-white placeholder-neutral-500 focus:outline-none focus:border-white focus:ring-1 focus:ring-white transition-all opacity-50 cursor-not-allowed"
+                            placeholder="Generation disabled: High server load. Back soon!"
                             value={prompt}
                             onChange={(e) => setPrompt(e.target.value)}
-                            disabled={isGenerating}
+                            disabled={true}
                             onKeyDown={(e) => e.key === 'Enter' && handleGenerate()}
                         />
                         <div className="absolute right-1 top-1 bottom-1">
                             <button
-                                className={`h-full px-3 text-xs font-medium rounded transition-colors ${prompt && !isGenerating
-                                    ? "bg-white text-black hover:bg-neutral-200"
-                                    : "bg-transparent text-neutral-600 cursor-not-allowed"
-                                    }`}
+                                className={`h-full px-3 text-xs font-medium rounded transition-colors bg-transparent text-neutral-600 cursor-not-allowed`}
                                 onClick={handleGenerate}
-                                disabled={!prompt || isGenerating}
+                                disabled={true}
                             >
-                                {isGenerating ? "Generating..." : "Generate"}
+                                Disabled
                             </button>
                         </div>
                     </div>
