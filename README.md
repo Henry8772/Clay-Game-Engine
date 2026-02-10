@@ -1,12 +1,17 @@
-# Clay Game Engine
+# Clay Game Engine -  A Natural Language Roblox
 
-> **The first game engine driven entirely by Gemini.**
->
+> *Clay is the next evolution of user-generated content.*
 > *🏆 Built for the Gemini 3 Hackathon | Made with ❤️*
 
-This project is a **Native Multimodal Engine**. Unlike tools that just generate code, we use **Gemini 3 Flash** as the runtime server. The engine manages state, rules, and assets purely through language, enabling **real-time "God Mode"** modifications in multiplayer environments.
+Platforms like **Roblox** have empowered millions of kids to create their own games, becoming one of the largest gaming ecosystems in the world. However, they still present a significant barrier: **to build anything unique, you still have to learn to code.**
 
+Clay removes this barrier entirely by replacing the script with **Natural Language**.
 
+* **No Code, Just Talk:** We replaced the IDE with a chat box. You don't write scripts; you just describe what you want.
+* **Instant Multiplayer (Coming Soon):** In traditional engines, multiplayer requires writing complex networking and synchronization code. **Thanks to our linguistic paradigm, we can support this easily.** We are currently building the ability to add a new player seat with a single sentence: **"Add a player 2 slot."**
+* **Limitless Imagination:** You aren't restricted by an asset store. If you want to create a game where **Batman uses an ultimate move on Voldemort**, or build a **Pokemon version of Hearthstone**, the engine generates the sprites, rules, and logic for it instantly.
+
+---
 
 ## What is this project?
 Game development is traditionally rigid: hard-coded physics, static assets, and compiled binaries. If you want to change the rules, you have to rewrite the code.
