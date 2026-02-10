@@ -241,7 +241,7 @@ export const Chat = ({
                 })}
 
                 {/* Optimistic User Message */}
-                {optimisticMessage && (
+                {optimisticMessage && !messages?.some(m => m.role === 'user' && m.content === optimisticMessage) && (
                     <div className="flex flex-col items-end opacity-70 mt-4 mb-2 pl-12">
                         <span className="text-[9px] text-neutral-600 mb-1 uppercase tracking-wider">usr (sending)</span>
                         <div className="max-w-full px-3 py-2 text-xs leading-relaxed whitespace-pre-wrap rounded border bg-neutral-100 text-neutral-900 border-white font-medium">
@@ -252,14 +252,30 @@ export const Chat = ({
 
                 {/* System Processing Indicator */}
                 {isProcessing && (
-                    <div className="flex flex-col items-start animate-pulse">
-                        <span className="text-[9px] text-neutral-600 mb-1 uppercase tracking-wider">sys</span>
-                        <div className="flex items-center gap-2 px-3 py-2 text-xs rounded border bg-neutral-900 text-neutral-400 border-neutral-800 border-dashed">
-                            <div className="w-1.5 h-1.5 bg-neutral-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                            <div className="w-1.5 h-1.5 bg-neutral-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                            <div className="w-1.5 h-1.5 bg-neutral-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                    !isPlayerTurn ? (
+                        <div className="flex flex-col items-start mt-4 mb-2 pr-12 animate-pulse">
+                            <div className="flex items-center gap-2 mb-1 ml-1">
+                                <span className="text-[10px] text-indigo-400 font-bold tracking-wider uppercase drop-shadow-[0_0_3px_rgba(99,102,241,0.8)]">AI Opponent</span>
+                            </div>
+                            <div className="px-3 py-2 text-xs leading-relaxed rounded border bg-indigo-900/40 text-neutral-300 border-indigo-500/30 shadow-[0_0_10px_rgba(99,102,241,0.1)] backdrop-blur-sm italic flex items-center gap-2">
+                                <span>AI Player thinking</span>
+                                <span className="flex gap-0.5">
+                                    <span className="animate-bounce delay-0">.</span>
+                                    <span className="animate-bounce delay-100">.</span>
+                                    <span className="animate-bounce delay-200">.</span>
+                                </span>
+                            </div>
                         </div>
-                    </div>
+                    ) : (
+                        <div className="flex flex-col items-start animate-pulse">
+                            <span className="text-[9px] text-neutral-600 mb-1 uppercase tracking-wider">sys</span>
+                            <div className="flex items-center gap-2 px-3 py-2 text-xs rounded border bg-neutral-900 text-neutral-400 border-neutral-800 border-dashed">
+                                <div className="w-1.5 h-1.5 bg-neutral-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                                <div className="w-1.5 h-1.5 bg-neutral-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                                <div className="w-1.5 h-1.5 bg-neutral-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                            </div>
+                        </div>
+                    )
                 )}
             </div>
 
