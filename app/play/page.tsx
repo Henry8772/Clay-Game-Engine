@@ -399,6 +399,26 @@ export default function PlayPage() {
             // IGNORE Pick Up (Visual only)
             if (event.type === 'PICK_UP') return;
 
+            // HANDLE ATTACK
+            if (event.type === 'ATTACK') {
+                const { entityId, targetId } = event;
+                const entity = entitiesList.find((e: any) => e.id === entityId);
+                const target = entitiesList.find((e: any) => e.id === targetId);
+
+                if (!entity || !target) return;
+
+                const attackAction: UserCommand = {
+                    type: "ATTACK", // or "ACTION" if ATTACK isn't in UserCommand type, but let's assume it flows through as description
+                    description: `Player commands ${entity.label} to attack ${target.label}`,
+                    payload: {
+                        entityId,
+                        targetId
+                    }
+                };
+                await executeCommand(attackAction);
+                return;
+            }
+
             // HANDLE MOVE / DROP
             if (event.type === 'MOVE') {
                 setReachableTiles(new Set());
