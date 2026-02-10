@@ -15,7 +15,7 @@ export async function runExtractionAgent(
     outputDir: string,
     options: ExtractionOptions = {}
 ): Promise<Record<string, string>> {
-    console.log("[ExtractionAgent] Extracting assets...");
+
 
     if (!fs.existsSync(outputDir)) {
         fs.mkdirSync(outputDir, { recursive: true });
@@ -52,7 +52,7 @@ export async function runExtractionAgent(
         const extractWidth = right - left;
         const extractHeight = bottom - top;
 
-        console.log(`[Extract] ${item.label}: [${left}, ${top}, ${right}, ${bottom}] (${extractWidth}x${extractHeight}) in ${width}x${height}`);
+
 
         if (left < 0 || top < 0 || left + extractWidth > width || top + extractHeight > height) {
             console.error(`[Extract] Bounds Error: ${item.label}: [${left}, ${top}, ${right}, ${bottom}] in ${width}x${height}`);

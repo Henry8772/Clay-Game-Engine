@@ -169,9 +169,22 @@ export class GeminiBackend implements LLMBackend {
             cleanText = cleanText.replace(/^```(?:json)?\s*/, "").replace(/\s*```$/, "");
         }
 
-        // Aggressive extraction: find first { and last }
-        const firstOpen = cleanText.indexOf('{');
-        const lastClose = cleanText.lastIndexOf('}');
+        // Aggressive extraction: find first { or [ and last } or ]
+        const firstCurly = cleanText.indexOf('{');
+        const firstSquare = cleanText.indexOf('[');
+
+        let firstOpen = -1;
+        if (firstCurly !== -1 && firstSquare !== -1) {
+            firstOpen = Math.min(firstCurly, firstSquare);
+        } else {
+            firstOpen = firstCurly !== -1 ? firstCurly : firstSquare;
+        }
+
+        const lastCurly = cleanText.lastIndexOf('}');
+        const lastSquare = cleanText.lastIndexOf(']');
+
+        const lastClose = Math.max(lastCurly, lastSquare);
+
         if (firstOpen !== -1 && lastClose !== -1 && lastClose > firstOpen) {
             cleanText = cleanText.substring(firstOpen, lastClose + 1);
         }
@@ -238,9 +251,6 @@ export class GeminiBackend implements LLMBackend {
         if (options?.config) {
             Object.assign(config, options.config);
         }
-
-        console.log(`[GeminiBackend] generateImage (new SDK) config: ${JSON.stringify(config)}`);
-
         // Using the new SDK structure
         const response = await ai.models.generateContent({
             model: modelName,
@@ -289,8 +299,6 @@ export class GeminiBackend implements LLMBackend {
         if (options?.config) {
             Object.assign(config, options.config);
         }
-
-        console.log(`[GeminiBackend] editImage (new SDK) config: ${JSON.stringify(config)}`);
 
         const response = await ai.models.generateContent({
             model: modelName,

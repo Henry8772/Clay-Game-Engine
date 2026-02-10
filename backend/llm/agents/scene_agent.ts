@@ -19,7 +19,7 @@ const SCENE_PROMPT_TEMPLATE = `You are a master game artist.
     2. **Strictly NO HUD or UI:** Do not include any user interface elements, health bars, text, numbers, buttons, minimaps, or overlays. The image must be a clean scene only.`;
 
 export async function runSceneAgent(client: LLMClient, design: GameDesign): Promise<Buffer> {
-    console.log("[SceneAgent] Generating scene based on design...");
+
 
     let prompt = SCENE_PROMPT_TEMPLATE
         .replace("{{ART_STYLE}}", design.art_style)

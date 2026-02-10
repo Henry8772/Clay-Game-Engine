@@ -20,6 +20,7 @@ function buildDesignFromState(state: UniversalState): GameDesign {
         });
     }
     return {
+        title: "Unknown Title",
         art_style: (state.meta.vars as any)?.art_style || "unknown",
         perspective: "unknown",
         background_theme: "unknown",
@@ -42,7 +43,7 @@ export async function processModification(
     userRequest: string
 ): Promise<{ newState: UniversalState; message: string; shouldRegenerate?: boolean; newPrompt?: string }> {
 
-    console.log(`[ModificationAgent] Processing request: ${runId}, ${currentState}, ${userRequest}`);
+
     // 1. Define Schema for Structured Output
     const toolSchema = {
         description: "Tool selection response",
@@ -106,15 +107,14 @@ export async function processModification(
 
     const inputData = [{ role: 'user', content: `${userRequest}\n\n[Context] Game Entities Count: ${Object.keys(currentState.entities).length}` }];
 
-    console.log(`[ModificationAgent] systemPrompt: ${systemPrompt}`);
-    console.log(`[ModificationAgent] inputData: ${JSON.stringify(inputData)}`);
+
 
     let tool: string | undefined;
     let args: any;
 
 
 
-    // If tool was not assigned by Demo Mode (e.g. Puzzle Step 2, or not in Demo Mode), call LLM
+
     if (!tool || !args) {
         // Normal LLM Call
         const response = await client.generateJSON<{ tool: string; args: any }>(
@@ -133,13 +133,11 @@ export async function processModification(
         args = response.args;
     }
 
-    console.log(`[ModificationAgent] Tool: ${tool}`, args);
 
-    // debug 
-    // const tool = "update_global_sprite_style";
-    // const args = { styleDescription: "cyberpunk" };
 
-    console.log(`[ModificationAgent] Tool: ${tool}`, args);
+
+
+
 
     // Build design context for agents
     const designContext = buildDesignFromState(currentState);
@@ -148,30 +146,30 @@ export async function processModification(
     let shouldRegenerate = false;
     let newPrompt = "";
 
-    // Helper to resolve asset paths from state URLs/Paths to disk paths
+
     const getDiskPath = (assetUrl: string) => {
         // Remove API proxy prefix if present to get relative filename
         const cleanName = assetUrl.split('/').pop() || assetUrl;
         return path.join(process.cwd(), 'backend', 'data', 'runs', runId, cleanName);
     };
 
-    // 3. Execute Tool Logic
+
     switch (tool) {
         case "generate_background": {
-            console.log(`[ModAgent] Generating background: ${args.description}`);
+
             const currentBg = (currentState.meta as any).vars?.background;
             let newBgBuffer: Buffer;
 
-            console.log(`[ModAgent] Current background: ${currentBg}`);
+
 
             if (currentBg) {
                 try {
-                    // [Strategy: EditImage] Use current background as reference to preserve layout
+
                     const bgPath = getDiskPath(currentBg);
                     const bgBuffer = await fs.readFile(bgPath);
-                    console.log(`[ModAgent] Editing existing background: ${bgPath}`);
 
-                    // Instruction to preserve layout while changing style/content
+
+
                     const editPrompt = `Edit this game background. ${args.description}. Maintain the exact layout, perspective.`;
 
                     newBgBuffer = await client.editImage(editPrompt, bgBuffer, "gemini-2.5-flash-image");
@@ -200,7 +198,7 @@ export async function processModification(
             const nameToFind = (args.name || "").toLowerCase();
             let foundBlueprint: any = null;
 
-            // 1. Find matching blueprint
+
             if (currentState.blueprints) {
                 for (const bp of Object.values(currentState.blueprints)) {
                     // Match by label (preferred) or ID, case-insensitive
@@ -223,18 +221,16 @@ export async function processModification(
                 break;
             }
 
-            console.log(`[ModAgent] Found blueprint for '${args.name}': ${foundBlueprint.id} (${foundBlueprint.label})`);
 
-            // 2. Spawn Entities
+
+
             for (let i = 0; i < count; i++) {
                 const newId = `ent_${Date.now()}_${i}`;
 
                 // default location
                 let spawnLoc = "tile_r2_c2";
 
-                // Simple logic to offset multiple spawns (optional, keeping it simple)
-                // If the game has specific logic for placement, it might be separate, 
-                // but here we just place them.
+
 
                 currentState.entities[newId] = {
                     ...foundBlueprint, // Inherit blueprint properties
@@ -266,9 +262,9 @@ export async function processModification(
 
         case "update_global_sprite_style": {
             const style = args.styleDescription;
-            console.log(`[ModAgent] Global style update to: ${style}`);
 
-            // 1. Locate Resources (Use White version if available for cleaner input)
+
+
             let spritePath = path.join(process.cwd(), 'backend', 'data', 'runs', runId, 'sprites_white.png');
             try {
                 await fs.access(spritePath);
@@ -278,15 +274,13 @@ export async function processModification(
 
             const inputBuffer = await fs.readFile(spritePath);
 
-            // 2. Run Modular Sprite Agent (Handles White -> Black -> Transparent)
-            // Note: runSpriteAgent now returns the transparent buffer
+
             const newSheetBuffer = await runSpriteAgent(client, inputBuffer, path.join(process.cwd(), 'backend', 'data', 'runs', runId), {
                 mode: 'restyle_existing',
                 styleDescription: style
             }, designContext);
 
-            // Debug code to load analysis_modified.json as newSheetBuffer
-            // const newSheetBuffer = await fs.readFile(path.join(process.cwd(), 'backend', 'data', 'runs', runId, 'sprites_restyle_1770278685817.png'));
+
 
             // Save the final transparent sheet
             const timestamp = Date.now();
@@ -294,7 +288,7 @@ export async function processModification(
             const finalSheetPath = await saveAsset(runId, newSheetBuffer, finalSheetName);
 
             // 3. Run Vision Agent (Uses the transparent buffer)
-            console.log(`[ModAgent] Running vision agent to detect items...`);
+
             const detectedItems = await runVisionAgent(client, newSheetBuffer, designContext);
 
             // --- Generate Debug Segmentation Image ---
@@ -303,30 +297,27 @@ export async function processModification(
 
                 const segmentedName = `sprites_restyle_segmented_${timestamp}.png`;
                 await saveAsset(runId, segmentedBuffer, segmentedName);
-                console.log(`[ModAgent] Saved segmentation debug image: ${segmentedName}`);
+
 
             } catch (err) {
                 console.warn(`[ModAgent] Failed to generate debug segmentation image:`, err);
             }
 
-            // Debug code to load analysis_modified.json as detectedItems
-            // const filePath = path.join(process.cwd(), 'backend', 'data', 'runs', runId, 'analysis_modified.json');
-            // const fileContent = await fs.readFile(filePath, 'utf-8');
-            // const detectedItems = JSON.parse(fileContent);
 
             // 4. Run Extraction Agent
+
             const outputDirName = `extracted_restyle_${timestamp}`;
             const outputDir = path.join(process.cwd(), 'backend', 'data', 'runs', runId, outputDirName);
 
             const manifest = await runExtractionAgent(newSheetBuffer, detectedItems, outputDir);
 
-            // 5. State Patching (Mapping manifest back to State)
+
             let updatedCount = 0;
 
-            // Helper to match labels loosely
+
             function normalizeLabel(l: string) { return l.toLowerCase().replace(/[^a-z0-9]/g, '_'); }
 
-            // Update Entities
+
             for (const entityId in currentState.entities) {
                 const entity = currentState.entities[entityId];
                 let labelToMatch = (entity as any).label;
@@ -347,7 +338,7 @@ export async function processModification(
                 }
             }
 
-            // Update Blueprints
+
             if (currentState.blueprints) {
                 for (const bpName in currentState.blueprints) {
                     const bp = currentState.blueprints[bpName];
@@ -371,25 +362,23 @@ export async function processModification(
             const environment_description = args.environment_description || `Update backgroundenvironment follows ${userRequest}`;
             const logic_instruction = args.logic_instruction ||
                 `Modified terrain described as '${userRequest}'.`;
-            console.log(`[ModAgent] Environment Update: Visual="${environment_description}", Logic="${logic_instruction}"`);
 
 
 
 
-            // 1. Load Current Background
+
+
             const currentBgPath = (currentState.meta as any).vars?.background;
             if (!currentBgPath) throw new Error("No background found to modify");
 
             const bgDiskPath = getDiskPath(currentBgPath);
             const bgBuffer = await fs.readFile(bgDiskPath);
 
-            // 2. VISUAL PHASE: Edit the Image
-            // Use the user's prompt to guide the diffusion model
+
             const editPrompt = `Edit this game map. ${environment_description}. Maintain exact perspective and grid layout.`;
             const newBgBuffer = await client.editImage(editPrompt, bgBuffer, "gemini-2.5-flash-image");
 
-            // 3. LOGIC PHASE: Re-scan NavMesh
-            // Pass the new image AND the logic instruction to the NavMesh agent
+
             if (currentState.navMesh) {
                 const rows = (currentState as any).grid?.rows || 6;
                 const cols = (currentState as any).grid?.cols || 6;
@@ -406,7 +395,7 @@ export async function processModification(
                 currentState.navMesh = updatedNavMesh;
             }
 
-            // 4. Update State & Assets
+
             const filename = `bg_mod_${Date.now()}.png`;
             const newAssetPath = await saveAsset(runId, newBgBuffer, filename);
 

@@ -11,8 +11,7 @@ export async function resolveGameAction(
     engineLogic: string = ""
 ): Promise<GameTool[]> {
 
-    // 1. ROBUST ENTITY MAPPING
-    // We assume 'currentState' has 'entities' and 'blueprints'
+
     const blueprints = currentState.blueprints || {};
 
     const simplifiedEntities = Object.values(currentState.entities).map((e: any) => {
@@ -26,22 +25,20 @@ export async function resolveGameAction(
             location: e.location || "sidebar",
             team: e.team,
             template: e.t,
-            // CRITICAL: Expose 'spawns' to LLM so it knows what card creates what unit
             spawns: bp?.spawns || null,
-            // Keep type to distinguish Cards vs Units (from blueprint or instance)
             type: bp?.type || e.type
         };
     });
 
     const toolsDescription = engineTools.length > 0 ? engineTools.join('\n') : AVAILABLE_TOOLS;
 
-    // Inject the Spawn Logic convention if not present
+
     let finalLogic = engineLogic;
     if (!finalLogic.includes("**Card Play:**")) {
         finalLogic += `\n**Card Play:** If user draws a CARD to the BOARD -> DESTROY the card, then SPAWN the corresponding unit (defined in 'spawns' property) at that location.`;
     }
 
-    // Inject Combat Logic if not present
+
     if (!finalLogic.includes("**Combat:**")) {
         finalLogic += `\n**Combat:** If a user moves a unit to a tile occupied by a hostile unit (different team), this is an ATTACK. Use ATTACK(attacker, target), not MOVE.`;
     }
@@ -65,7 +62,7 @@ export async function resolveGameAction(
     `;
 
 
-    // 1. EXTRACT FOCUSED INTERACTION (The Missing Link)
+
     let interactionContext = "";
     if (currentState.focused_interaction) {
         const { target_zone_id, target_zone_type, target_zone_metadata } = currentState.focused_interaction;
@@ -89,21 +86,13 @@ export async function resolveGameAction(
     `;
 
 
-    console.log("System Instruction:", systemInstruction);
-    console.log("User Input:", userInput);
+
 
     const inputData = [{ role: 'user', content: userInput }];
 
-    // --- DEBUG LOG ---
-    console.log(`
-    [GameLogic] Resolving Action: "${actionDescription}"
-    ---------------------------------------------------
-    Entities: ${JSON.stringify(simplifiedEntities.map(e => `${e.label}(${e.team}) @ ${e.location}`), null, 2)}
-    Interaction: ${currentState.focused_interaction ? JSON.stringify(currentState.focused_interaction) : "None"}
-    Rules Snippet: ${finalLogic.slice(-200)}
-    ---------------------------------------------------
-    `);
-    // -----------------
+
+
+
 
     const schema = {
         type: SchemaType.OBJECT,

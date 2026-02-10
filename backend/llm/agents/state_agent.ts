@@ -11,7 +11,7 @@ export async function runStateAgent(
     design: GameDesign,
     assetManifest: Record<string, string> = {}
 ): Promise<any> {
-    console.log("[StateAgent] Architecting Game State...");
+
 
     // 1. Prepare Asset Paths
     const formattedAssets = Object.values(assetManifest).map(filename => {
@@ -38,7 +38,7 @@ export async function runStateAgent(
         }
     };
 
-    // 3. Define Schema matching YOUR Target JSON
+
     const stateSchema = {
         type: SchemaType.OBJECT,
         properties: {
@@ -63,12 +63,13 @@ export async function runStateAgent(
                     properties: {
                         id: { type: SchemaType.STRING },
                         t: { type: SchemaType.STRING }, // templateId
-                        pixel_box: { type: SchemaType.ARRAY, items: { type: SchemaType.NUMBER } }
+                        pixel_box: { type: SchemaType.ARRAY, items: { type: SchemaType.NUMBER } },
+                        team: { type: SchemaType.STRING, description: "'blue' (player) or 'red' (enemy)" }
                     },
-                    required: ["id", "t", "pixel_box"]
+                    required: ["id", "t", "pixel_box", "team"]
                 }
             },
-            // We utilize this to populate meta.vars
+
             global_vars: {
                 type: SchemaType.ARRAY,
                 items: {
@@ -100,6 +101,11 @@ export async function runStateAgent(
        
     3. **Global Vars:**
        - Always return: [{key: "background", value: "background.png"}, {key: "navmesh", value: "navmesh.json"}]
+
+    4. **Teams:**
+       - Check 'design_brief.teams'.
+       - If a unit's label matches 'player' team -> team: 'blue'.
+       - If a unit's label matches 'enemy' team -> team: 'red'.
     `;
 
     // 4. Generate
@@ -128,7 +134,7 @@ export async function runStateAgent(
     const varsObj: Record<string, any> = {};
     result.global_vars.forEach(kv => varsObj[kv.key] = kv.value);
 
-    // Hardcoded tools matching your target
+
     const ENGINE_TOOLS = [
         "1. MOVE(entityId, toZoneId) -> Teleport a unit.",
         "2. SPAWN(templateId, toZoneId, owner) -> Create a new unit from a card/template.",
@@ -140,19 +146,25 @@ export async function runStateAgent(
     return {
         initialState: {
             meta: {
+                title: design.title || "Untitled Game",
                 turnCount: 1,
                 activePlayerId: "player",
+                activePlayerIndex: 0, // Start with first player
+                players: [
+                    { id: "player", type: "human", "team": "blue" },
+                    { id: "enemy", type: "ai", "team": "red" }
+                ],
                 phase: "main",
                 runId: runId,
                 version: "2.0",
-                vars: varsObj // <--- Populated from global_vars
+                vars: varsObj
             },
             blueprints: blueprintsMap,
             entities: entitiesMap,
-            // Extract grid size from design or default
+
             grid: {
-                rows: (design as any).grid_resolution || 0,
-                cols: (design as any).grid_resolution || 0
+                rows: design.grid_shape?.rows || 0,
+                cols: design.grid_shape?.cols || 0
             },
             navMesh: navMesh
         },

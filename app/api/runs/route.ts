@@ -18,9 +18,35 @@ export async function GET() {
 
         const runs = entries
             .filter(dirent => dirent.isDirectory())
-            .map(dirent => dirent.name)
-            // Optional: Sort by creation time if we wanted, but alpha sort is default and fine for IDs like "run_timestamp"
-            .sort((a, b) => b.localeCompare(a)); // Newest first usually
+            .map(dirent => {
+                const runId = dirent.name;
+                const runPath = path.join(RUNS_BASE_DIR, runId);
+
+                // Check if complete (has gamestate.json)
+                const isComplete = fs.existsSync(path.join(runPath, 'gamestate.json'));
+
+                // Get Title from design.json if available
+                let title = runId;
+                try {
+                    const designPath = path.join(runPath, 'design.json');
+                    if (fs.existsSync(designPath)) {
+                        const design = JSON.parse(fs.readFileSync(designPath, 'utf8'));
+                        if (design.title) {
+                            title = design.title;
+                        }
+                    }
+                } catch (e) {
+                    // Ignore
+                }
+
+                return {
+                    id: runId,
+                    title,
+                    isComplete,
+                    timestamp: fs.statSync(runPath).birthtimeMs
+                };
+            })
+            .sort((a, b) => b.timestamp - a.timestamp); // Newest first
 
         return NextResponse.json({ runs });
     } catch (e) {

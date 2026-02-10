@@ -21,7 +21,7 @@ export async function runSpriteAgent(
 ): Promise<Buffer> {
     const mode = config.mode || 'extract_from_scene';
 
-    console.log(`[SpriteAgent] Running in mode: ${mode}`);
+
 
     // 1. Determine Prompt based on Mode
     let whitePrompt = "";
@@ -37,16 +37,16 @@ export async function runSpriteAgent(
         whitePrompt = `Redraw this sprite sheet in the style of: ${config.styleDescription || 'standard'}. Maintain the exact position, scale, and silhouette of every element. Do not add or remove objects. Keep the white background.`;
     }
 
-    console.log("[SpriteAgent] White Prompt:", whitePrompt);
+
 
     // 2. Generate White Background Layer
-    console.log("[SpriteAgent] Generating White Layer...");
+
 
     // In 'restyle' mode, we use the inputBuffer (which should be the old sheet). 
     // In 'extract' mode, inputBuffer is the Scene.
     const temperature = mode === 'extract_from_scene' ? 0 : 0.7;
 
-    console.log(path.join(runDir, `sprites_${mode}_white.png`));
+
 
     // debug
     // const whiteBuffer = fs.readFileSync(path.join(runDir, `sprites_${mode}_white.png`));
@@ -55,7 +55,7 @@ export async function runSpriteAgent(
     });
 
     // 3. Generate Black Background Layer (for Alpha)
-    console.log("[SpriteAgent] Generating Black Layer (for Alpha)...");
+
     // const blackPrompt = (mode === 'restyle_existing')
     //     ? `Redraw this sprite sheet in the style of: ${config.styleDescription || 'standard'}. Maintain the exact position. Use a solid black background.`
     //     : "A image of all the sprites and each cards in equal spacing. Must use a solid black background.";
@@ -86,6 +86,6 @@ export async function runSpriteAgent(
     }
 
     // 5. Compute Transparency
-    console.log("[SpriteAgent] Computing alpha mask...");
+
     return createTransparencyMask(whiteBuffer, blackBuffer);
 }

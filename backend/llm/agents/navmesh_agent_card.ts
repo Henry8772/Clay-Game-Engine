@@ -9,10 +9,10 @@ export async function runNavMeshAgent(
     backgroundBuffer: Buffer,
     design: GameDesign
 ): Promise<any[]> {
-    console.log(`[NavMeshAgent] Generating NavMesh for ${design.grid_type}...`);
+
 
     if (client.isDebug) {
-        console.log("[NavMeshAgent] Returning MOCK_NAVMESH");
+
         return MOCK_NAVMESH;
     }
 

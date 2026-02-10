@@ -16,7 +16,7 @@ describe('REAL: NavMesh Agent', () => {
     it.skipIf(!shouldRun)('should generate navmesh from background', async () => {
         const client = new LLMClient("gemini", "gemini-3-flash-preview", false);
 
-        const runDir = getTestRunDir('puzzle');
+        const runDir = getTestRunDir('run_1770725331397_328011b5');
         let bgPath = path.join(runDir, "background.png");
 
         if (!fs.existsSync(bgPath)) {

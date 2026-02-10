@@ -45,7 +45,6 @@ export class GameEngine {
     public async processAction(action: GameAction): Promise<any> {
         // 1. Translate Action to Natural Language
         const command = this.translateActionToCommand(action);
-        console.log(`[GameEngine] Processing Action: ${action.type} -> "${command}"`);
 
         // 2. Call Referee (LLM or Hybrid)
         const tools = await resolveGameAction(
@@ -94,7 +93,6 @@ export class GameEngine {
 
     public async processCommand(command: string): Promise<any> {
         this.turnChanged = false; // Reset the flag before processing a new command
-        console.log(`[GameEngine] Processing Raw Command: "${command}"`);
         const tools = await resolveGameAction(
             this.llmClient,
             this.state,
@@ -120,7 +118,6 @@ export class GameEngine {
         const logs: LogEntry[] = [];
 
         tools.forEach(tool => {
-            console.log(`[Engine] Executing: ${tool.name}`, tool.args);
 
             switch (tool.name) {
                 case "MOVE": {

@@ -220,11 +220,13 @@ export async function drawBoundingBoxes(imageBuffer: Buffer, items: Box2DItem[])
         // Random color generation based on label for distinction
         const color = stringToColor(item.label || 'unknown');
 
+        const safeLabel = (item.label || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
+
         return `
             <rect x="${x}" y="${y}" width="${w}" height="${h}" 
                   fill="none" stroke="${color}" stroke-width="2" />
             <text x="${x}" y="${y - 5}" font-family="Arial" font-size="14" fill="${color}" style="text-shadow: 1px 1px 1px black;">
-                ${item.label || ''}
+                ${safeLabel}
             </text>
         `;
     }).join('\n');

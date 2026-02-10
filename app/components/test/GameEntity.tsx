@@ -93,7 +93,6 @@ export const GameEntity = ({ id, name, initialX, initialY, color, src, onAction,
         };
 
         const onPlace = (e: PIXI.FederatedPointerEvent) => {
-            console.log(`GameEntity ${name}: onPlace triggered. Held: ${isHeld.current}`);
             if (isHeld.current) {
                 isHeld.current = false;
                 container.alpha = 1;
@@ -102,8 +101,6 @@ export const GameEntity = ({ id, name, initialX, initialY, color, src, onAction,
                 const dropZone = getZoneAt(container.x, container.y);
                 const toId = dropZone ? dropZone.id : null;
                 const fromId = dragStartZone.current;
-
-                console.log(`GameEntity ${name}: Dropped at`, { x: container.x, y: container.y, zone: toId });
 
                 // Semantic Event
                 const event = JSON.stringify({
@@ -125,10 +122,8 @@ export const GameEntity = ({ id, name, initialX, initialY, color, src, onAction,
         };
 
         const onPickup = (e: PIXI.FederatedPointerEvent) => {
-            console.log(`GameEntity ${name}: onPickup triggered`);
             // If already held, treat click as drop (though normally onPlace catches this via stage)
             if (isHeld.current) {
-                console.log(`GameEntity ${name}: Already held, treating as drop`);
                 onPlace(e);
                 return;
             }
@@ -146,7 +141,6 @@ export const GameEntity = ({ id, name, initialX, initialY, color, src, onAction,
                 x: currentPosition.x - container.x,
                 y: currentPosition.y - container.y
             };
-            console.log(`GameEntity ${name}: Picked up. Offset:`, pickupOffset.current);
 
             container.alpha = 0.5;
 
@@ -161,7 +155,6 @@ export const GameEntity = ({ id, name, initialX, initialY, color, src, onAction,
                 entityConfig: config,
                 from: dragStartZone.current
             });
-            console.log('Pickup Event:', pickupEvent);
             onAction(pickupEvent);
 
             // Bind follow/place to STAGE

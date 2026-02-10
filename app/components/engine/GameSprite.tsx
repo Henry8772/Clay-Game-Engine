@@ -228,8 +228,6 @@ export const GameSprite = ({ id, name, initialX, initialY, color, src, onAction,
             const targetEntity = getEntityAt(container.x, container.y, id);
             const isAttack = !!targetEntity;
 
-            console.log(`GameSprite ${name}: Dropped at`, { x: container.x, y: container.y, zone: toId });
-
             if (toId && dropZone) {
                 if (isAttack && targetEntity) {
                     shake(5);

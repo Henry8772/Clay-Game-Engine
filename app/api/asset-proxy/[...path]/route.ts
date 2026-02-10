@@ -44,7 +44,7 @@ export async function GET(
 
         // Security check for Tests
         if (!potentialPath.startsWith(TEST_BASE_DIR)) {
-            console.log("Access attempt outside base:", potentialPath);
+
             return new NextResponse('Forbidden: Access outside base directory', { status: 403 });
         }
     }

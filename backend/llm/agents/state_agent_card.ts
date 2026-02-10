@@ -11,7 +11,7 @@ export async function runStateAgent(
     design: GameDesign,
     assetManifest: Record<string, string> = {}
 ): Promise<any> {
-    console.log("[StateAgent] Handing over State Architecture to LLM...");
+
 
     // 1. Prepare Context for the LLM
     // We filter down the input to just what the LLM needs to make decisions.
